@@ -1,45 +1,82 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>小白羊💗的入口網站</title>
+
   <style>
     body {
-      font-family: sans-serif;
+      margin: 0;
+      font-family: "Microsoft JhengHei", sans-serif;
       background: #f3f4f6;
-      padding: 40px;
+      padding: 16px;
     }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+
+    /* 手機：一欄 */
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px,1fr));
-      gap: 20px;
+      grid-template-columns: 1fr;
+      gap: 16px;
     }
+
+    /* 平板：兩欄 */
+    @media (min-width: 600px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* 電腦：最多四欄 */
+    @media (min-width: 1000px) {
+      .grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
     .card {
       background: white;
       padding: 20px;
       border-radius: 16px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.08);
       cursor: pointer;
       transition: 0.2s;
+      min-height: 110px;
+
+      /* 手機點擊更舒服 */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
-    .card:hover {
-      transform: translateY(-5px);
+
+    .card:active {
+      transform: scale(0.97);
     }
+
     .icon {
-      font-size: 30px;
-      margin-bottom: 10px;
+      font-size: 28px;
+      margin-bottom: 6px;
     }
+
     .title {
       font-weight: bold;
-      font-size: 18px;
+      font-size: 17px;
     }
+
     .desc {
-      font-size: 14px;
+      font-size: 13px;
       color: #666;
-      margin-top: 5px;
+      margin-top: 4px;
     }
+
   </style>
 </head>
+
 <body>
 
 <h1>小白羊💗的入口網站</h1>
@@ -57,27 +94,25 @@
     <div class="title">PDF簽名</div>
     <div class="desc">可簽名與下載</div>
   </div>
-  
+
   <div class="card" onclick="openApp('apps/app3.html')">
-    <div class="icon">✍️</div>
+    <div class="icon">📄</div>
     <div class="title">PDF檔案編輯</div>
     <div class="desc">可刪除和新增頁面</div>
   </div>
 
- <div class="card" onclick="openApp('apps/app4.html')">
+  <div class="card" onclick="openApp('apps/app4.html')">
     <div class="icon">🎯</div>
     <div class="title">模擬考試系統</div>
     <div class="desc">可每次更新題庫</div>
   </div>
 
   <div class="card" onclick="openApp('apps/app5.html')">
-    <div class="icon">🎯</div>
+    <div class="icon">💖</div>
     <div class="title">生活滿意度測驗</div>
     <div class="desc">可往前往後修改答案</div>
   </div>
 
-
-  
 </div>
 
 <script>
