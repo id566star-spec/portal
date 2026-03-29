@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>題庫練習系統</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+      background: #f5f7fb;
+      color: #222;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 16px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+    h1, h2 {
+      margin-top: 0;
+      color: #1f3c88;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    label {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    input[type="file"], select, button {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #cfd7e6;
+      font-size: 14px;
+    }
+    button {
+      background: #1f6feb;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1558c0;
+    }
+    .secondary {
+      background: #6c757d;
+    }
+    .secondary:hover {
+      background: #565e64;
+    }
+    .question-box {
+      border: 1px solid #e5e9f2;
+      border-radius: 16px;
+      padding: 20px;
+      background: #fcfdff;
+    }
+    .question-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 18px;
+      line-height: 1.7;
+    }
+    .option {
+      display: block;
+      padding: 12px 14px;
+      border: 1px solid #d9e0ee;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+      background: white;
+    }
+    .option:hover {
+      background: #f2f7ff;
+      border-color: #9ec5fe;
+    }
+    .option input {
+      margin-right: 8px;
+    }
+    .result {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+    .correct {
+      background: #e9f9ee;
+      color: #146c43;
+    }
+    .wrong {
+      background: #fff1f0;
+      color: #b42318;
+    }
+    .tag-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .tag-item {
+      background: #f3f6fb;
+      border: 1px solid #d8e2f0;
+      padding: 10px 14px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .info {
+      font-size: 14px;
+      color: #555;
+    }
+    .count-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .count-item {
+      background: #f5f8ff;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid #dbe7ff;
+      font-weight: 700;
+    }
+    .empty {
+      color: #888;
+      text-align: center;
+      padding: 28px 10px;
+    }
+    .small {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.7;
+    }
+    .answer-text {
+      margin-top: 8px;
+      font-weight: 600;
+    }
+    .notice {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #fff8e1;
+      color: #7a5d00;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    @media (max-width: 768px) {
+      .question-title {
+        font-size: 18px;
+      }
+      .row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      input[type="file"], select, button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>題庫練習系統</h1>
+      <div class="row">
+        <label for="csvFile">匯入題庫（僅支援 .csv）</label>
+        <input type="file" id="csvFile" accept=".csv,text/csv" />
+        <button onclick="importCSV()">匯入 CSV 題庫</button>
+      </div>
+      <div class="small">
+        CSV 欄位格式必須為：<br>
+        <b>id,題目,選項A,選項B,選項C,選項D,正確答案,是否出題,重點必考,難題,章節</b>
+      </div>
+      <div class="notice">
+        若你的 CSV 是用 Excel 存出的，常見問題是編碼不是 UTF-8。這個版本已加強相容性，可讀取 UTF-8 與 Big5 常見格式。
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>篩選條件</h2>
+      <div class="row">
+        <div>
+          <label for="filterMode">出題模式</label><br>
+          <select id="filterMode">
+            <option value="all">全部可出題</option>
+            <option value="key">只出重點必考</option>
+            <option value="hard">只出難題</option>
+            <option value="keyhard">只出重點必考 + 難題</option>
+            <option value="keyorhard">出重點必考或難題</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="chapterFilter">章節篩選</label><br>
+          <select id="chapterFilter">
+            <option value="全部">全部章節</option>
+          </select>
+        </div>
+
+        <div>
+          <label>&nbsp;</label><br>
+          <button onclick="applyFilter()">套用篩選</button>
+        </div>
+
+        <div>
+          <label>&nbsp;</label><br>
+          <button class="secondary" onclick="nextQuestion()">下一題</button>
+        </div>
+      </div>
+
+      <div class="count-box">
+        <div class="count-item">題庫總數：<span id="totalCount">0</span></div>
+        <div class="count-item">目前篩選後題數：<span id="filteredCount">0</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>題目練習</h2>
+      <div id="questionArea" class="empty">請先匯入 CSV 題庫。</div>
+    </div>
+  </div>
+
+  <script>
+    let allQuestions = [];
+    let filteredQuestions = [];
+    let currentQuestion = null;
+
+    function normalizeBoolean(value, defaultValue = 0) {
+      if (value === undefined || value === null || value === "") return defaultValue;
+      const text = String(value).trim().toLowerCase();
+      if (["1", "true", "是", "y", "yes"].includes(text)) return 1;
+      return 0;
+    }
+
+    function normalizeQuestion(row, index) {
+      return {
+        id: row["id"] ? String(row["id"]).trim() : String(index + 1),
+        題目: row["題目"] ? String(row["題目"]).trim() : "",
+        選項A: row["選項A"] ? String(row["選項A"]).trim() : "",
+        選項B: row["選項B"] ? String(row["選項B"]).trim() : "",
+        選項C: row["選項C"] ? String(row["選項C"]).trim() : "",
+        選項D: row["選項D"] ? String(row["選項D"]).trim() : "",
+        正確答案: row["正確答案"] ? String(row["正確答案"]).trim().toUpperCase() : "",
+        是否出題: normalizeBoolean(row["是否出題"], 1),
+        重點必考: normalizeBoolean(row["重點必考"], 0),
+        難題: normalizeBoolean(row["難題"], 0),
+        章節: row["章節"] ? String(row["章節"]).trim() : "未分類"
+      };
+    }
+
+    function importCSV() {
+      const fileInput = document.getElementById("csvFile");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert("請先選擇 CSV 檔案。");
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        try {
+          const buffer = e.target.result;
+          const text = decodeCSVBuffer(buffer);
+          const rows = parseCSV(text);
+
+          if (!rows.length) {
+            alert("CSV 檔案沒有資料。");
+            return;
+          }
+
+          const headers = rows[0].map(h => cleanHeader(h));
+          const requiredHeaders = ["id","題目","選項A","選項B","選項C","選項D","正確答案","是否出題","重點必考","難題","章節"];
+          const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+
+          if (missingHeaders.length > 0) {
+            alert("CSV 欄位格式不正確，缺少欄位：" + missingHeaders.join("、"));
+            return;
+          }
+
+          const dataRows = rows.slice(1).filter(row => row.some(cell => String(cell).trim() !== ""));
+          const jsonData = dataRows.map(row => {
+            const obj = {};
+            headers.forEach((header, i) => {
+              obj[header] = row[i] !== undefined ? String(row[i]).trim() : "";
+            });
+            return obj;
+          });
+
+          allQuestions = jsonData.map((row, index) => normalizeQuestion(row, index));
+          updateChapterOptions();
+          applyFilter();
+          alert("CSV 題庫匯入成功。");
+        } catch (error) {
+          console.error(error);
+          alert("CSV 匯入失敗，請確認檔案內容、欄位名稱或編碼格式是否正確。");
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+
+    function decodeCSVBuffer(buffer) {
+      const uint8Array = new Uint8Array(buffer);
+
+      const tryEncodings = ["utf-8", "big5", "gb18030"];
+      let bestText = "";
+
+      for (const encoding of tryEncodings) {
+        try {
+          const decoder = new TextDecoder(encoding, { fatal: false });
+          const text = decoder.decode(uint8Array);
+
+          if (text.includes("題目") && text.includes("正確答案")) {
+            return text.replace(/^\uFEFF/, "");
+          }
+
+          if (!bestText) bestText = text;
+        } catch (e) {
+        }
+      }
+
+      return bestText.replace(/^\uFEFF/, "");
+    }
+
+    function cleanHeader(text) {
+      return String(text)
+        .replace(/^\uFEFF/, "")
+        .replace(/\r/g, "")
+        .trim();
+    }
+
+    function parseCSV(text) {
+      const rows = [];
+      let row = [];
+      let cell = "";
+      let inQuotes = false;
+
+      text = text.replace(/^\uFEFF/, "");
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const nextChar = text[i + 1];
+
+        if (char === '"') {
+          if (inQuotes && nextChar === '"') {
+            cell += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          row.push(cell);
+          cell = "";
+        } else if ((char === '\n' || char === '\r') && !inQuotes) {
+          if (char === '\r' && nextChar === '\n') i++;
+          row.push(cell);
+          rows.push(row);
+          row = [];
+          cell = "";
+        } else {
+          cell += char;
+        }
+      }
+
+      if (cell.length > 0 || row.length > 0) {
+        row.push(cell);
+        rows.push(row);
+      }
+
+      return rows;
+    }
+
+    function updateChapterOptions() {
+      const chapterFilter = document.getElementById("chapterFilter");
+      const chapters = [...new Set(allQuestions.map(q => q.章節 || "未分類"))];
+
+      chapterFilter.innerHTML = '<option value="全部">全部章節</option>';
+      chapters.forEach(chapter => {
+        const option = document.createElement("option");
+        option.value = chapter;
+        option.textContent = chapter;
+        chapterFilter.appendChild(option);
+      });
+    }
+
+    function applyFilter() {
+      const filterMode = document.getElementById("filterMode").value;
+      const chapterFilter = document.getElementById("chapterFilter").value;
+
+      filteredQuestions = allQuestions.filter(q => {
+        if (q.是否出題 !== 1) return false;
+        if (chapterFilter !== "全部" && q.章節 !== chapterFilter) return false;
+
+        if (filterMode === "all") return true;
+        if (filterMode === "key") return q.重點必考 === 1;
+        if (filterMode === "hard") return q.難題 === 1;
+        if (filterMode === "keyhard") return q.重點必考 === 1 && q.難題 === 1;
+        if (filterMode === "keyorhard") return q.重點必考 === 1 || q.難題 === 1;
+
+        return true;
+      });
+
+      document.getElementById("totalCount").textContent = allQuestions.length;
+      document.getElementById("filteredCount").textContent = filteredQuestions.length;
+
+      if (filteredQuestions.length === 0) {
+        currentQuestion = null;
+        document.getElementById("questionArea").innerHTML = '<div class="empty">目前沒有符合條件的題目。</div>';
+        return;
+      }
+
+      nextQuestion();
+    }
+
+    function nextQuestion() {
+      if (!filteredQuestions.length) {
+        document.getElementById("questionArea").innerHTML = '<div class="empty">目前沒有符合條件的題目。</div>';
+        return;
+      }
+
+      const randomIndex = Math.floor(Math.random() * filteredQuestions.length);
+      currentQuestion = filteredQuestions[randomIndex];
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      if (!currentQuestion) return;
+
+      const area = document.getElementById("questionArea");
+      area.innerHTML = `
+        <div class="question-box">
+          <div class="info">題號：${escapeHtml(currentQuestion.id)}｜章節：${escapeHtml(currentQuestion.章節)}</div>
+          <div class="question-title">${escapeHtml(currentQuestion.題目)}</div>
+
+          <label class="option">
+            <input type="radio" name="answer" value="A"> A. ${escapeHtml(currentQuestion.選項A)}
+          </label>
+          <label class="option">
+            <input type="radio" name="answer" value="B"> B. ${escapeHtml(currentQuestion.選項B)}
+          </label>
+          <label class="option">
+            <input type="radio" name="answer" value="C"> C. ${escapeHtml(currentQuestion.選項C)}
+          </label>
+          <label class="option">
+            <input type="radio" name="answer" value="D"> D. ${escapeHtml(currentQuestion.選項D)}
+          </label>
+
+          <div class="row" style="margin-top: 16px;">
+            <button onclick="checkAnswer()">送出答案</button>
+            <button class="secondary" onclick="nextQuestion()">換一題</button>
+          </div>
+
+          <div id="resultArea"></div>
+
+          <div class="tag-group">
+            <label class="tag-item">
+              <input type="checkbox" ${currentQuestion.是否出題 === 0 ? "checked" : ""} onchange="toggleLearned(this.checked)">
+              已學會（勾選後不再出題）
+            </label>
+
+            <label class="tag-item">
+              <input type="checkbox" ${currentQuestion.重點必考 === 1 ? "checked" : ""} onchange="toggleKey(this.checked)">
+              重點必考
+            </label>
+
+            <label class="tag-item">
+              <input type="checkbox" ${currentQuestion.難題 === 1 ? "checked" : ""} onchange="toggleHard(this.checked)">
+              難題
+            </label>
+          </div>
+        </div>
+      `;
+    }
+
+    function checkAnswer() {
+      if (!currentQuestion) return;
+
+      const selected = document.querySelector('input[name="answer"]:checked');
+      if (!selected) {
+        alert("請先選擇答案。");
+        return;
+      }
+
+      const resultArea = document.getElementById("resultArea");
+      const userAnswer = selected.value;
+      const correct = currentQuestion.正確答案;
+      const optionText = currentQuestion["選項" + correct] || "";
+
+      if (userAnswer === correct) {
+        resultArea.innerHTML = `
+          <div class="result correct">
+            答對了！
+            <div class="answer-text">正確答案：${correct}. ${escapeHtml(optionText)}</div>
+          </div>
+        `;
+      } else {
+        resultArea.innerHTML = `
+          <div class="result wrong">
+            答錯了。
+            <div class="answer-text">你的答案：${userAnswer}</div>
+            <div class="answer-text">正確答案：${correct}. ${escapeHtml(optionText)}</div>
+          </div>
+        `;
+      }
+    }
+
+    function toggleLearned(checked) {
+      if (!currentQuestion) return;
+      currentQuestion.是否出題 = checked ? 0 : 1;
+      applyFilter();
+    }
+
+    function toggleKey(checked) {
+      if (!currentQuestion) return;
+      currentQuestion.重點必考 = checked ? 1 : 0;
+    }
+
+    function toggleHard(checked) {
+      if (!currentQuestion) return;
+      currentQuestion.難題 = checked ? 1 : 0;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+  </script>
+</body>
+</html>
