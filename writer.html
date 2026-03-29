@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>PDF 簽名工具</title>
+
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+  <!-- Signature Pad -->
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
+
+  <!-- pdf-lib -->
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, "Microsoft JhengHei", sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 16px;
+      background: #f7f8fc;
+      color: #222;
+    }
+
+    h2 {
+      margin-top: 8px;
+      margin-bottom: 18px;
+      font-size: 24px;
+    }
+
+    h3 {
+      margin-top: 24px;
+      margin-bottom: 12px;
+      font-size: 20px;
+    }
+
+    input[type="file"] {
+      margin-bottom: 12px;
+      max-width: 100%;
+    }
+
+    #status {
+      margin: 8px 0 16px;
+      font-size: 15px;
+      color: #444;
+    }
+
+    #pdf-container {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+      max-width: 100%;
+      overflow: auto;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      padding: 8px;
+    }
+
+    #pdf-canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      margin: 0 auto;
+      border: 1px solid #ddd;
+      background: white;
+    }
+
+    #signature-overlay {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 10;
+      cursor: move;
+      touch-action: none;
+      -ms-touch-action: none;
+      background: transparent;
+    }
+
+    .signature-wrap {
+      width: min(94vw, 460px);
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    #signature-pad {
+      width: 100%;
+      height: 220px;
+      display: block;
+      border: 2px dashed #b9c1d0;
+      border-radius: 12px;
+      background: #fcfcff;
+      margin: 0 auto 12px;
+      touch-action: none;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #2f6fed;
+      color: white;
+      min-width: 120px;
+    }
+
+    button:hover {
+      opacity: 0.92;
+    }
+
+    .hint {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 12px;
+      }
+
+      h2 {
+        font-size: 22px;
+      }
+
+      h3 {
+        font-size: 18px;
+      }
+
+      #signature-pad {
+        height: 260px;
+      }
+
+      button {
+        width: 100%;
+        max-width: 320px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h2>PDF 簽名工具</h2>
+
+  <input type="file" id="upload" accept="application/pdf" />
+  <p id="status"></p>
+
+  <div id="pdf-container">
+    <canvas id="pdf-canvas"></canvas>
+    <canvas id="signature-overlay"></canvas>
+  </div>
+
+  <h3>簽名區</h3>
+  <div class="signature-wrap">
+    <div class="hint">請直接在下方簽名，完成後按「套用簽名」，再拖曳到 PDF 的正確位置。</div>
+    <canvas id="signature-pad"></canvas>
+
+    <div class="btn-group">
+      <button type="button" onclick="clearSignature()">清除</button>
+      <button type="button" onclick="applySignature()">套用簽名</button>
+      <button type="button" onclick="downloadPDF()">下載 PDF</button>
+    </div>
+  </div>
+
+  <script>
+    let pdfDoc = null;
+    let currentPage = 1;
+    let signaturePad = null;
+    let signatureImage = null;
+
+    let sigX = 50;
+    let sigY = 50;
+
+    let sigDisplayWidth = 220;
+    let sigDisplayHeight = 110;
+
+    let dragging = false;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+
+    const statusText = document.getElementById('status');
+    const pdfContainer = document.getElementById('pdf-container');
+    const pdfCanvas = document.getElementById('pdf-canvas');
+    const pdfCtx = pdfCanvas.getContext('2d');
+    const overlayCanvas = document.getElementById('signature-overlay');
+    const overlayCtx = overlayCanvas.getContext('2d');
+
+    const signaturePadCanvas = document.getElementById('signature-pad');
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+    function resizeSignaturePad() {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      const rect = signaturePadCanvas.getBoundingClientRect();
+
+      signaturePadCanvas.width = rect.width * ratio;
+      signaturePadCanvas.height = rect.height * ratio;
+
+      const ctx = signaturePadCanvas.getContext('2d');
+      ctx.scale(ratio, ratio);
+
+      if (signaturePad) {
+        signaturePad.clear();
+      }
+
+      signaturePad = new SignaturePad(signaturePadCanvas, {
+        minWidth: 1.2,
+        maxWidth: 3.0,
+        penColor: '#111'
+      });
+    }
+
+    function updateSignatureDefaultSize() {
+      if (window.innerWidth <= 768) {
+        sigDisplayWidth = 240;
+        sigDisplayHeight = 120;
+      } else {
+        sigDisplayWidth = 220;
+        sigDisplayHeight = 110;
+      }
+    }
+
+    window.addEventListener('load', () => {
+      if (typeof SignaturePad === 'undefined') {
+        alert('SignaturePad 載入失敗');
+        return;
+      }
+
+      updateSignatureDefaultSize();
+      resizeSignaturePad();
+    });
+
+    window.addEventListener('resize', () => {
+      updateSignatureDefaultSize();
+      resizeSignaturePad();
+      if (signatureImage) drawSignature();
+    });
+
+    document.getElementById('upload').addEventListener('change', async function (e) {
+      try {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        statusText.innerText = '載入 PDF 中...';
+
+        const arrayBuffer = await file.arrayBuffer();
+        pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+        statusText.innerText = 'PDF 載入成功';
+        await renderPage();
+      } catch (err) {
+        console.error(err);
+        statusText.innerText = '❌ PDF 載入失敗';
+      }
+    });
+
+    async function renderPage() {
+      try {
+        const page = await pdfDoc.getPage(currentPage);
+
+        const containerWidth = Math.min(window.innerWidth - 40, 900);
+        const unscaledViewport = page.getViewport({ scale: 1 });
+        const scale = containerWidth / unscaledViewport.width;
+        const viewport = page.getViewport({ scale: scale });
+
+        pdfCanvas.width = viewport.width;
+        pdfCanvas.height = viewport.height;
+
+        pdfCanvas.style.width = viewport.width + 'px';
+        pdfCanvas.style.height = viewport.height + 'px';
+
+        overlayCanvas.width = viewport.width;
+        overlayCanvas.height = viewport.height;
+        overlayCanvas.style.width = viewport.width + 'px';
+        overlayCanvas.style.height = viewport.height + 'px';
+
+        const renderContext = {
+          canvasContext: pdfCtx,
+          viewport: viewport
+        };
+
+        await page.render(renderContext).promise;
+
+        if (signatureImage) {
+          drawSignature();
+        }
+      } catch (err) {
+        console.error(err);
+        statusText.innerText = '❌ 渲染失敗';
+      }
+    }
+
+    function clearSignature() {
+      if (!signaturePad) return;
+      signaturePad.clear();
+    }
+
+    function applySignature() {
+      if (!signaturePad || signaturePad.isEmpty()) {
+        alert('請先簽名');
+        return;
+      }
+
+      signatureImage = signaturePad.toDataURL('image/png');
+
+      sigX = Math.max(20, (overlayCanvas.width - sigDisplayWidth) / 2);
+      sigY = Math.max(20, (overlayCanvas.height - sigDisplayHeight) / 2);
+
+      drawSignature();
+    }
+
+    function drawSignature() {
+      if (!signatureImage) return;
+
+      const img = new Image();
+      img.src = signatureImage;
+
+      img.onload = () => {
+        overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        overlayCtx.drawImage(img, sigX, sigY, sigDisplayWidth, sigDisplayHeight);
+      };
+    }
+
+    function getPointerPos(e) {
+      const rect = overlayCanvas.getBoundingClientRect();
+      const scaleX = overlayCanvas.width / rect.width;
+      const scaleY = overlayCanvas.height / rect.height;
+
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    }
+
+    function isInsideSignature(x, y) {
+      return (
+        x >= sigX &&
+        x <= sigX + sigDisplayWidth &&
+        y >= sigY &&
+        y <= sigY + sigDisplayHeight
+      );
+    }
+
+    overlayCanvas.addEventListener('pointerdown', (e) => {
+      if (!signatureImage) return;
+
+      const pos = getPointerPos(e);
+
+      if (isInsideSignature(pos.x, pos.y)) {
+        dragging = true;
+        dragOffsetX = pos.x - sigX;
+        dragOffsetY = pos.y - sigY;
+        overlayCanvas.setPointerCapture(e.pointerId);
+        e.preventDefault();
+      }
+    });
+
+    overlayCanvas.addEventListener('pointermove', (e) => {
+      if (!dragging || !signatureImage) return;
+
+      const pos = getPointerPos(e);
+
+      sigX = pos.x - dragOffsetX;
+      sigY = pos.y - dragOffsetY;
+
+      sigX = Math.max(0, Math.min(sigX, overlayCanvas.width - sigDisplayWidth));
+      sigY = Math.max(0, Math.min(sigY, overlayCanvas.height - sigDisplayHeight));
+
+      drawSignature();
+      e.preventDefault();
+    });
+
+    function stopDragging(e) {
+      if (!dragging) return;
+      dragging = false;
+      try {
+        overlayCanvas.releasePointerCapture(e.pointerId);
+      } catch (_) {}
+    }
+
+    overlayCanvas.addEventListener('pointerup', stopDragging);
+    overlayCanvas.addEventListener('pointercancel', stopDragging);
+    overlayCanvas.addEventListener('pointerleave', stopDragging);
+
+    async function downloadPDF() {
+      try {
+        if (!signatureImage) {
+          alert('請先套用簽名');
+          return;
+        }
+
+        const fileInput = document.getElementById('upload');
+        if (!fileInput.files[0]) {
+          alert('請先上傳 PDF');
+          return;
+        }
+
+        const existingPdfBytes = await fileInput.files[0].arrayBuffer();
+        const srcDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+        const newDoc = await PDFLib.PDFDocument.create();
+
+        const [copiedPage] = await newDoc.copyPages(srcDoc, [currentPage - 1]);
+        const page = newDoc.addPage(copiedPage);
+
+        const pngImage = await newDoc.embedPng(signatureImage);
+
+        const scaleX = page.getWidth() / pdfCanvas.width;
+        const scaleY = page.getHeight() / pdfCanvas.height;
+
+        const pdfX = sigX * scaleX;
+        const pdfY = page.getHeight() - (sigY * scaleY) - (sigDisplayHeight * scaleY);
+
+        page.drawImage(pngImage, {
+          x: pdfX,
+          y: pdfY,
+          width: sigDisplayWidth * scaleX,
+          height: sigDisplayHeight * scaleY
+        });
+
+        const pdfBytes = await newDoc.save();
+
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'signed_single_page.pdf';
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (err) {
+        console.error(err);
+        alert('下載失敗，請打開 console 查看錯誤');
+      }
+    }
+  </script>
+</body>
+</html>
