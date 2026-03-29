@@ -363,8 +363,8 @@
 
         <div class="section">
           <label class="label" for="lineUserId">客戶 LINE User ID</label>
-          <input id="lineUserId" type="text" placeholder="請輸入客戶的 LINE User ID" />
-          <div class="hint">💡 發送 LINE 時會用這個 ID 當收件人</div>
+          <input id="lineUserId" type="text" placeholder="此欄位目前可不填" />
+          <div class="hint">💡 已改為開啟 LINE 分享畫面，此欄位目前可保留備用</div>
         </div>
       </div>
 
@@ -387,7 +387,7 @@
         <div class="btn-row btn-row-4">
           <button class="btn-primary" id="copyAndSaveBtn" type="button">複製文字並記錄名單</button>
           <button class="btn-secondary" id="copyOnlyBtn" type="button">只複製文字</button>
-          <button class="btn-primary" id="sendLineBtn" type="button">立即發送 LINE</button>
+          <button class="btn-primary" id="sendLineBtn" type="button">分享到 LINE</button>
           <button class="btn-secondary" id="resetBtn" type="button">清空表單</button>
         </div>
 
@@ -429,8 +429,8 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "renew_notice_records_v2";
-    const LAST_ACCOUNT_KEY = "renew_last_account_v2";
+    const STORAGE_KEY = "renew_notice_records_v3";
+    const LAST_ACCOUNT_KEY = "renew_last_account_v3";
 
     const insuredNameEl = document.getElementById("insuredName");
     const policyNameEl = document.getElementById("policyName");
@@ -654,6 +654,7 @@ ${insuredName} 的「${policyName}」週年日是 ${anniversary}
           <td>${escapeHtml(item.lineUserId || "-")}</td>
           <td>
             <button class="mini-btn btn-secondary" onclick="copyRecordMessage('${item.id}')">複製</button>
+            <button class="mini-btn btn-secondary" onclick="shareRecordToLine('${item.id}')">分享 LINE</button>
             <button class="mini-btn btn-danger" onclick="deleteRecordById('${item.id}')">刪除</button>
           </td>
         </tr>
@@ -775,6 +776,18 @@ ${insuredName} 的「${policyName}」週年日是 ${anniversary}
       setStatus("已複製文字並記錄到名單");
     }
 
+    async function openLineShare(message) {
+      const ok = await copyText(message);
+      const shareUrl = `https://line.me/R/share?text=${encodeURIComponent(message)}`;
+      window.open(shareUrl, "_blank");
+
+      if (ok) {
+        setStatus("已複製文字，並開啟 LINE 分享畫面");
+      } else {
+        setStatus("已開啟 LINE 分享畫面，若未自動複製請手動貼上", true);
+      }
+    }
+
     async function handleSendLine() {
       const data = getFormData();
       const error = validateForm(data);
@@ -784,46 +797,10 @@ ${insuredName} 的「${policyName}」週年日是 ${anniversary}
         return;
       }
 
-      if (!data.lineUserId) {
-        setStatus("請輸入客戶 LINE User ID", true);
-        return;
-      }
-
       const message = generateMessage(data);
-
-      try {
-        setStatus("LINE 發送中...");
-
-        const response = await fetch("/send-line", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            to: data.lineUserId,
-            message: message,
-            insuredName: data.insuredName,
-            policyName: data.policyName,
-            payType: data.payType,
-            anniversary: data.anniversary,
-            payMonth: data.payMonth,
-            payerName: data.payerName,
-            payAccount: data.payAccount
-          })
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.message || "LINE 發送失敗");
-        }
-
-        saveLastAccount();
-        addRecord(data, message);
-        setStatus("LINE 已發送成功，並已記錄到名單");
-      } catch (err) {
-        setStatus(`LINE 發送失敗：${err.message}`, true);
-      }
+      saveLastAccount();
+      addRecord(data, message);
+      await openLineShare(message);
     }
 
     function clearAllRecords() {
@@ -880,6 +857,12 @@ ${insuredName} 的「${policyName}」週年日是 ${anniversary}
       } else {
         setStatus("複製失敗", true);
       }
+    };
+
+    window.shareRecordToLine = async function(id) {
+      const item = records.find(r => r.id === id);
+      if (!item) return;
+      await openLineShare(item.message);
     };
 
     window.deleteRecordById = function(id) {
