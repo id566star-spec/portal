@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>續保通知產生器</title>
+  <style>
+    :root{
+      --green:#4f7f5d;
+      --green-dark:#3f684b;
+      --green-light:#edf4ef;
+      --border:#d9dfda;
+      --text:#2f3a33;
+      --muted:#6c7a70;
+      --bg:#f5f6f4;
+      --card:#ffffff;
+      --danger:#c94b4b;
+      --danger-dark:#a93b3b;
+      --warning:#f6f2de;
+      --shadow:0 10px 30px rgba(0,0,0,.08);
+      --radius:16px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.6;
+    }
+
+    .wrap{
+      max-width:900px;
+      margin:0 auto;
+      padding:20px 16px 40px;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:20px;
+      box-shadow:var(--shadow);
+      padding:22px;
+    }
+
+    .title{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      font-size:30px;
+      font-weight:800;
+      color:var(--green);
+      margin-bottom:24px;
+      text-align:center;
+    }
+
+    .title .icon{
+      font-size:28px;
+    }
+
+    .section{
+      margin-bottom:18px;
+    }
+
+    .label{
+      display:block;
+      font-size:16px;
+      font-weight:700;
+      margin-bottom:8px;
+    }
+
+    .tabs{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .tab-btn{
+      border:1px solid var(--border);
+      background:#efefef;
+      color:#444;
+      padding:10px 14px;
+      border-radius:10px;
+      font-size:15px;
+      cursor:pointer;
+      transition:.2s;
+      font-weight:700;
+    }
+
+    .tab-btn.active{
+      background:var(--green);
+      color:#fff;
+      border-color:var(--green);
+    }
+
+    input, select, textarea{
+      width:100%;
+      border:1px solid #d5d8d5;
+      border-radius:10px;
+      padding:13px 14px;
+      font-size:16px;
+      outline:none;
+      background:#fff;
+      transition:.2s;
+    }
+
+    input:focus, select:focus, textarea:focus{
+      border-color:var(--green);
+      box-shadow:0 0 0 3px rgba(79,127,93,.12);
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+    }
+
+    .hint{
+      font-size:13px;
+      color:#8b927f;
+      margin-top:6px;
+    }
+
+    .message-box{
+      background:#f3f7f4;
+      border:1.5px dashed #91a792;
+      border-radius:14px;
+      padding:18px;
+      white-space:pre-wrap;
+      min-height:180px;
+      font-size:17px;
+    }
+
+    .btn-row{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:12px;
+      margin-top:14px;
+    }
+
+    button{
+      border:none;
+      border-radius:10px;
+      padding:13px 16px;
+      font-size:16px;
+      font-weight:800;
+      cursor:pointer;
+      transition:.2s;
+    }
+
+    .btn-primary{
+      background:var(--green);
+      color:#fff;
+    }
+
+    .btn-primary:hover{
+      background:var(--green-dark);
+    }
+
+    .btn-secondary{
+      background:#e9eeea;
+      color:var(--text);
+    }
+
+    .btn-secondary:hover{
+      background:#dde5df;
+    }
+
+    .btn-danger{
+      background:var(--danger);
+      color:#fff;
+    }
+
+    .btn-danger:hover{
+      background:var(--danger-dark);
+    }
+
+    .status{
+      margin-top:12px;
+      font-size:14px;
+      font-weight:700;
+      color:var(--green-dark);
+      min-height:24px;
+    }
+
+    .sub-title{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:22px;
+      font-weight:800;
+      color:var(--green);
+      margin:26px 0 14px;
+    }
+
+    .toolbar{
+      display:grid;
+      grid-template-columns:1.5fr 1fr 1fr;
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .table-wrap{
+      overflow:auto;
+      border:1px solid #e1e5e1;
+      border-radius:14px;
+      background:#fff;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:760px;
+    }
+
+    th, td{
+      padding:12px 10px;
+      border-bottom:1px solid #edf0ed;
+      text-align:left;
+      font-size:14px;
+      vertical-align:top;
+    }
+
+    th{
+      background:#f6f8f6;
+      color:#4b5c51;
+      font-weight:800;
+      position:sticky;
+      top:0;
+      z-index:1;
+    }
+
+    tr:hover td{
+      background:#fafcfa;
+    }
+
+    .tag{
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      background:var(--green-light);
+      color:var(--green-dark);
+      white-space:nowrap;
+    }
+
+    .mini-btn{
+      padding:8px 10px;
+      font-size:13px;
+      border-radius:8px;
+      font-weight:700;
+      margin-right:6px;
+    }
+
+    .empty{
+      text-align:center;
+      color:#8a948c;
+      padding:24px;
+      font-weight:700;
+    }
+
+    .notice-box{
+      background:var(--warning);
+      border:1px solid #ddd2a5;
+      border-radius:14px;
+      padding:14px 16px;
+      margin-top:10px;
+      color:#6b5b1e;
+      font-size:15px;
+    }
+
+    .footer-note{
+      margin-top:12px;
+      color:#7c877f;
+      font-size:13px;
+      text-align:center;
+    }
+
+    @media (max-width:768px){
+      .title{
+        font-size:24px;
+      }
+      .grid-2{
+        grid-template-columns:1fr;
+      }
+      .btn-row{
+        grid-template-columns:1fr;
+      }
+      .toolbar{
+        grid-template-columns:1fr;
+      }
+      .card{
+        padding:16px;
+        border-radius:16px;
+      }
+      .message-box{
+        font-size:16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="title">
+        <span class="icon">📋</span>
+        <span>續保通知產生器</span>
+      </div>
+
+      <div class="section">
+        <label class="label">1. 選擇繳費方式</label>
+        <div class="tabs">
+          <button class="tab-btn active" type="button" data-paytype="信用卡">信用卡</button>
+          <button class="tab-btn" type="button" data-paytype="銀行扣款">銀行扣款</button>
+          <button class="tab-btn" type="button" data-paytype="自行繳費">自行繳費</button>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="section">
+          <label class="label" for="insuredName">被保險人姓名</label>
+          <input id="insuredName" type="text" placeholder="請輸入被保險人姓名" value="吳阿寶" />
+        </div>
+
+        <div class="section">
+          <label class="label" for="anniversary">保單週年日（月/日）</label>
+          <input id="anniversary" type="text" placeholder="例如：4/15" value="4/15" />
+        </div>
+
+        <div class="section">
+          <label class="label" for="payMonth">扣款／繳費月份</label>
+          <select id="payMonth">
+            <option>本月</option>
+            <option selected>下個月</option>
+            <option>下下個月</option>
+            <option>其他</option>
+          </select>
+        </div>
+
+        <div class="section">
+          <label class="label" for="payerName">繳費人姓名</label>
+          <input id="payerName" type="text" placeholder="請輸入繳費人姓名" value="你" />
+        </div>
+      </div>
+
+      <div class="section">
+        <label class="label" for="payAccount">扣款銀行／信用卡</label>
+        <input id="payAccount" type="text" placeholder="例如：華南信用卡、玉山銀行、台新信用卡" value="華南信用卡" />
+        <div class="hint">💡 系統會自動記住你最近輸入的銀行或卡片名稱</div>
+      </div>
+
+      <div class="section">
+        <div class="notice-box">
+          🔔 提醒：系統會依照你選擇的繳費方式，自動產生不同的通知內容。
+        </div>
+      </div>
+
+      <div class="section">
+        <label class="label">2. 通知文字預覽</label>
+        <div id="messagePreview" class="message-box"></div>
+
+        <div class="btn-row">
+          <button class="btn-primary" id="copyAndSaveBtn" type="button">複製文字並記錄名單</button>
+          <button class="btn-secondary" id="copyOnlyBtn" type="button">只複製文字</button>
+          <button class="btn-secondary" id="resetBtn" type="button">清空表單</button>
+        </div>
+
+        <div class="status" id="statusText"></div>
+      </div>
+
+      <div class="sub-title">✅ 已通知名單</div>
+
+      <div class="toolbar">
+        <input id="searchInput" type="text" placeholder="搜尋姓名、繳費方式、銀行卡別..." />
+        <button class="btn-secondary" id="exportBtn" type="button">匯出 CSV</button>
+        <button class="btn-danger" id="clearAllBtn" type="button">清空全部紀錄</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>通知時間</th>
+              <th>被保險人</th>
+              <th>繳費方式</th>
+              <th>週年日</th>
+              <th>扣款／繳費月份</th>
+              <th>繳費人</th>
+              <th>銀行／信用卡</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="recordTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="footer-note">
+        本系統為單機版，資料儲存在目前這台裝置的瀏覽器中。
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "renew_notice_records_v1";
+    const LAST_ACCOUNT_KEY = "renew_last_account_v1";
+
+    const insuredNameEl = document.getElementById("insuredName");
+    const anniversaryEl = document.getElementById("anniversary");
+    const payMonthEl = document.getElementById("payMonth");
+    const payerNameEl = document.getElementById("payerName");
+    const payAccountEl = document.getElementById("payAccount");
+    const messagePreviewEl = document.getElementById("messagePreview");
+    const statusTextEl = document.getElementById("statusText");
+    const recordTableBodyEl = document.getElementById("recordTableBody");
+    const searchInputEl = document.getElementById("searchInput");
+
+    const tabButtons = document.querySelectorAll(".tab-btn");
+
+    let currentPayType = "信用卡";
+    let records = loadRecords();
+
+    function loadRecords() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        return data ? JSON.parse(data) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveRecords() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    }
+
+    function saveLastAccount() {
+      localStorage.setItem(LAST_ACCOUNT_KEY, payAccountEl.value.trim());
+    }
+
+    function loadLastAccount() {
+      const last = localStorage.getItem(LAST_ACCOUNT_KEY);
+      if (last && !payAccountEl.value.trim()) {
+        payAccountEl.value = last;
+      }
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function formatDateTime(date = new Date()) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      const hh = String(date.getHours()).padStart(2, "0");
+      const mm = String(date.getMinutes()).padStart(2, "0");
+      const ss = String(date.getSeconds()).padStart(2, "0");
+      return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+    }
+
+    function getFormData() {
+      return {
+        payType: currentPayType,
+        insuredName: insuredNameEl.value.trim(),
+        anniversary: anniversaryEl.value.trim(),
+        payMonth: payMonthEl.value,
+        payerName: payerNameEl.value.trim(),
+        payAccount: payAccountEl.value.trim()
+      };
+    }
+
+    function generateMessage(data) {
+      const insuredName = data.insuredName || "客戶";
+      const anniversary = data.anniversary || "未填寫";
+      const payMonth = data.payMonth || "下個月";
+      const payerName = data.payerName || "您";
+      const payAccount = data.payAccount || "原設定帳戶";
+      const payType = data.payType;
+
+      if (payType === "信用卡") {
+        return `🔔 溫馨提醒
+
+${insuredName} 的保單週年日是 ${anniversary}
+${payMonth} 會從您的「${payAccount}」自動扣款。
+
+如有以下狀況，請盡速與我聯繫：
+💳 信用卡更換、遺失或到期
+📮 通訊地址變更
+📱 聯絡電話更新
+
+以免扣款失敗影響權益唷，謝謝您。`;
+      }
+
+      if (payType === "銀行扣款") {
+        return `🔔 溫馨提醒
+
+${insuredName} 的保單週年日是 ${anniversary}
+${payMonth} 將由您設定的「${payAccount}」自動扣款。
+
+如有以下狀況，請盡速與我聯繫：
+🏦 扣款帳戶異動
+💰 帳戶餘額不足
+📮 通訊地址變更
+📱 聯絡電話更新
+
+避免扣款失敗影響保單效力，感謝您。`;
+      }
+
+      return `🔔 溫馨提醒
+
+${insuredName} 的保單週年日是 ${anniversary}
+提醒您 ${payMonth} 需要自行繳費。
+
+繳費人：${payerName}
+建議您提前留意繳費時間，避免逾期影響保單權益。
+
+如需我協助確認繳費方式、繳費單或其他問題，歡迎隨時與我聯繫，謝謝您。`;
+    }
+
+    function updatePreview() {
+      const data = getFormData();
+      const msg = generateMessage(data);
+      messagePreviewEl.textContent = msg;
+    }
+
+    function setStatus(text, isError = false) {
+      statusTextEl.textContent = text;
+      statusTextEl.style.color = isError ? "var(--danger)" : "var(--green-dark)";
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (e) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand("copy");
+          document.body.removeChild(textarea);
+          return true;
+        } catch (err) {
+          document.body.removeChild(textarea);
+          return false;
+        }
+      }
+    }
+
+    function validateForm(data) {
+      if (!data.insuredName) return "請輸入被保險人姓名";
+      if (!data.anniversary) return "請輸入保單週年日";
+      if (!data.payerName) return "請輸入繳費人姓名";
+      if (!data.payAccount && data.payType !== "自行繳費") return "請輸入扣款銀行或信用卡";
+      return "";
+    }
+
+    function addRecord(data, message) {
+      const newRecord = {
+        id: Date.now().toString(),
+        createdAt: formatDateTime(),
+        ...data,
+        message
+      };
+      records.unshift(newRecord);
+      saveRecords();
+      renderRecords();
+    }
+
+    function deleteRecord(id) {
+      records = records.filter(item => item.id !== id);
+      saveRecords();
+      renderRecords();
+      setStatus("已刪除該筆紀錄");
+    }
+
+    function renderRecords() {
+      const keyword = searchInputEl.value.trim().toLowerCase();
+
+      const filtered = records.filter(item => {
+        const text = [
+          item.createdAt,
+          item.insuredName,
+          item.payType,
+          item.anniversary,
+          item.payMonth,
+          item.payerName,
+          item.payAccount,
+          item.message
+        ].join(" ").toLowerCase();
+        return text.includes(keyword);
+      });
+
+      if (!filtered.length) {
+        recordTableBodyEl.innerHTML = `
+          <tr>
+            <td colspan="8" class="empty">目前沒有符合條件的紀錄</td>
+          </tr>
+        `;
+        return;
+      }
+
+      recordTableBodyEl.innerHTML = filtered.map(item => `
+        <tr>
+          <td>${escapeHtml(item.createdAt)}</td>
+          <td>${escapeHtml(item.insuredName)}</td>
+          <td><span class="tag">${escapeHtml(item.payType)}</span></td>
+          <td>${escapeHtml(item.anniversary)}</td>
+          <td>${escapeHtml(item.payMonth)}</td>
+          <td>${escapeHtml(item.payerName)}</td>
+          <td>${escapeHtml(item.payAccount || "-")}</td>
+          <td>
+            <button class="mini-btn btn-secondary" onclick="copyRecordMessage('${item.id}')">複製</button>
+            <button class="mini-btn btn-danger" onclick="deleteRecordById('${item.id}')">刪除</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function exportCSV() {
+      if (!records.length) {
+        setStatus("目前沒有紀錄可匯出", true);
+        return;
+      }
+
+      const headers = [
+        "通知時間",
+        "被保險人姓名",
+        "繳費方式",
+        "保單週年日",
+        "扣款/繳費月份",
+        "繳費人姓名",
+        "扣款銀行/信用卡",
+        "通知文字"
+      ];
+
+      const rows = records.map(r => [
+        r.createdAt,
+        r.insuredName,
+        r.payType,
+        r.anniversary,
+        r.payMonth,
+        r.payerName,
+        r.payAccount,
+        r.message
+      ]);
+
+      const csvContent = [headers, ...rows]
+        .map(row =>
+          row.map(field => {
+            const value = String(field ?? "").replace(/"/g, '""');
+            return `"${value}"`;
+          }).join(",")
+        )
+        .join("\n");
+
+      const bom = "\uFEFF";
+      const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `續保通知名單_${new Date().getTime()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setStatus("CSV 匯出完成");
+    }
+
+    function resetForm() {
+      insuredNameEl.value = "";
+      anniversaryEl.value = "";
+      payMonthEl.value = "下個月";
+      payerNameEl.value = "";
+      payAccountEl.value = localStorage.getItem(LAST_ACCOUNT_KEY) || "";
+      currentPayType = "信用卡";
+      tabButtons.forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.paytype === "信用卡");
+      });
+      updatePreview();
+      setStatus("表單已清空");
+    }
+
+    async function handleCopyOnly() {
+      const data = getFormData();
+      const error = validateForm(data);
+      if (error) {
+        setStatus(error, true);
+        return;
+      }
+
+      const message = generateMessage(data);
+      const ok = await copyText(message);
+
+      if (ok) {
+        saveLastAccount();
+        setStatus("通知文字已複製");
+      } else {
+        setStatus("複製失敗，請手動選取文字", true);
+      }
+    }
+
+    async function handleCopyAndSave() {
+      const data = getFormData();
+      const error = validateForm(data);
+      if (error) {
+        setStatus(error, true);
+        return;
+      }
+
+      const message = generateMessage(data);
+      const ok = await copyText(message);
+
+      if (!ok) {
+        setStatus("複製失敗，請手動選取文字", true);
+        return;
+      }
+
+      saveLastAccount();
+      addRecord(data, message);
+      setStatus("已複製文字並記錄到名單");
+    }
+
+    function clearAllRecords() {
+      if (!records.length) {
+        setStatus("目前沒有紀錄可清空", true);
+        return;
+      }
+
+      const yes = confirm("確定要清空全部通知紀錄嗎？此動作無法復原。");
+      if (!yes) return;
+
+      records = [];
+      saveRecords();
+      renderRecords();
+      setStatus("已清空全部紀錄");
+    }
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentPayType = btn.dataset.paytype;
+        tabButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        updatePreview();
+      });
+    });
+
+    [insuredNameEl, anniversaryEl, payMonthEl, payerNameEl, payAccountEl].forEach(el => {
+      el.addEventListener("input", updatePreview);
+      el.addEventListener("change", updatePreview);
+    });
+
+    document.getElementById("copyOnlyBtn").addEventListener("click", handleCopyOnly);
+    document.getElementById("copyAndSaveBtn").addEventListener("click", handleCopyAndSave);
+    document.getElementById("resetBtn").addEventListener("click", resetForm);
+    document.getElementById("exportBtn").addEventListener("click", exportCSV);
+    document.getElementById("clearAllBtn").addEventListener("click", clearAllRecords);
+    searchInputEl.addEventListener("input", renderRecords);
+
+    window.copyRecordMessage = async function(id) {
+      const item = records.find(r => r.id === id);
+      if (!item) return;
+      const ok = await copyText(item.message);
+      if (ok) {
+        setStatus(`已複製 ${item.insuredName} 的通知文字`);
+      } else {
+        setStatus("複製失敗", true);
+      }
+    };
+
+    window.deleteRecordById = function(id) {
+      const yes = confirm("確定要刪除這筆紀錄嗎？");
+      if (!yes) return;
+      deleteRecord(id);
+    };
+
+    loadLastAccount();
+    updatePreview();
+    renderRecords();
+  </script>
+</body>
+</html>
