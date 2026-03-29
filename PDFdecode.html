@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>來亞保險私塾 | PDF 批次解密工作站</title>
+    
+    <script src="https://unpkg.com/@cantoo/pdf-lib/dist/pdf-lib.min.js"></script>
+
+    <style>
+        /* 基礎設置 */
+        body { 
+            font-family: 'PingFang TC', 'Heiti TC', 'Noto Sans TC', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #1e293b;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* 雙欄主容器 */
+        .workstation {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: row;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        /* 左欄：操作區 */
+        .left-panel {
+            flex: 1;
+            padding: 40px;
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        /* 右欄：狀態區 */
+        .right-panel {
+            flex: 1;
+            padding: 40px;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 { margin-top: 0; margin-bottom: 5px; color: #0f172a; font-weight: 800; }
+        .subheader { color: #64748b; font-size: 13px; margin-bottom: 30px; letter-spacing: 2px; }
+
+        .form-group { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 10px; font-weight: 600; font-size: 14px; color: #334155; }
+
+        input[type="password"] { 
+            width: 100%; padding: 14px; border: 2px solid #cbd5e1; border-radius: 10px; 
+            box-sizing: border-box; font-size: 15px; transition: all 0.2s; background-color: #f1f5f9;
+        }
+        input[type="password"]:focus { outline: none; border-color: #3b82f6; background-color: #fff; }
+
+        /* 拖曳區 */
+        .drop-zone {
+            border: 2px dashed #94a3b8; border-radius: 12px; padding: 30px 20px;
+            text-align: center; background-color: #f1f5f9; cursor: pointer;
+            transition: all 0.2s; color: #475569;
+        }
+        .drop-zone:hover { background-color: #e2e8f0; border-color: #64748b; }
+        .drop-zone.dragover { background-color: #dbeafe; border-color: #3b82f6; transform: scale(1.02); }
+        .drop-zone-icon { font-size: 32px; display: block; margin-bottom: 10px; }
+        .drop-zone-text { font-size: 14px; line-height: 1.5; }
+
+        button { 
+            width: 100%; padding: 16px; background-color: #2563eb; color: white;
+            border: none; border-radius: 10px; font-size: 16px; font-weight: bold;
+            cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+        }
+        button:hover { background-color: #1d4ed8; transform: translateY(-2px); }
+        button:disabled { background-color: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* 右欄：檔案清單區 */
+        .list-header {
+            font-weight: bold; color: #334155; margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .file-list {
+            flex-grow: 1; overflow-y: auto; max-height: 400px;
+            border: 1px solid #e2e8f0; border-radius: 10px; background: #ffffff;
+            padding: 10px; box-sizing: border-box;
+        }
+        
+        /* 酷炫的單一檔案項目樣式 */
+        .file-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px;
+            transition: background-color 0.3s;
+        }
+        .file-item:last-child { border-bottom: none; }
+        .file-name {
+            color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65%;
+        }
+        .file-status { font-weight: bold; font-size: 12px; padding: 4px 8px; border-radius: 6px; }
+
+        /* 各種狀態的視覺回饋 */
+        .status-waiting { color: #64748b; background: #f1f5f9; }
+        .status-processing { 
+            color: #2563eb; background: #dbeafe;
+            /* 呼吸燈動畫 */
+            animation: pulse 1.5s infinite;
+        }
+        .status-success { color: #16a34a; background: #dcfce3; }
+        .status-error { color: #dc2626; background: #fee2e2; }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        #globalStatus { margin-top: 15px; font-size: 14px; text-align: center; font-weight: bold; color: #2563eb; }
+
+        /* 響應式：螢幕太小時變回單欄 */
+        @media (max-width: 768px) {
+            .workstation { flex-direction: column; }
+            .left-panel { border-right: none; border-bottom: 1px solid #e2e8f0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="workstation">
+    <div class="left-panel">
+        <h2>批量解密工作站</h2>
+        <div class="subheader">AI 賦能 | 效率飛升 | 來亞保險私塾</div>
+        
+        <div class="form-group">
+            <label>1. 選擇或拖曳保單 (可多選)：</label>
+            <div id="dropZone" class="drop-zone">
+                <span class="drop-zone-icon">📥</span>
+                <div class="drop-zone-text">將 PDF 拖曳至此<br>或點擊選擇檔案</div>
+                <input type="file" id="pdfFiles" accept="application/pdf" multiple style="display: none;">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>2. 保單共同密碼：</label>
+            <input type="password" id="pdfPassword" placeholder="輸入解密密碼">
+        </div>
+
+        <button id="processBtn">選擇存檔資料夾並開始</button>
+        <div id="globalStatus"></div>
+    </div>
+
+    <div class="right-panel">
+        <div class="list-header">
+            <span>任務清單</span>
+            <span id="fileCountBadge" style="font-size: 12px; color: #64748b;">0 個檔案</span>
+        </div>
+        <div id="fileList" class="file-list">
+            <div style="text-align: center; color: #94a3b8; margin-top: 50px; font-size: 13px;">
+                尚未匯入檔案，等待指示中...
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const { PDFDocument } = window.PDFLib;
+
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('pdfFiles');
+    const fileListDiv = document.getElementById('fileList');
+    const fileCountBadge = document.getElementById('fileCountBadge');
+    
+    // 儲存目前選取的檔案陣列
+    let currentFiles = [];
+
+    // --- 處理檔案選取與 UI 更新 ---
+    dropZone.addEventListener('click', () => fileInput.click());
+    
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+    
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault(); dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0) handleFiles(e.dataTransfer.files);
+    });
+
+    function handleFiles(files) {
+        currentFiles = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+        
+        if (currentFiles.length === 0) {
+            fileListDiv.innerHTML = '<div style="text-align: center; color: #dc2626; margin-top: 20px;">請匯入有效的 PDF 檔案！</div>';
+            return;
+        }
+
+        fileCountBadge.innerText = `${currentFiles.length} 個檔案`;
+        fileListDiv.innerHTML = ''; // 清空列表
+
+        // 動態產生右邊的檔案清單 UI
+        currentFiles.forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            item.id = `file-item-${index}`;
+            
+            item.innerHTML = `
+                <span class="file-name" title="${file.name}">${file.name}</span>
+                <span class="file-status status-waiting" id="status-${index}">等待中...</span>
+            `;
+            fileListDiv.appendChild(item);
+        });
+    }
+
+    // --- 核心解密與資料夾儲存邏輯 ---
+    document.getElementById('processBtn').addEventListener('click', async () => {
+        const passwordInput = document.getElementById('pdfPassword').value;
+        const globalStatus = document.getElementById('globalStatus');
+        const btn = document.getElementById('processBtn');
+
+        if (currentFiles.length === 0) return alert('請先選取 PDF 檔案！');
+        if (!passwordInput) return alert('請輸入密碼！');
+
+        let dirHandle;
+        try {
+            // 【超強功能】：呼叫瀏覽器 API 讓使用者選擇儲存的資料夾
+            dirHandle = await window.showDirectoryPicker({
+                mode: 'readwrite'
+            });
+        } catch (err) {
+            // 如果使用者取消選擇，或瀏覽器不支援
+            console.log('取消選擇資料夾或不支援:', err);
+            return;
+        }
+
+        btn.disabled = true;
+        globalStatus.innerText = '系統運算中，請勿關閉視窗...';
+
+        let successCount = 0;
+
+        for (let i = 0; i < currentFiles.length; i++) {
+            const file = currentFiles[i];
+            const statusBadge = document.getElementById(`status-${i}`);
+            
+            // UI 更新：變成藍色呼吸燈，顯示解密中
+            statusBadge.className = 'file-status status-processing';
+            statusBadge.innerText = '⚙️ 解密寫入中';
+
+            try {
+                // 1. 讀取並解密 PDF
+                const arrayBuffer = await file.arrayBuffer();
+                const pdfDoc = await PDFDocument.load(arrayBuffer, { password: passwordInput });
+                const pdfBytes = await pdfDoc.save();
+
+                // 2. 決定新檔名
+                const newFileName = file.name.replace(/\.[pP][dD][fF]$/, '_已解密.pdf');
+
+                // 3. 直接在使用者剛剛選擇的資料夾中建立新檔案並寫入
+                const fileHandle = await dirHandle.getFileHandle(newFileName, { create: true });
+                const writable = await fileHandle.createWritable();
+                await writable.write(pdfBytes);
+                await writable.close();
+
+                // UI 更新：成功
+                statusBadge.className = 'file-status status-success';
+                statusBadge.innerText = '✅ 成功';
+                successCount++;
+
+                // 稍微暫停，讓動畫有視覺上的跑動感 (純為了酷炫體驗)
+                await new Promise(r => setTimeout(r, 200));
+
+            } catch (error) {
+                console.error(`處理 ${file.name} 失敗:`, error);
+                // UI 更新：失敗
+                statusBadge.className = 'file-status status-error';
+                statusBadge.innerText = '❌ 失敗';
+            }
+        }
+
+        globalStatus.innerText = `任務完成！成功解密並存檔 ${successCount} 份。`;
+        globalStatus.style.color = '#16a34a';
+        btn.disabled = false;
+        btn.innerText = '重新執行新任務';
+    });
+</script>
+
+</body>
+</html>
