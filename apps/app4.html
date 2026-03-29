@@ -71,9 +71,14 @@
       font-weight: 700;
       margin-bottom: 18px;
       line-height: 1.7;
+      text-align: left;
     }
+
+    /* 選項固定對齊 */
     .option {
-      display: block;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
       padding: 12px 14px;
       border: 1px solid #d9e0ee;
       border-radius: 12px;
@@ -81,14 +86,31 @@
       cursor: pointer;
       transition: 0.2s;
       background: white;
+      text-align: left;
     }
     .option:hover {
       background: #f2f7ff;
       border-color: #9ec5fe;
     }
-    .option input {
-      margin-right: 8px;
+    .option input[type="radio"] {
+      margin-top: 3px;
+      flex: 0 0 auto;
     }
+    .option-label {
+      width: 28px;
+      min-width: 28px;
+      font-weight: 700;
+      line-height: 1.6;
+      text-align: left;
+      flex: 0 0 28px;
+    }
+    .option-text {
+      flex: 1;
+      line-height: 1.6;
+      text-align: left;
+      word-break: break-word;
+    }
+
     .result {
       margin-top: 16px;
       padding: 12px 14px;
@@ -167,6 +189,14 @@
       }
       input[type="file"], select, button {
         width: 100%;
+      }
+      .option {
+        gap: 10px;
+      }
+      .option-label {
+        width: 26px;
+        min-width: 26px;
+        flex-basis: 26px;
       }
     }
   </style>
@@ -316,7 +346,6 @@
 
     function decodeCSVBuffer(buffer) {
       const uint8Array = new Uint8Array(buffer);
-
       const tryEncodings = ["utf-8", "big5", "gb18030"];
       let bestText = "";
 
@@ -330,8 +359,7 @@
           }
 
           if (!bestText) bestText = text;
-        } catch (e) {
-        }
+        } catch (e) {}
       }
 
       return bestText.replace(/^\uFEFF/, "");
@@ -438,6 +466,16 @@
       renderQuestion();
     }
 
+    function renderOption(letter, text) {
+      return `
+        <label class="option">
+          <input type="radio" name="answer" value="${letter}">
+          <div class="option-label">${letter}.</div>
+          <div class="option-text">${escapeHtml(text)}</div>
+        </label>
+      `;
+    }
+
     function renderQuestion() {
       if (!currentQuestion) return;
 
@@ -447,18 +485,10 @@
           <div class="info">題號：${escapeHtml(currentQuestion.id)}｜章節：${escapeHtml(currentQuestion.章節)}</div>
           <div class="question-title">${escapeHtml(currentQuestion.題目)}</div>
 
-          <label class="option">
-            <input type="radio" name="answer" value="A"> A. ${escapeHtml(currentQuestion.選項A)}
-          </label>
-          <label class="option">
-            <input type="radio" name="answer" value="B"> B. ${escapeHtml(currentQuestion.選項B)}
-          </label>
-          <label class="option">
-            <input type="radio" name="answer" value="C"> C. ${escapeHtml(currentQuestion.選項C)}
-          </label>
-          <label class="option">
-            <input type="radio" name="answer" value="D"> D. ${escapeHtml(currentQuestion.選項D)}
-          </label>
+          ${renderOption("A", currentQuestion.選項A)}
+          ${renderOption("B", currentQuestion.選項B)}
+          ${renderOption("C", currentQuestion.選項C)}
+          ${renderOption("D", currentQuestion.選項D)}
 
           <div class="row" style="margin-top: 16px;">
             <button onclick="checkAnswer()">送出答案</button>
