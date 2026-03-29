@@ -22,6 +22,7 @@
     }
 
     *{box-sizing:border-box}
+
     body{
       margin:0;
       font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;
@@ -31,7 +32,7 @@
     }
 
     .wrap{
-      max-width:900px;
+      max-width:960px;
       margin:0 auto;
       padding:20px 16px 40px;
     }
@@ -128,7 +129,7 @@
       border-radius:14px;
       padding:18px;
       white-space:pre-wrap;
-      min-height:180px;
+      min-height:220px;
       font-size:17px;
     }
 
@@ -137,6 +138,10 @@
       grid-template-columns:1fr 1fr 1fr;
       gap:12px;
       margin-top:14px;
+    }
+
+    .btn-row-4{
+      grid-template-columns:1fr 1fr 1fr 1fr;
     }
 
     button{
@@ -211,7 +216,7 @@
     table{
       width:100%;
       border-collapse:collapse;
-      min-width:760px;
+      min-width:980px;
     }
 
     th, td{
@@ -252,6 +257,7 @@
       border-radius:8px;
       font-weight:700;
       margin-right:6px;
+      margin-bottom:6px;
     }
 
     .empty{
@@ -282,19 +288,25 @@
       .title{
         font-size:24px;
       }
+
       .grid-2{
         grid-template-columns:1fr;
       }
-      .btn-row{
+
+      .btn-row,
+      .btn-row-4{
         grid-template-columns:1fr;
       }
+
       .toolbar{
         grid-template-columns:1fr;
       }
+
       .card{
         padding:16px;
         border-radius:16px;
       }
+
       .message-box{
         font-size:16px;
       }
@@ -325,6 +337,11 @@
         </div>
 
         <div class="section">
+          <label class="label" for="policyName">保單名稱</label>
+          <input id="policyName" type="text" placeholder="例如：醫療險 / 壽險 / 投資型保單" />
+        </div>
+
+        <div class="section">
           <label class="label" for="anniversary">保單週年日（月/日）</label>
           <input id="anniversary" type="text" placeholder="例如：4/15" value="4/15" />
         </div>
@@ -342,6 +359,12 @@
         <div class="section">
           <label class="label" for="payerName">繳費人姓名</label>
           <input id="payerName" type="text" placeholder="請輸入繳費人姓名" value="你" />
+        </div>
+
+        <div class="section">
+          <label class="label" for="lineUserId">客戶 LINE User ID</label>
+          <input id="lineUserId" type="text" placeholder="請輸入客戶的 LINE User ID" />
+          <div class="hint">💡 發送 LINE 時會用這個 ID 當收件人</div>
         </div>
       </div>
 
@@ -361,9 +384,10 @@
         <label class="label">2. 通知文字預覽</label>
         <div id="messagePreview" class="message-box"></div>
 
-        <div class="btn-row">
+        <div class="btn-row btn-row-4">
           <button class="btn-primary" id="copyAndSaveBtn" type="button">複製文字並記錄名單</button>
           <button class="btn-secondary" id="copyOnlyBtn" type="button">只複製文字</button>
+          <button class="btn-primary" id="sendLineBtn" type="button">立即發送 LINE</button>
           <button class="btn-secondary" id="resetBtn" type="button">清空表單</button>
         </div>
 
@@ -373,7 +397,7 @@
       <div class="sub-title">✅ 已通知名單</div>
 
       <div class="toolbar">
-        <input id="searchInput" type="text" placeholder="搜尋姓名、繳費方式、銀行卡別..." />
+        <input id="searchInput" type="text" placeholder="搜尋姓名、保單名稱、繳費方式、銀行卡別..." />
         <button class="btn-secondary" id="exportBtn" type="button">匯出 CSV</button>
         <button class="btn-danger" id="clearAllBtn" type="button">清空全部紀錄</button>
       </div>
@@ -384,11 +408,13 @@
             <tr>
               <th>通知時間</th>
               <th>被保險人</th>
+              <th>保單名稱</th>
               <th>繳費方式</th>
               <th>週年日</th>
               <th>扣款／繳費月份</th>
               <th>繳費人</th>
               <th>銀行／信用卡</th>
+              <th>LINE User ID</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -403,14 +429,16 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "renew_notice_records_v1";
-    const LAST_ACCOUNT_KEY = "renew_last_account_v1";
+    const STORAGE_KEY = "renew_notice_records_v2";
+    const LAST_ACCOUNT_KEY = "renew_last_account_v2";
 
     const insuredNameEl = document.getElementById("insuredName");
+    const policyNameEl = document.getElementById("policyName");
     const anniversaryEl = document.getElementById("anniversary");
     const payMonthEl = document.getElementById("payMonth");
     const payerNameEl = document.getElementById("payerName");
     const payAccountEl = document.getElementById("payAccount");
+    const lineUserIdEl = document.getElementById("lineUserId");
     const messagePreviewEl = document.getElementById("messagePreview");
     const statusTextEl = document.getElementById("statusText");
     const recordTableBodyEl = document.getElementById("recordTableBody");
@@ -446,7 +474,7 @@
     }
 
     function escapeHtml(text) {
-      return String(text)
+      return String(text ?? "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
@@ -468,15 +496,18 @@
       return {
         payType: currentPayType,
         insuredName: insuredNameEl.value.trim(),
+        policyName: policyNameEl.value.trim(),
         anniversary: anniversaryEl.value.trim(),
         payMonth: payMonthEl.value,
         payerName: payerNameEl.value.trim(),
-        payAccount: payAccountEl.value.trim()
+        payAccount: payAccountEl.value.trim(),
+        lineUserId: lineUserIdEl.value.trim()
       };
     }
 
     function generateMessage(data) {
       const insuredName = data.insuredName || "客戶";
+      const policyName = data.policyName || "保單";
       const anniversary = data.anniversary || "未填寫";
       const payMonth = data.payMonth || "下個月";
       const payerName = data.payerName || "您";
@@ -486,7 +517,7 @@
       if (payType === "信用卡") {
         return `🔔 溫馨提醒
 
-${insuredName} 的保單週年日是 ${anniversary}
+${insuredName} 的「${policyName}」週年日是 ${anniversary}
 ${payMonth} 會從您的「${payAccount}」自動扣款。
 
 如有以下狀況，請盡速與我聯繫：
@@ -500,7 +531,7 @@ ${payMonth} 會從您的「${payAccount}」自動扣款。
       if (payType === "銀行扣款") {
         return `🔔 溫馨提醒
 
-${insuredName} 的保單週年日是 ${anniversary}
+${insuredName} 的「${policyName}」週年日是 ${anniversary}
 ${payMonth} 將由您設定的「${payAccount}」自動扣款。
 
 如有以下狀況，請盡速與我聯繫：
@@ -514,7 +545,7 @@ ${payMonth} 將由您設定的「${payAccount}」自動扣款。
 
       return `🔔 溫馨提醒
 
-${insuredName} 的保單週年日是 ${anniversary}
+${insuredName} 的「${policyName}」週年日是 ${anniversary}
 提醒您 ${payMonth} 需要自行繳費。
 
 繳費人：${payerName}
@@ -556,6 +587,7 @@ ${insuredName} 的保單週年日是 ${anniversary}
 
     function validateForm(data) {
       if (!data.insuredName) return "請輸入被保險人姓名";
+      if (!data.policyName) return "請輸入保單名稱";
       if (!data.anniversary) return "請輸入保單週年日";
       if (!data.payerName) return "請輸入繳費人姓名";
       if (!data.payAccount && data.payType !== "自行繳費") return "請輸入扣款銀行或信用卡";
@@ -588,11 +620,13 @@ ${insuredName} 的保單週年日是 ${anniversary}
         const text = [
           item.createdAt,
           item.insuredName,
+          item.policyName,
           item.payType,
           item.anniversary,
           item.payMonth,
           item.payerName,
           item.payAccount,
+          item.lineUserId,
           item.message
         ].join(" ").toLowerCase();
         return text.includes(keyword);
@@ -601,7 +635,7 @@ ${insuredName} 的保單週年日是 ${anniversary}
       if (!filtered.length) {
         recordTableBodyEl.innerHTML = `
           <tr>
-            <td colspan="8" class="empty">目前沒有符合條件的紀錄</td>
+            <td colspan="10" class="empty">目前沒有符合條件的紀錄</td>
           </tr>
         `;
         return;
@@ -611,11 +645,13 @@ ${insuredName} 的保單週年日是 ${anniversary}
         <tr>
           <td>${escapeHtml(item.createdAt)}</td>
           <td>${escapeHtml(item.insuredName)}</td>
+          <td>${escapeHtml(item.policyName || "-")}</td>
           <td><span class="tag">${escapeHtml(item.payType)}</span></td>
           <td>${escapeHtml(item.anniversary)}</td>
           <td>${escapeHtml(item.payMonth)}</td>
           <td>${escapeHtml(item.payerName)}</td>
           <td>${escapeHtml(item.payAccount || "-")}</td>
+          <td>${escapeHtml(item.lineUserId || "-")}</td>
           <td>
             <button class="mini-btn btn-secondary" onclick="copyRecordMessage('${item.id}')">複製</button>
             <button class="mini-btn btn-danger" onclick="deleteRecordById('${item.id}')">刪除</button>
@@ -633,22 +669,26 @@ ${insuredName} 的保單週年日是 ${anniversary}
       const headers = [
         "通知時間",
         "被保險人姓名",
+        "保單名稱",
         "繳費方式",
         "保單週年日",
         "扣款/繳費月份",
         "繳費人姓名",
         "扣款銀行/信用卡",
+        "LINE User ID",
         "通知文字"
       ];
 
       const rows = records.map(r => [
         r.createdAt,
         r.insuredName,
+        r.policyName,
         r.payType,
         r.anniversary,
         r.payMonth,
         r.payerName,
         r.payAccount,
+        r.lineUserId,
         r.message
       ]);
 
@@ -677,14 +717,18 @@ ${insuredName} 的保單週年日是 ${anniversary}
 
     function resetForm() {
       insuredNameEl.value = "";
+      policyNameEl.value = "";
       anniversaryEl.value = "";
       payMonthEl.value = "下個月";
       payerNameEl.value = "";
       payAccountEl.value = localStorage.getItem(LAST_ACCOUNT_KEY) || "";
+      lineUserIdEl.value = "";
       currentPayType = "信用卡";
+
       tabButtons.forEach(btn => {
         btn.classList.toggle("active", btn.dataset.paytype === "信用卡");
       });
+
       updatePreview();
       setStatus("表單已清空");
     }
@@ -692,6 +736,7 @@ ${insuredName} 的保單週年日是 ${anniversary}
     async function handleCopyOnly() {
       const data = getFormData();
       const error = validateForm(data);
+
       if (error) {
         setStatus(error, true);
         return;
@@ -711,6 +756,7 @@ ${insuredName} 的保單週年日是 ${anniversary}
     async function handleCopyAndSave() {
       const data = getFormData();
       const error = validateForm(data);
+
       if (error) {
         setStatus(error, true);
         return;
@@ -727,6 +773,57 @@ ${insuredName} 的保單週年日是 ${anniversary}
       saveLastAccount();
       addRecord(data, message);
       setStatus("已複製文字並記錄到名單");
+    }
+
+    async function handleSendLine() {
+      const data = getFormData();
+      const error = validateForm(data);
+
+      if (error) {
+        setStatus(error, true);
+        return;
+      }
+
+      if (!data.lineUserId) {
+        setStatus("請輸入客戶 LINE User ID", true);
+        return;
+      }
+
+      const message = generateMessage(data);
+
+      try {
+        setStatus("LINE 發送中...");
+
+        const response = await fetch("/send-line", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            to: data.lineUserId,
+            message: message,
+            insuredName: data.insuredName,
+            policyName: data.policyName,
+            payType: data.payType,
+            anniversary: data.anniversary,
+            payMonth: data.payMonth,
+            payerName: data.payerName,
+            payAccount: data.payAccount
+          })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "LINE 發送失敗");
+        }
+
+        saveLastAccount();
+        addRecord(data, message);
+        setStatus("LINE 已發送成功，並已記錄到名單");
+      } catch (err) {
+        setStatus(`LINE 發送失敗：${err.message}`, true);
+      }
     }
 
     function clearAllRecords() {
@@ -753,13 +850,22 @@ ${insuredName} 的保單週年日是 ${anniversary}
       });
     });
 
-    [insuredNameEl, anniversaryEl, payMonthEl, payerNameEl, payAccountEl].forEach(el => {
+    [
+      insuredNameEl,
+      policyNameEl,
+      anniversaryEl,
+      payMonthEl,
+      payerNameEl,
+      payAccountEl,
+      lineUserIdEl
+    ].forEach(el => {
       el.addEventListener("input", updatePreview);
       el.addEventListener("change", updatePreview);
     });
 
     document.getElementById("copyOnlyBtn").addEventListener("click", handleCopyOnly);
     document.getElementById("copyAndSaveBtn").addEventListener("click", handleCopyAndSave);
+    document.getElementById("sendLineBtn").addEventListener("click", handleSendLine);
     document.getElementById("resetBtn").addEventListener("click", resetForm);
     document.getElementById("exportBtn").addEventListener("click", exportCSV);
     document.getElementById("clearAllBtn").addEventListener("click", clearAllRecords);
