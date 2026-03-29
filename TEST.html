@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人生滿意度測驗</title>
+
+<style>
+body {
+    font-family: "Microsoft JhengHei";
+    background: #f5f7fa;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 700px;
+    margin: auto;
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+}
+
+.title {
+    text-align: center;
+    font-size: 26px;
+    margin-bottom: 15px;
+}
+
+.progress {
+    margin-bottom: 20px;
+}
+
+.bar {
+    height: 10px;
+    background: #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.fill {
+    height: 100%;
+    background: #4CAF50;
+    width: 0%;
+}
+
+.question {
+    font-size: 24px;
+    margin-bottom: 25px;
+}
+
+.option {
+    padding: 12px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.option:hover {
+    background: #f0f7ff;
+}
+
+.selected {
+    border-color: #4CAF50;
+    background: #eaf6ea;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #ddd;
+    cursor: pointer;
+}
+
+.btn.next {
+    background: #4CAF50;
+    color: white;
+}
+
+.result {
+    display: none;
+    text-align: center;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container" id="quiz">
+    <div class="title">人生滿意度測驗</div>
+
+    <div class="progress">
+        <div id="progressText"></div>
+        <div class="bar"><div id="progressBar" class="fill"></div></div>
+    </div>
+
+    <div id="questionBox" class="question"></div>
+    <div id="optionsBox"></div>
+
+    <div class="buttons">
+        <button class="btn" onclick="prev()">上一題</button>
+        <button class="btn next" onclick="next()">下一題</button>
+    </div>
+</div>
+
+<div class="container result" id="result">
+    <h2>測驗結果</h2>
+    <div id="score"></div>
+    <div id="analysis"></div>
+    <button onclick="restart()">重新測驗</button>
+</div>
+
+<script>
+const questions = [
+"我對目前的生活感到滿意",
+"我的生活接近我理想中的樣子",
+"我對未來抱有希望",
+"我每天大多是快樂的",
+"我對自己的成就感到滿意",
+"我的人際關係讓我感到支持",
+"我有明確的人生目標",
+"我的工作或學習讓我感到有價值",
+"我的身心狀態良好",
+"我能有效處理生活中的壓力",
+"我覺得自己是有用的人",
+"我對目前的經濟狀況感到安心",
+"我的生活有平衡",
+"我對自己整體是肯定的",
+"我能掌控自己的人生方向",
+"我對過去感到不後悔",
+"我感受到生活的意義",
+"我覺得每天都有值得期待的事情",
+"我與家人的關係良好",
+"我願意繼續努力讓生活變更好"
+];
+
+const options = ["非常不同意","不同意","普通","同意","非常同意"];
+
+let index = 0;
+let answers = new Array(questions.length).fill(null);
+
+function render(){
+    document.getElementById("questionBox").innerText =
+        (index+1)+". "+questions[index];
+
+    let html = "";
+
+    options.forEach((opt,i)=>{
+        let cls = answers[index]===i+1 ? "option selected" : "option";
+        html += `<div class="${cls}" onclick="select(${i+1})">${i+1}. ${opt}</div>`;
+    });
+
+    document.getElementById("optionsBox").innerHTML = html;
+
+    let percent = Math.round((index+1)/questions.length*100);
+    document.getElementById("progressText").innerText =
+        `第 ${index+1} / ${questions.length} 題`;
+    document.getElementById("progressBar").style.width = percent+"%";
+}
+
+// ⭐ 選答案 → 自動跳題
+function select(score){
+    answers[index] = score;
+    render();
+
+    setTimeout(()=>{
+        if(index < questions.length-1){
+            index++;
+            render();
+        }else{
+            showResult();
+        }
+    }, 200); // 微延遲，讓使用者看到選到的效果
+}
+
+// ⭐ 手動下一題
+function next(){
+    if(answers[index] === null){
+        alert("請先選擇答案");
+        return;
+    }
+
+    if(index < questions.length-1){
+        index++;
+        render();
+    }else{
+        showResult();
+    }
+}
+
+function prev(){
+    if(index > 0){
+        index--;
+        render();
+    }
+}
+
+function showResult(){
+    let total = answers.reduce((a,b)=>a+b,0);
+    let avg = total / questions.length;
+
+    let text = "";
+    if(avg >= 4){
+        text = "😊 高滿意：生活穩定且滿足";
+    }else if(avg >= 3){
+        text = "😐 中等滿意：仍有改善空間";
+    }else{
+        text = "⚠️ 低滿意：建議關注壓力與生活狀態";
+    }
+
+    document.getElementById("quiz").style.display = "none";
+    document.getElementById("result").style.display = "block";
+
+    document.getElementById("score").innerHTML =
+        `總分：${total} / 100<br>平均：${avg.toFixed(2)}`;
+    document.getElementById("analysis").innerHTML = text;
+}
+
+function restart(){
+    index = 0;
+    answers = new Array(questions.length).fill(null);
+    document.getElementById("quiz").style.display = "block";
+    document.getElementById("result").style.display = "none";
+    render();
+}
+
+render();
+</script>
+
+</body>
+</html>
