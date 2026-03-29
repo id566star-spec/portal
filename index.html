@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>我的入口網站</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f3f4f6;
+      padding: 40px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px,1fr));
+      gap: 20px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+    }
+    .icon {
+      font-size: 30px;
+      margin-bottom: 10px;
+    }
+    .title {
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .desc {
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>我的入口網站</h1>
+
+<div class="grid">
+
+  <div class="card" onclick="openApp('apps/app1.html')">
+    <div class="icon">📁</div>
+    <div class="title">客戶管理</div>
+    <div class="desc">生日＋關係＋問候產生</div>
+  </div>
+
+  <div class="card" onclick="openApp('apps/app2.html')">
+    <div class="icon">✍️</div>
+    <div class="title">PDF簽名</div>
+    <div class="desc">可簽名與下載</div>
+  </div>
+
+</div>
+
+<script>
+function openApp(url){
+  window.open(url, '_blank');
+}
+</script>
+
+</body>
+</html>
