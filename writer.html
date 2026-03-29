@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>PDF 簽名工具</title>
+
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+  <!-- Signature Pad -->
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
+
+  <!-- pdf-lib -->
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+
+  <style>
+    body { font-family: Arial; text-align: center; }
+    canvas { border: 1px solid #ccc; margin: 10px; }
+    #pdf-container { position: relative; display: inline-block; }
+    #signature-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      cursor: move;
+    }
+  </style>
+</head>
+<body>
+
+<h2>PDF 簽名工具</h2>
+
+<input type="file" id="upload" accept="application/pdf"><br>
+<p id="status"></p>
+
+<div id="pdf-container">
+  <canvas id="pdf-canvas"></canvas>
+  <canvas id="signature-overlay"></canvas>
+</div>
+
+<h3>簽名區</h3>
+<canvas id="signature-pad" width="300" height="150"></canvas><br>
+<button onclick="clearSignature()">清除</button>
+<button onclick="applySignature()">套用簽名</button>
+<button onclick="downloadPDF()">下載 PDF</button>
+
+<script>
+let pdfDoc = null;
+let currentPage = 1;
+let signaturePad = null;
+let signatureImage = null;
+let sigX = 50, sigY = 50;
+
+const statusText = document.getElementById('status');
+const pdfCanvas = document.getElementById('pdf-canvas');
+const pdfCtx = pdfCanvas.getContext('2d');
+const overlayCanvas = document.getElementById('signature-overlay');
+const overlayCtx = overlayCanvas.getContext('2d');
+
+// ⭐ 關鍵修正：設定 worker
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+// 初始化
+window.addEventListener('load', () => {
+  if (typeof SignaturePad === 'undefined') {
+    alert('SignaturePad 載入失敗');
+    return;
+  }
+
+  signaturePad = new SignaturePad(document.getElementById('signature-pad'));
+});
+
+// 上傳 PDF
+ document.getElementById('upload').addEventListener('change', async function(e) {
+  try {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    statusText.innerText = '載入 PDF 中...';
+
+    const arrayBuffer = await file.arrayBuffer();
+
+    pdfDoc = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+
+    statusText.innerText = 'PDF 載入成功';
+
+    renderPage();
+  } catch (err) {
+    console.error(err);
+    statusText.innerText = '❌ PDF 載入失敗';
+  }
+});
+
+// 渲染 PDF
+async function renderPage() {
+  try {
+    const page = await pdfDoc.getPage(currentPage);
+    const viewport = page.getViewport({scale: 1.5});
+
+    pdfCanvas.width = viewport.width;
+    pdfCanvas.height = viewport.height;
+
+    overlayCanvas.width = viewport.width;
+    overlayCanvas.height = viewport.height;
+
+    const renderContext = {
+      canvasContext: pdfCtx,
+      viewport: viewport
+    };
+
+    await page.render(renderContext).promise;
+
+  } catch (err) {
+    console.error(err);
+    statusText.innerText = '❌ 渲染失敗';
+  }
+}
+
+// 清除簽名
+function clearSignature() {
+  if (!signaturePad) return;
+  signaturePad.clear();
+}
+
+// 套用簽名
+function applySignature() {
+  if (!signaturePad || signaturePad.isEmpty()) {
+    alert('請先簽名');
+    return;
+  }
+
+  signatureImage = signaturePad.toDataURL();
+  drawSignature();
+}
+
+function drawSignature() {
+  if (!signatureImage) return;
+
+  const img = new Image();
+  img.src = signatureImage;
+
+  img.onload = () => {
+    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    overlayCtx.drawImage(img, sigX, sigY, 150, 80);
+  };
+}
+
+// 拖曳
+let dragging = false;
+
+overlayCanvas.addEventListener('mousedown', () => dragging = true);
+overlayCanvas.addEventListener('mouseup', () => dragging = false);
+overlayCanvas.addEventListener('mouseleave', () => dragging = false);
+
+overlayCanvas.addEventListener('mousemove', (e) => {
+  if (dragging) {
+    sigX = e.offsetX;
+    sigY = e.offsetY;
+    drawSignature();
+  }
+});
+
+// 下載 PDF（只輸出有簽名的那一頁）
+async function downloadPDF() {
+  try {
+    if (!signatureImage) return alert('請先套用簽名');
+
+    const fileInput = document.getElementById('upload');
+    if (!fileInput.files[0]) return alert('請先上傳 PDF');
+
+    console.log('開始下載流程');
+
+    const existingPdfBytes = await fileInput.files[0].arrayBuffer();
+
+    const srcDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+
+    const newDoc = await PDFLib.PDFDocument.create();
+
+    // ⭐ 正確做法：由 newDoc 去 copyPages（不是 srcDoc）
+    const [copiedPage] = await newDoc.copyPages(srcDoc, [currentPage - 1]);
+
+    const page = newDoc.addPage(copiedPage);
+
+    const pngImage = await newDoc.embedPng(signatureImage);
+
+    const scaleX = page.getWidth() / pdfCanvas.width;
+    const scaleY = page.getHeight() / pdfCanvas.height;
+
+    const pdfX = sigX * scaleX;
+    const pdfY = page.getHeight() - (sigY * scaleY) - (80 * scaleY);
+
+    page.drawImage(pngImage, {
+      x: pdfX,
+      y: pdfY,
+      width: 150 * scaleX,
+      height: 80 * scaleY
+    });
+
+    const pdfBytes = await newDoc.save();
+
+    console.log('PDF 生成完成');
+
+    // ⭐ 修正下載方式（提高成功率）
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'signed_single_page.pdf';
+
+    document.body.appendChild(link); // ⭐ 必加（某些瀏覽器不加不會下載）
+    link.click();
+    document.body.removeChild(link);
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    console.log('下載觸發完成');
+
+  } catch (err) {
+    console.error(err);
+    alert('下載失敗，請打開 console 查看錯誤');
+  }
+}
+
+</script>
+
+</body>
+</html>
