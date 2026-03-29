@@ -1,261 +1,531 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>客戶生日管理系統</title>
-
 <style>
+  * { box-sizing: border-box; }
 
-body{
-font-family:"Microsoft JhengHei",Arial;
-background:#f2f2f2;
-padding:30px;
-}
+  :root{
+    --bg:#f5f7fb;
+    --card:#ffffff;
+    --text:#1f2937;
+    --sub:#6b7280;
+    --line:#e5e7eb;
+    --primary:#ec4899;
+    --primary-dark:#db2777;
+    --blue:#2563eb;
+    --orange:#f59e0b;
+    --red:#ef4444;
+    --green:#10b981;
+    --linegreen:#06c755;
+    --shadow:0 10px 25px rgba(15, 23, 42, 0.08);
+    --radius:18px;
+  }
 
-.container{
-background:white;
-padding:25px;
-border-radius:10px;
-max-width:900px;
-margin:auto;
-box-shadow:0 0 10px rgba(0,0,0,0.1);
-}
+  body{
+    margin:0;
+    font-family:"Microsoft JhengHei","PingFang TC",Arial,sans-serif;
+    background:linear-gradient(180deg,#fff7fb 0%, var(--bg) 100%);
+    color:var(--text);
+    padding:14px;
+  }
 
-h2{
-text-align:center;
-}
+  .app{
+    max-width:720px;
+    margin:0 auto;
+  }
 
-input,button,textarea{
-width:100%;
-padding:10px;
-margin-top:8px;
-margin-bottom:10px;
-font-size:16px;
-}
+  .header{
+    background:linear-gradient(135deg,#f472b6 0%, #ec4899 55%, #db2777 100%);
+    color:#fff;
+    border-radius:24px;
+    padding:20px 18px;
+    box-shadow:var(--shadow);
+    margin-bottom:14px;
+  }
 
-button{
-background:#4CAF50;
-color:white;
-border:none;
-border-radius:5px;
-cursor:pointer;
-}
+  .header h1{
+    margin:0;
+    font-size:24px;
+    line-height:1.3;
+  }
 
-button:hover{
-background:#45a049;
-}
+  .header p{
+    margin:8px 0 0;
+    font-size:14px;
+    opacity:0.95;
+    line-height:1.6;
+  }
 
-.copybtn{
-background:#2196F3;
-}
+  .panel{
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:16px;
+    margin-bottom:14px;
+  }
 
-.calendarbtn{
-background:#FF9800;
-}
+  .panel h2{
+    margin:0 0 12px;
+    font-size:18px;
+  }
 
-.deletebtn{
-background:#f44336;
-}
+  label{
+    display:block;
+    font-weight:700;
+    font-size:14px;
+    margin:10px 0 6px;
+  }
 
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:20px;
-}
+  input, textarea, button{
+    font-family:inherit;
+    font-size:16px;
+  }
 
-th,td{
-border:1px solid #ddd;
-padding:8px;
-text-align:center;
-}
+  input, textarea{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 12px;
+    outline:none;
+    background:#fff;
+  }
 
-#todayList{
-background:#fff3cd;
-padding:10px;
-border-radius:5px;
-}
+  input:focus, textarea:focus{
+    border-color:#f472b6;
+    box-shadow:0 0 0 4px rgba(244,114,182,0.12);
+  }
 
+  textarea{
+    resize:vertical;
+    min-height:180px;
+    line-height:1.7;
+  }
+
+  button{
+    width:100%;
+    border:none;
+    border-radius:14px;
+    padding:14px 12px;
+    color:#fff;
+    font-weight:700;
+    cursor:pointer;
+    transition:transform .12s ease, opacity .12s ease;
+  }
+
+  button:active{
+    transform:scale(0.98);
+  }
+
+  .btn-primary{ background:var(--primary); }
+  .btn-primary:hover{ background:var(--primary-dark); }
+
+  .btn-blue{ background:var(--blue); }
+  .btn-orange{ background:var(--orange); }
+  .btn-red{ background:var(--red); }
+  .btn-green{ background:var(--green); }
+  .btn-line{ background:var(--linegreen); }
+
+  .today-box{
+    background:#fff7ed;
+    border:1px solid #fed7aa;
+    border-radius:16px;
+    padding:14px;
+    line-height:1.8;
+    color:#9a3412;
+    font-size:15px;
+  }
+
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    margin-top:12px;
+  }
+
+  .stat{
+    background:#fafafa;
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:12px;
+    text-align:center;
+  }
+
+  .stat .num{
+    display:block;
+    font-size:20px;
+    font-weight:800;
+  }
+
+  .client-list{
+    display:grid;
+    gap:12px;
+  }
+
+  .client-card{
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:14px;
+    background:#fff;
+  }
+
+  .client-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:8px;
+  }
+
+  .client-name{
+    font-size:18px;
+    font-weight:800;
+    margin:0;
+  }
+
+  .badge{
+    display:inline-block;
+    padding:6px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+    background:#fdf2f8;
+    color:#be185d;
+    border:1px solid #fbcfe8;
+    white-space:nowrap;
+  }
+
+  .meta{
+    color:var(--sub);
+    font-size:14px;
+    line-height:1.8;
+  }
+
+  .action-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:12px;
+  }
+
+  .action-grid .full{
+    grid-column:1 / -1;
+  }
+
+  .message-actions{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+    margin-top:12px;
+  }
+
+  .empty{
+    color:var(--sub);
+    text-align:center;
+    padding:18px 10px;
+    border:1px dashed var(--line);
+    border-radius:16px;
+    background:#fafafa;
+  }
+
+  .message-tip{
+    margin-top:10px;
+    color:var(--sub);
+    font-size:13px;
+    line-height:1.7;
+  }
+
+  @media (min-width: 768px){
+    body{ padding:24px; }
+    .header{ padding:24px; }
+    .panel{ padding:20px; }
+    .form-row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+      align-items:end;
+    }
+    .action-grid{
+      grid-template-columns:repeat(3,1fr);
+    }
+    .action-grid .full{
+      grid-column:auto;
+    }
+    .message-actions{
+      grid-template-columns:1fr 1fr;
+    }
+  }
 </style>
-
 </head>
-
 <body>
+  <div class="app">
+    <div class="header">
+      <h1>客戶生日管理系統</h1>
+      <p>手機排版優化版本，可依客戶生日自動判斷星座，產生更貼近對方個性的生日關心內容，並可直接分享到 LINE。</p>
+    </div>
 
-<div class="container">
+    <div class="panel">
+      <h2>新增客戶</h2>
+      <div class="form-row">
+        <div>
+          <label for="name">客戶姓名</label>
+          <input type="text" id="name" placeholder="請輸入客戶姓名" />
+        </div>
+        <div>
+          <label for="birthday">生日</label>
+          <input type="date" id="birthday" />
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn-primary" onclick="addClient()">新增客戶</button>
+      </div>
 
-<h2>客戶生日管理系統</h2>
+      <div class="stats">
+        <div class="stat">
+          <span class="num" id="totalCount">0</span>
+          客戶總數
+        </div>
+        <div class="stat">
+          <span class="num" id="birthdayCount">0</span>
+          今日生日
+        </div>
+      </div>
+    </div>
 
-<label>客戶姓名</label>
-<input type="text" id="name">
+    <div class="panel">
+      <h2>今天生日</h2>
+      <div id="todayList" class="today-box">今天沒有客戶生日</div>
+    </div>
 
-<label>生日</label>
-<input type="date" id="birthday">
+    <div class="panel">
+      <h2>客戶列表</h2>
+      <div id="clientList" class="client-list"></div>
+    </div>
 
-<button onclick="addClient()">新增客戶</button>
-
-<h3>今天生日</h3>
-<div id="todayList"></div>
-
-<h3>客戶列表</h3>
-
-<table>
-
-<thead>
-<tr>
-<th>姓名</th>
-<th>生日</th>
-<th>祝福</th>
-<th>Google日曆</th>
-<th>刪除</th>
-</tr>
-</thead>
-
-<tbody id="clientTable"></tbody>
-
-</table>
-
-<label>祝福訊息</label>
-<textarea id="message" rows="6"></textarea>
-
-<button class="copybtn" onclick="copyMessage()">複製祝福</button>
-
-</div>
+    <div class="panel">
+      <h2>生日關心訊息</h2>
+      <textarea id="message" placeholder="點選客戶卡片中的「產生祝福」後，這裡會自動帶入內容。"></textarea>
+      <div class="message-actions">
+        <button class="btn-blue" onclick="copyMessage()">複製祝福內容</button>
+        <button class="btn-line" onclick="shareToLine()">分享到 LINE</button>
+      </div>
+      <div class="message-tip">
+        LINE 官方文件提供的分享格式可用 <code>https://line.me/R/share?text=...</code> 開啟 LINE 的「Share with」分享畫面，讓使用者選擇朋友、群組或官方帳號傳送文字訊息。citeturn998831search0turn998831search1
+      </div>
+    </div>
+  </div>
 
 <script>
-
-let clients=JSON.parse(localStorage.getItem("clients")) || [];
+let clients = JSON.parse(localStorage.getItem("clients")) || [];
 
 function save(){
-localStorage.setItem("clients",JSON.stringify(clients));
+  localStorage.setItem("clients", JSON.stringify(clients));
+}
+
+function pad(n){
+  return String(n).padStart(2,'0');
+}
+
+function formatBirthday(dateString){
+  const d = new Date(dateString);
+  if (isNaN(d.getTime())) return dateString;
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+function getZodiac(month, day){
+  if ((month == 1 && day >= 20) || (month == 2 && day <= 18)) return "水瓶座";
+  if ((month == 2 && day >= 19) || (month == 3 && day <= 20)) return "雙魚座";
+  if ((month == 3 && day >= 21) || (month == 4 && day <= 19)) return "牡羊座";
+  if ((month == 4 && day >= 20) || (month == 5 && day <= 20)) return "金牛座";
+  if ((month == 5 && day >= 21) || (month == 6 && day <= 20)) return "雙子座";
+  if ((month == 6 && day >= 21) || (month == 7 && day <= 22)) return "巨蟹座";
+  if ((month == 7 && day >= 23) || (month == 8 && day <= 22)) return "獅子座";
+  if ((month == 8 && day >= 23) || (month == 9 && day <= 22)) return "處女座";
+  if ((month == 9 && day >= 23) || (month == 10 && day <= 22)) return "天秤座";
+  if ((month == 10 && day >= 23) || (month == 11 && day <= 21)) return "天蠍座";
+  if ((month == 11 && day >= 22) || (month == 12 && day <= 21)) return "射手座";
+  return "摩羯座";
+}
+
+function getZodiacByBirthday(dateString){
+  const d = new Date(dateString);
+  return getZodiac(d.getMonth()+1, d.getDate());
+}
+
+function getZodiacCareText(zodiac){
+  const map = {
+    "牡羊座":"您總是帶著熱情與行動力，願新的一歲依然充滿衝勁，也別忘了在忙碌中照顧自己、保留放鬆的時間。",
+    "金牛座":"您給人穩定又值得信賴的感覺，願新的一歲生活安穩豐盛，心裡想實現的事都一步步開花結果。",
+    "雙子座":"您總是帶來靈活與活力，願新的一歲保有好奇與光彩，也能遇見更多讓您開心的人事物。",
+    "巨蟹座":"您溫暖又細膩，總是默默照顧身邊的人，願新的一歲也有人同樣溫柔地守護您，讓您安心快樂。",
+    "獅子座":"您自帶光芒與魅力，願新的一歲繼續閃耀，自信前行，也收穫更多欣賞與支持。",
+    "處女座":"您做事細心又可靠，願新的一歲一切順心如意，也記得偶爾放鬆，好好疼愛努力的自己。",
+    "天秤座":"您總讓人感受到舒服與和諧，願新的一歲保持優雅與從容，生活、工作與心情都剛剛好。",
+    "天蠍座":"您有著堅定與深度，願新的一歲內心所期待的都能逐步實現，生活也越來越踏實安定。",
+    "射手座":"您充滿開朗與冒險精神，願新的一歲保持自由與熱情，走到哪裡都能遇見驚喜與好運。",
+    "摩羯座":"您踏實又有責任感，願新的一歲努力都被看見，付出都有回報，日子穩穩向上。",
+    "水瓶座":"您有自己的想法與獨特魅力，願新的一歲持續自在做自己，也把靈感化成更多美好成果。",
+    "雙魚座":"您溫柔又有同理心，願新的一歲被世界溫柔以待，心中所想都慢慢靠近幸福。"
+  };
+  return map[zodiac] || "願新的一歲平安健康、順心喜樂，每一天都充滿溫暖與好運。";
 }
 
 function addClient(){
+  const name = document.getElementById("name").value.trim();
+  const birthday = document.getElementById("birthday").value;
 
-let name=document.getElementById("name").value;
-let birthday=document.getElementById("birthday").value;
+  if(name === "" || birthday === ""){
+    alert("請填寫完整資料");
+    return;
+  }
 
-if(name==""||birthday==""){
-alert("請填寫完整資料");
-return;
-}
+  clients.push({ name, birthday });
+  save();
+  render();
 
-clients.push({name:name,birthday:birthday});
-
-save();
-
-render();
-
-document.getElementById("name").value="";
-document.getElementById("birthday").value="";
-
+  document.getElementById("name").value = "";
+  document.getElementById("birthday").value = "";
 }
 
 function render(){
+  const list = document.getElementById("clientList");
+  list.innerHTML = "";
 
-let table=document.getElementById("clientTable");
-table.innerHTML="";
+  const today = new Date();
+  const month = today.getMonth() + 1;
+  const day = today.getDate();
+  let todayHtml = "";
+  let birthdayCount = 0;
 
-let today=new Date();
-let month=today.getMonth()+1;
-let day=today.getDate();
+  if(clients.length === 0){
+    list.innerHTML = '<div class="empty">目前還沒有客戶資料，先新增一筆吧。</div>';
+  }
 
-let todayList="";
+  clients.forEach((c, i) => {
+    const b = new Date(c.birthday);
+    const m = b.getMonth() + 1;
+    const d = b.getDate();
+    const zodiac = getZodiac(m, d);
 
-clients.forEach((c,i)=>{
+    const card = document.createElement("div");
+    card.className = "client-card";
+    card.innerHTML = `
+      <div class="client-top">
+        <div>
+          <p class="client-name">${escapeHtml(c.name)}</p>
+          <div class="meta">生日：${formatBirthday(c.birthday)}</div>
+        </div>
+        <span class="badge">${zodiac}</span>
+      </div>
+      <div class="meta">系統可依星座自動產生適合的生日關心內容。</div>
+      <div class="action-grid">
+        <button class="btn-primary" onclick="generateMessage(${i})">產生祝福</button>
+        <button class="btn-orange" onclick="addToCalendar('${escapeAttr(c.name)}','${escapeAttr(c.birthday)}')">加入 Google 日曆</button>
+        <button class="btn-red full" onclick="deleteClient(${i})">刪除客戶</button>
+      </div>
+    `;
+    list.appendChild(card);
 
-let b=new Date(c.birthday);
+    if(m === month && d === day){
+      birthdayCount++;
+      todayHtml += `🎂 ${escapeHtml(c.name)}（${zodiac}）今天生日<br>`;
+    }
+  });
 
-let m=b.getMonth()+1;
-let d=b.getDate();
-
-let row=`
-<tr>
-<td>${c.name}</td>
-<td>${c.birthday}</td>
-<td><button onclick="generate('${c.name}')">祝福</button></td>
-<td><button class="calendarbtn" onclick="addToCalendar('${c.name}','${c.birthday}')">加入</button></td>
-<td><button class="deletebtn" onclick="deleteClient(${i})">刪除</button></td>
-</tr>
-`;
-
-table.innerHTML+=row;
-
-if(m==month && d==day){
-todayList+=c.name+" 今天生日 🎂<br>";
+  document.getElementById("todayList").innerHTML = todayHtml || "今天沒有客戶生日";
+  document.getElementById("totalCount").textContent = clients.length;
+  document.getElementById("birthdayCount").textContent = birthdayCount;
 }
 
-});
+function generateMessage(index){
+  const client = clients[index];
+  const zodiac = getZodiacByBirthday(client.birthday);
+  const careText = getZodiacCareText(zodiac);
 
-document.getElementById("todayList").innerHTML=todayList || "今天沒有客戶生日";
+  const msg = `${client.name} 您好：
 
-}
+今天是您的生日，先跟您說聲生日快樂 🎂
 
-function generate(name){
+您是${zodiac}，${careText}
 
-let msg=`${name} 您好：
+誠心祝福您在新的一歲裡，
+平安健康、心情愉快、萬事順心，
+每天都能感受到被珍惜與被祝福。
 
-今天是您的生日 🎂
-祝您生日快樂！
+生日快樂，願一切美好都如期而至。`;
 
-願新的一歲
-平安健康、萬事順心，
-每天都充滿喜悅與好運。
-
-誠摯祝福`;
-
-document.getElementById("message").value=msg;
-
+  document.getElementById("message").value = msg;
+  document.getElementById("message").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function copyMessage(){
+  const text = document.getElementById("message").value.trim();
+  if(!text){
+    alert("請先產生祝福內容");
+    return;
+  }
 
-let copyText=document.getElementById("message");
+  navigator.clipboard.writeText(text).then(() => {
+    alert("祝福內容已複製，可以貼到 LINE 或簡訊");
+  }).catch(() => {
+    alert("複製失敗，請手動選取文字複製");
+  });
+}
 
-copyText.select();
+function shareToLine(){
+  const text = document.getElementById("message").value.trim();
+  if(!text){
+    alert("請先產生祝福內容");
+    return;
+  }
 
-navigator.clipboard.writeText(copyText.value);
-
-alert("祝福已複製，可以貼到LINE或簡訊");
-
+  const lineUrl = `https://line.me/R/share?text=${encodeURIComponent(text)}`;
+  window.location.href = lineUrl;
 }
 
 function deleteClient(index){
+  if(confirm("確定要刪除這位客戶嗎？")){
+    clients.splice(index, 1);
+    save();
+    render();
+  }
+}
 
-if(confirm("確定要刪除這位客戶嗎？")){
+function addToCalendar(name, birthday){
+  const date = new Date(birthday);
+  const year = date.getFullYear();
+  const month = pad(date.getMonth()+1);
+  const day = pad(date.getDate());
 
-clients.splice(index,1);
+  const start = `${year}${month}${day}`;
+  const endDate = new Date(date);
+  endDate.setDate(endDate.getDate() + 1);
+  const end = `${endDate.getFullYear()}${pad(endDate.getMonth()+1)}${pad(endDate.getDate())}`;
 
-save();
+  const text = encodeURIComponent(name + " 生日提醒");
+  const details = encodeURIComponent("記得傳送生日祝福與關心訊息");
+  const recur = encodeURIComponent("RRULE:FREQ=YEARLY");
+  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${start}/${end}&details=${details}&recur=${recur}`;
+
+  window.open(url, "_blank");
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#39;");
+}
+
+function escapeAttr(str){
+  return String(str).replaceAll("'", "\\'");
+}
 
 render();
-
-}
-
-}
-
-function addToCalendar(name,birthday){
-
-let date=new Date(birthday);
-
-let year=date.getFullYear();
-let month=(date.getMonth()+1).toString().padStart(2,'0');
-let day=date.getDate().toString().padStart(2,'0');
-
-let start=year+month+day;
-
-let text=encodeURIComponent(name+" 生日");
-
-let details=encodeURIComponent("記得傳生日祝福");
-
-let url=`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${start}/${start}&details=${details}&recur=RRULE:FREQ=YEARLY`;
-
-window.open(url,"_blank");
-
-}
-
-render();
-
 </script>
-
 </body>
 </html>
