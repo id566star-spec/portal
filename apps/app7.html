@@ -216,7 +216,7 @@
     table{
       width:100%;
       border-collapse:collapse;
-      min-width:980px;
+      min-width:900px;
     }
 
     th, td{
@@ -362,16 +362,10 @@
         </div>
 
         <div class="section">
-          <label class="label" for="lineUserId">客戶 LINE User ID</label>
-          <input id="lineUserId" type="text" placeholder="此欄位目前可不填" />
-          <div class="hint">💡 已改為開啟 LINE 分享畫面，此欄位目前可保留備用</div>
+          <label class="label" for="payAccount">扣款銀行／信用卡</label>
+          <input id="payAccount" type="text" placeholder="例如：華南信用卡、玉山銀行、台新信用卡" value="華南信用卡" />
+          <div class="hint">💡 系統會自動記住你最近輸入的銀行或卡片名稱</div>
         </div>
-      </div>
-
-      <div class="section">
-        <label class="label" for="payAccount">扣款銀行／信用卡</label>
-        <input id="payAccount" type="text" placeholder="例如：華南信用卡、玉山銀行、台新信用卡" value="華南信用卡" />
-        <div class="hint">💡 系統會自動記住你最近輸入的銀行或卡片名稱</div>
       </div>
 
       <div class="section">
@@ -414,7 +408,6 @@
               <th>扣款／繳費月份</th>
               <th>繳費人</th>
               <th>銀行／信用卡</th>
-              <th>LINE User ID</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -429,8 +422,8 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "renew_notice_records_v3";
-    const LAST_ACCOUNT_KEY = "renew_last_account_v3";
+    const STORAGE_KEY = "renew_notice_records_v4";
+    const LAST_ACCOUNT_KEY = "renew_last_account_v4";
 
     const insuredNameEl = document.getElementById("insuredName");
     const policyNameEl = document.getElementById("policyName");
@@ -438,7 +431,6 @@
     const payMonthEl = document.getElementById("payMonth");
     const payerNameEl = document.getElementById("payerName");
     const payAccountEl = document.getElementById("payAccount");
-    const lineUserIdEl = document.getElementById("lineUserId");
     const messagePreviewEl = document.getElementById("messagePreview");
     const statusTextEl = document.getElementById("statusText");
     const recordTableBodyEl = document.getElementById("recordTableBody");
@@ -500,8 +492,7 @@
         anniversary: anniversaryEl.value.trim(),
         payMonth: payMonthEl.value,
         payerName: payerNameEl.value.trim(),
-        payAccount: payAccountEl.value.trim(),
-        lineUserId: lineUserIdEl.value.trim()
+        payAccount: payAccountEl.value.trim()
       };
     }
 
@@ -626,7 +617,6 @@ ${insuredName} 的「${policyName}」週年日是 ${anniversary}
           item.payMonth,
           item.payerName,
           item.payAccount,
-          item.lineUserId,
           item.message
         ].join(" ").toLowerCase();
         return text.includes(keyword);
@@ -635,7 +625,7 @@ ${insuredName} 的「${policyName}」週年日是 ${anniversary}
       if (!filtered.length) {
         recordTableBodyEl.innerHTML = `
           <tr>
-            <td colspan="10" class="empty">目前沒有符合條件的紀錄</td>
+            <td colspan="9" class="empty">目前沒有符合條件的紀錄</td>
           </tr>
         `;
         return;
@@ -651,7 +641,6 @@ ${insuredName} 的「${policyName}」週年日是 ${anniversary}
           <td>${escapeHtml(item.payMonth)}</td>
           <td>${escapeHtml(item.payerName)}</td>
           <td>${escapeHtml(item.payAccount || "-")}</td>
-          <td>${escapeHtml(item.lineUserId || "-")}</td>
           <td>
             <button class="mini-btn btn-secondary" onclick="copyRecordMessage('${item.id}')">複製</button>
             <button class="mini-btn btn-secondary" onclick="shareRecordToLine('${item.id}')">分享 LINE</button>
@@ -676,7 +665,6 @@ ${insuredName} 的「${policyName}」週年日是 ${anniversary}
         "扣款/繳費月份",
         "繳費人姓名",
         "扣款銀行/信用卡",
-        "LINE User ID",
         "通知文字"
       ];
 
@@ -689,7 +677,6 @@ ${insuredName} 的「${policyName}」週年日是 ${anniversary}
         r.payMonth,
         r.payerName,
         r.payAccount,
-        r.lineUserId,
         r.message
       ]);
 
@@ -723,7 +710,6 @@ ${insuredName} 的「${policyName}」週年日是 ${anniversary}
       payMonthEl.value = "下個月";
       payerNameEl.value = "";
       payAccountEl.value = localStorage.getItem(LAST_ACCOUNT_KEY) || "";
-      lineUserIdEl.value = "";
       currentPayType = "信用卡";
 
       tabButtons.forEach(btn => {
@@ -779,7 +765,7 @@ ${insuredName} 的「${policyName}」週年日是 ${anniversary}
     async function openLineShare(message) {
       const ok = await copyText(message);
       const shareUrl = `https://line.me/R/share?text=${encodeURIComponent(message)}`;
-      window.open(shareUrl, "_blank");
+      window.location.href = shareUrl;
 
       if (ok) {
         setStatus("已複製文字，並開啟 LINE 分享畫面");
@@ -833,8 +819,7 @@ ${insuredName} 的「${policyName}」週年日是 ${anniversary}
       anniversaryEl,
       payMonthEl,
       payerNameEl,
-      payAccountEl,
-      lineUserIdEl
+      payAccountEl
     ].forEach(el => {
       el.addEventListener("input", updatePreview);
       el.addEventListener("change", updatePreview);
