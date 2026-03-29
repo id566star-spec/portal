@@ -61,6 +61,7 @@
       border-radius: 14px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
       padding: 8px;
+      touch-action: none;
     }
 
     #pdf-canvas {
@@ -173,7 +174,10 @@
 
   <h3>簽名區</h3>
   <div class="signature-wrap">
-    <div class="hint">請直接在下方簽名，完成後按「套用簽名」，再拖曳到 PDF 的正確位置。</div>
+    <div class="hint">
+      請先在下方簽名，按「套用簽名」後：<br>
+      單指可拖曳位置，雙指可縮放簽名大小。
+    </div>
     <canvas id="signature-pad"></canvas>
 
     <div class="btn-group">
@@ -194,18 +198,28 @@
 
     let sigDisplayWidth = 220;
     let sigDisplayHeight = 110;
+    let sigAspectRatio = 2;
 
     let dragging = false;
     let dragOffsetX = 0;
     let dragOffsetY = 0;
 
+    let activePointers = new Map();
+    let pinchMode = false;
+    let pinchStartDistance = 0;
+    let pinchStartWidth = 0;
+    let pinchCenterStart = null;
+    let pinchStartX = 0;
+    let pinchStartY = 0;
+
+    const MIN_SIG_WIDTH = 80;
+    const MAX_SIG_WIDTH_RATIO = 0.9;
+
     const statusText = document.getElementById('status');
-    const pdfContainer = document.getElementById('pdf-container');
     const pdfCanvas = document.getElementById('pdf-canvas');
     const pdfCtx = pdfCanvas.getContext('2d');
     const overlayCanvas = document.getElementById('signature-overlay');
     const overlayCtx = overlayCanvas.getContext('2d');
-
     const signaturePadCanvas = document.getElementById('signature-pad');
 
     pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -219,6 +233,7 @@
       signaturePadCanvas.height = rect.height * ratio;
 
       const ctx = signaturePadCanvas.getContext('2d');
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(ratio, ratio);
 
       if (signaturePad) {
@@ -240,6 +255,7 @@
         sigDisplayWidth = 220;
         sigDisplayHeight = 110;
       }
+      sigAspectRatio = sigDisplayWidth / sigDisplayHeight;
     }
 
     window.addEventListener('load', () => {
@@ -255,7 +271,10 @@
     window.addEventListener('resize', () => {
       updateSignatureDefaultSize();
       resizeSignaturePad();
-      if (signatureImage) drawSignature();
+      if (signatureImage) {
+        keepSignatureInside();
+        drawSignature();
+      }
     });
 
     document.getElementById('upload').addEventListener('change', async function (e) {
@@ -287,7 +306,6 @@
 
         pdfCanvas.width = viewport.width;
         pdfCanvas.height = viewport.height;
-
         pdfCanvas.style.width = viewport.width + 'px';
         pdfCanvas.style.height = viewport.height + 'px';
 
@@ -302,6 +320,8 @@
         };
 
         await page.render(renderContext).promise;
+
+        keepSignatureInside();
 
         if (signatureImage) {
           drawSignature();
@@ -363,46 +383,145 @@
       );
     }
 
+    function getDistance(p1, p2) {
+      const dx = p2.x - p1.x;
+      const dy = p2.y - p1.y;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function getCenter(p1, p2) {
+      return {
+        x: (p1.x + p2.x) / 2,
+        y: (p1.y + p2.y) / 2
+      };
+    }
+
+    function keepSignatureInside() {
+      const maxWidth = overlayCanvas.width * MAX_SIG_WIDTH_RATIO;
+      if (sigDisplayWidth > maxWidth) {
+        sigDisplayWidth = maxWidth;
+        sigDisplayHeight = sigDisplayWidth / sigAspectRatio;
+      }
+
+      if (sigDisplayWidth < MIN_SIG_WIDTH) {
+        sigDisplayWidth = MIN_SIG_WIDTH;
+        sigDisplayHeight = sigDisplayWidth / sigAspectRatio;
+      }
+
+      sigX = Math.max(0, Math.min(sigX, overlayCanvas.width - sigDisplayWidth));
+      sigY = Math.max(0, Math.min(sigY, overlayCanvas.height - sigDisplayHeight));
+    }
+
     overlayCanvas.addEventListener('pointerdown', (e) => {
       if (!signatureImage) return;
 
       const pos = getPointerPos(e);
+      activePointers.set(e.pointerId, pos);
 
-      if (isInsideSignature(pos.x, pos.y)) {
-        dragging = true;
-        dragOffsetX = pos.x - sigX;
-        dragOffsetY = pos.y - sigY;
-        overlayCanvas.setPointerCapture(e.pointerId);
+      if (activePointers.size === 1) {
+        if (isInsideSignature(pos.x, pos.y)) {
+          dragging = true;
+          pinchMode = false;
+          dragOffsetX = pos.x - sigX;
+          dragOffsetY = pos.y - sigY;
+          overlayCanvas.setPointerCapture(e.pointerId);
+        }
+      }
+
+      if (activePointers.size === 2) {
+        const pointers = Array.from(activePointers.values());
+        const p1 = pointers[0];
+        const p2 = pointers[1];
+
+        const center = getCenter(p1, p2);
+
+        if (
+          isInsideSignature(p1.x, p1.y) ||
+          isInsideSignature(p2.x, p2.y) ||
+          isInsideSignature(center.x, center.y)
+        ) {
+          dragging = false;
+          pinchMode = true;
+          pinchStartDistance = getDistance(p1, p2);
+          pinchStartWidth = sigDisplayWidth;
+          pinchStartX = sigX;
+          pinchStartY = sigY;
+          pinchCenterStart = center;
+        }
+      }
+
+      e.preventDefault();
+    });
+
+    overlayCanvas.addEventListener('pointermove', (e) => {
+      if (!signatureImage) return;
+      if (!activePointers.has(e.pointerId)) return;
+
+      const pos = getPointerPos(e);
+      activePointers.set(e.pointerId, pos);
+
+      if (pinchMode && activePointers.size >= 2) {
+        const pointers = Array.from(activePointers.values());
+        const p1 = pointers[0];
+        const p2 = pointers[1];
+
+        const newDistance = getDistance(p1, p2);
+        const newCenter = getCenter(p1, p2);
+
+        if (pinchStartDistance > 0) {
+          let newWidth = pinchStartWidth * (newDistance / pinchStartDistance);
+
+          const maxWidth = overlayCanvas.width * MAX_SIG_WIDTH_RATIO;
+          newWidth = Math.max(MIN_SIG_WIDTH, Math.min(newWidth, maxWidth));
+
+          const newHeight = newWidth / sigAspectRatio;
+
+          const centerOffsetXRatio = (pinchCenterStart.x - pinchStartX) / pinchStartWidth;
+          const centerOffsetYRatio = (pinchCenterStart.y - pinchStartY) / (pinchStartWidth / sigAspectRatio);
+
+          sigDisplayWidth = newWidth;
+          sigDisplayHeight = newHeight;
+
+          sigX = newCenter.x - (sigDisplayWidth * centerOffsetXRatio);
+          sigY = newCenter.y - (sigDisplayHeight * centerOffsetYRatio);
+
+          keepSignatureInside();
+          drawSignature();
+        }
+
+        e.preventDefault();
+        return;
+      }
+
+      if (dragging && activePointers.size === 1) {
+        sigX = pos.x - dragOffsetX;
+        sigY = pos.y - dragOffsetY;
+
+        keepSignatureInside();
+        drawSignature();
         e.preventDefault();
       }
     });
 
-    overlayCanvas.addEventListener('pointermove', (e) => {
-      if (!dragging || !signatureImage) return;
+    function stopPointer(e) {
+      activePointers.delete(e.pointerId);
 
-      const pos = getPointerPos(e);
+      if (activePointers.size < 2) {
+        pinchMode = false;
+      }
 
-      sigX = pos.x - dragOffsetX;
-      sigY = pos.y - dragOffsetY;
+      if (activePointers.size === 0) {
+        dragging = false;
+      }
 
-      sigX = Math.max(0, Math.min(sigX, overlayCanvas.width - sigDisplayWidth));
-      sigY = Math.max(0, Math.min(sigY, overlayCanvas.height - sigDisplayHeight));
-
-      drawSignature();
-      e.preventDefault();
-    });
-
-    function stopDragging(e) {
-      if (!dragging) return;
-      dragging = false;
       try {
         overlayCanvas.releasePointerCapture(e.pointerId);
       } catch (_) {}
     }
 
-    overlayCanvas.addEventListener('pointerup', stopDragging);
-    overlayCanvas.addEventListener('pointercancel', stopDragging);
-    overlayCanvas.addEventListener('pointerleave', stopDragging);
+    overlayCanvas.addEventListener('pointerup', stopPointer);
+    overlayCanvas.addEventListener('pointercancel', stopPointer);
+    overlayCanvas.addEventListener('pointerleave', stopPointer);
 
     async function downloadPDF() {
       try {
