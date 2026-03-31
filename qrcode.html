@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code 圖片掃描器</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(135deg, #f6f8fc, #eef3ff);
+      color: #1f2937;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 22px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+      padding: 24px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      text-align: center;
+      color: #111827;
+    }
+
+    .sub {
+      text-align: center;
+      color: #6b7280;
+      margin-bottom: 24px;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    .paste-area {
+      border: 2px dashed #c7d2fe;
+      background: #f8faff;
+      border-radius: 18px;
+      padding: 28px 20px;
+      text-align: center;
+      transition: 0.25s;
+      min-height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    .paste-area.dragover {
+      border-color: #4f46e5;
+      background: #eef2ff;
+      transform: scale(1.01);
+    }
+
+    .icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .paste-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .paste-desc {
+      font-size: 15px;
+      color: #6b7280;
+      line-height: 1.8;
+    }
+
+    .hint {
+      margin-top: 14px;
+      display: inline-block;
+      background: #111827;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 14px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    button, .btn-like {
+      border: none;
+      background: #4f46e5;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+
+    button:hover, .btn-like:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+
+    button.secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .preview-wrap {
+      margin-top: 24px;
+      display: none;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .preview-box {
+      background: #f9fafb;
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      text-align: center;
+    }
+
+    #previewImage {
+      max-width: 100%;
+      max-height: 380px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    }
+
+    .result-wrap {
+      margin-top: 24px;
+    }
+
+    .result-box {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 16px;
+      min-height: 90px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.8;
+      font-size: 15px;
+    }
+
+    .success {
+      color: #065f46;
+      background: #ecfdf5;
+      border-color: #a7f3d0;
+    }
+
+    .error {
+      color: #991b1b;
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+
+    .footer-tip {
+      margin-top: 18px;
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.8;
+      text-align: center;
+    }
+
+    canvas {
+      display: none;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 14px;
+      }
+
+      .card {
+        padding: 18px;
+        border-radius: 18px;
+      }
+
+      h1 {
+        font-size: 23px;
+      }
+
+      .paste-title {
+        font-size: 19px;
+      }
+
+      .paste-area {
+        min-height: 200px;
+        padding: 22px 14px;
+      }
+
+      button {
+        width: 100%;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>QR Code 圖片掃描器</h1>
+      <div class="sub">
+        直接貼上圖片即可辨識，不必上傳檔案。<br>
+        支援 <strong>Ctrl + V</strong> 貼上、拖曳圖片進來。
+      </div>
+
+      <div class="paste-area" id="pasteArea">
+        <div class="icon">📷</div>
+        <div class="paste-title">直接貼上圖片辨識 QR Code</div>
+        <div class="paste-desc">
+          請先複製圖片，再按 <strong>Ctrl + V</strong> 貼上到這個頁面<br>
+          也可以把圖片直接拖進來
+        </div>
+        <div class="hint">點一下此區域後，直接 Ctrl + V</div>
+      </div>
+
+      <div class="actions">
+        <button id="copyBtn">複製辨識結果</button>
+        <button id="clearBtn" class="secondary">清除畫面</button>
+      </div>
+
+      <div class="preview-wrap" id="previewWrap">
+        <div class="section-title">圖片預覽</div>
+        <div class="preview-box">
+          <img id="previewImage" alt="貼上的圖片預覽" />
+        </div>
+      </div>
+
+      <div class="result-wrap">
+        <div class="section-title">辨識結果</div>
+        <div class="result-box" id="resultBox">尚未辨識，請先貼上圖片。</div>
+      </div>
+
+      <div class="footer-tip">
+        若圖片中有清楚的 QR Code，系統會自動辨識並顯示內容。<br>
+        可辨識網址、文字、LINE 連結、付款碼等常見 QR Code。
+      </div>
+
+      <canvas id="canvas"></canvas>
+    </div>
+  </div>
+
+  <script>
+    const pasteArea = document.getElementById("pasteArea");
+    const previewWrap = document.getElementById("previewWrap");
+    const previewImage = document.getElementById("previewImage");
+    const resultBox = document.getElementById("resultBox");
+    const copyBtn = document.getElementById("copyBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    let lastResult = "";
+
+    function showMessage(message, type = "") {
+      resultBox.className = "result-box";
+      if (type) resultBox.classList.add(type);
+      resultBox.textContent = message;
+    }
+
+    function processImageFile(file) {
+      if (!file || !file.type.startsWith("image/")) {
+        showMessage("貼上的內容不是圖片，請重新貼上圖片。", "error");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          previewImage.src = event.target.result;
+          previewWrap.style.display = "block";
+
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+          if (code) {
+            lastResult = code.data;
+            showMessage("辨識成功：\n" + code.data, "success");
+          } else {
+            lastResult = "";
+            showMessage("沒有辨識到 QR Code，請確認圖片是否清楚、完整，且 QR Code 不要太小。", "error");
+          }
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    document.addEventListener("paste", function(event) {
+      const items = event.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf("image") !== -1) {
+          const file = items[i].getAsFile();
+          processImageFile(file);
+          return;
+        }
+      }
+
+      showMessage("偵測到貼上動作，但內容不是圖片。請先複製圖片後再貼上。", "error");
+    });
+
+    pasteArea.addEventListener("click", () => {
+      pasteArea.focus();
+      showMessage("已準備好接收貼上的圖片，請按 Ctrl + V。");
+    });
+
+    pasteArea.setAttribute("tabindex", "0");
+
+    pasteArea.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      pasteArea.classList.add("dragover");
+    });
+
+    pasteArea.addEventListener("dragleave", () => {
+      pasteArea.classList.remove("dragover");
+    });
+
+    pasteArea.addEventListener("drop", (e) => {
+      e.preventDefault();
+      pasteArea.classList.remove("dragover");
+
+      const file = e.dataTransfer.files[0];
+      processImageFile(file);
+    });
+
+    copyBtn.addEventListener("click", async () => {
+      if (!lastResult) {
+        alert("目前沒有可複製的辨識結果。");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(lastResult);
+        alert("辨識結果已複製。");
+      } catch (error) {
+        alert("複製失敗，請手動複製。");
+      }
+    });
+
+    clearBtn.addEventListener("click", () => {
+      previewImage.src = "";
+      previewWrap.style.display = "none";
+      lastResult = "";
+      showMessage("尚未辨識，請先貼上圖片。");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+  </script>
+</body>
+</html>
