@@ -1,0 +1,13 @@
+新建 文本文档.txt{
+  "name": "mp4-to-mp3-converter",
+  "version": "1.0.0",
+  "description": "MP4 轉 MP3 網頁工具",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "multer": "^2.0.2"
+  }
+}
