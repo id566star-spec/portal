@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>錢途人生｜青少年財商桌遊</title>
+  <style>
+    :root {
+      --bg: #f6f1e8;
+      --ink: #1f355e;
+      --blue: #4da6ff;
+      --red: #ff6b6b;
+      --yellow: #ffd93d;
+      --green: #6bcb77;
+      --purple: #9b7bff;
+      --card: #ffffff;
+      --line: #d9d1c3;
+      --shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(180deg, #fcfaf5 0%, var(--bg) 100%);
+      color: #24334d;
+    }
+
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .titlebar {
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    .titlebar h1 {
+      margin: 0;
+      font-size: clamp(28px, 5vw, 48px);
+      color: #d95d11;
+      text-shadow: 2px 2px 0 #fff1a6;
+    }
+
+    .titlebar p {
+      margin: 8px 0 0;
+      color: var(--ink);
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .board-card, .panel {
+      background: rgba(255,255,255,0.86);
+      border: 1px solid rgba(31,53,94,0.08);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .board-card {
+      padding: 12px;
+      overflow: hidden;
+    }
+
+    .board-wrap {
+      position: relative;
+      width: min(90vw, 760px);
+      height: min(90vw, 760px);
+      margin: 0 auto;
+    }
+
+    .ring-text {
+      position: absolute;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(18px, 2vw, 28px);
+      font-weight: 900;
+      color: #264d8d;
+      z-index: 5;
+      text-align: center;
+      width: 90%;
+    }
+
+    .board {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at center, #fffefb 0 34%, transparent 34% 100%),
+        radial-gradient(circle at center, transparent 0 49.2%, #20498f 49.2% 49.9%, transparent 49.9% 100%),
+        radial-gradient(circle at center, transparent 0 72%, #20498f 72% 72.7%, transparent 72.7% 100%),
+        radial-gradient(circle at center, #fbf7ef 0 100%);
+      border: 2px solid #d6dcee;
+    }
+
+    .center-zone {
+      position: absolute;
+      inset: 24% 24%;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      z-index: 2;
+    }
+
+    .center-inner { width: 100%; }
+
+    .logo {
+      font-size: clamp(42px, 7vw, 78px);
+      line-height: 1;
+      font-weight: 900;
+      color: #f6b300;
+      text-shadow:
+        0 3px 0 #c95600,
+        3px 0 0 #c95600,
+        -3px 0 0 #c95600,
+        0 -3px 0 #c95600,
+        2px 2px 0 #1b9347;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #1c4a86;
+      font-size: clamp(18px, 2vw, 30px);
+      font-weight: 800;
+      margin-bottom: 18px;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .pill {
+      border-radius: 14px;
+      padding: 10px 14px;
+      color: #fff;
+      font-weight: 800;
+      min-width: 120px;
+      font-size: 16px;
+      box-shadow: var(--shadow);
+    }
+    .pill.cash { background: #1677d8; }
+    .pill.passive { background: #f0ad00; }
+    .pill.expense { background: #ef5a4c; }
+
+    .goal {
+      margin-top: 10px;
+      font-weight: 900;
+      color: #274b89;
+      font-size: clamp(18px, 2vw, 30px);
+    }
+
+    .space {
+      position: absolute;
+      width: 108px;
+      height: 74px;
+      border-radius: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #fff;
+      font-weight: 900;
+      line-height: 1.15;
+      box-shadow: 0 8px 15px rgba(0,0,0,0.14);
+      border: 3px solid rgba(255,255,255,0.9);
+      transform-origin: center center;
+      padding: 6px;
+      z-index: 3;
+    }
+
+    .space .main { font-size: 18px; }
+    .space .sub { font-size: 12px; margin-top: 4px; opacity: 0.95; }
+    .space.opportunity { background: var(--blue); }
+    .space.event { background: var(--red); }
+    .space.consume { background: var(--yellow); color: #8c5400; }
+    .space.psych { background: var(--green); }
+    .space.start { background: var(--purple); }
+
+    .player-token {
+      position: absolute;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 3px solid white;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      z-index: 6;
+      transition: all 0.35s ease;
+    }
+    .token-0 { background: #ff4d4f; }
+    .token-1 { background: #1677ff; }
+    .token-2 { background: #10b981; }
+    .token-3 { background: #f59e0b; }
+
+    .player-slot {
+      position: absolute;
+      background: rgba(255,255,255,0.95);
+      color: #284d88;
+      border: 2px solid #c8d3ea;
+      border-radius: 18px;
+      padding: 10px 16px;
+      font-weight: 800;
+      min-width: 150px;
+      z-index: 4;
+      box-shadow: var(--shadow);
+      font-size: 20px;
+    }
+    .slot-tl { left: 0; top: 28%; transform: translate(-18%, -50%); }
+    .slot-bl { left: 0; bottom: 14%; transform: translate(-18%, 50%); }
+    .slot-tr { right: 0; top: 28%; transform: translate(18%, -50%); }
+    .slot-br { right: 0; bottom: 14%; transform: translate(18%, 50%); }
+
+    .panel {
+      padding: 18px;
+      position: sticky;
+      top: 12px;
+    }
+
+    .section-title {
+      font-size: 22px;
+      margin: 0 0 12px;
+      color: #1f355e;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .stat-card {
+      background: #fff;
+      border: 1px solid #ece6da;
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    .stat-card h4 { margin: 0 0 8px; font-size: 16px; color: #1f355e; }
+    .stat-card div { font-weight: 800; }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 14px 0;
+    }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+
+    .primary { background: #1f7aec; color: #fff; }
+    .secondary { background: #fff; color: #1f355e; border: 1px solid #d8e0ef; }
+    .danger { background: #ef5a4c; color: #fff; }
+
+    .dice-box, .card-box, .rules-box, .players-box {
+      background: #fff;
+      border-radius: 18px;
+      padding: 14px;
+      border: 1px solid #ece6da;
+      margin-bottom: 14px;
+    }
+
+    .dice-face {
+      font-size: 42px;
+      font-weight: 900;
+      color: #1f355e;
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    .card-type {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .type-opportunity { background: var(--blue); }
+    .type-event { background: var(--red); }
+    .type-consume { background: #f3b600; color: #7e5200; }
+    .type-psych { background: var(--green); }
+    .type-start { background: var(--purple); }
+
+    .card-title { font-size: 22px; font-weight: 900; margin: 0 0 8px; color: #20304c; }
+    .card-desc { margin: 0 0 12px; line-height: 1.7; }
+    .effect { font-weight: 800; color: #ca4a1f; }
+
+    .choice-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .log {
+      max-height: 220px;
+      overflow: auto;
+      font-size: 14px;
+      line-height: 1.6;
+      padding-right: 4px;
+    }
+    .log-item {
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: #fbfaf7;
+      border: 1px solid #f0eadc;
+      margin-bottom: 8px;
+    }
+
+    .player-line {
+      padding: 10px;
+      border-radius: 14px;
+      background: #fbfaf7;
+      border: 1px solid #efe6d8;
+      margin-bottom: 8px;
+    }
+    .player-line strong { display: inline-block; min-width: 56px; }
+
+    .winner {
+      background: #fff8d6;
+      border: 2px solid #f0c94d;
+      padding: 12px;
+      border-radius: 16px;
+      font-weight: 900;
+      color: #7a5600;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .panel { position: static; }
+      .player-slot { display: none; }
+      .board-wrap { width: min(96vw, 700px); height: min(96vw, 700px); }
+      .space { width: 82px; height: 60px; border-radius: 14px; }
+      .space .main { font-size: 15px; }
+      .space .sub { font-size: 10px; }
+    }
+
+    @media (max-width: 640px) {
+      .wrap { padding: 10px; }
+      .board-wrap { width: 96vw; height: 96vw; }
+      .space { width: 68px; height: 52px; border-radius: 12px; }
+      .space .main { font-size: 13px; }
+      .space .sub { font-size: 9px; }
+      .center-zone { inset: 26% 22%; }
+      .logo { font-size: 38px; }
+      .subtitle { font-size: 16px; }
+      .goal { font-size: 16px; }
+      .pill { min-width: 90px; font-size: 13px; padding: 8px 10px; }
+      .status-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="titlebar">
+      <h1>錢途人生</h1>
+      <p>青少年財商桌遊・HTML 單機版</p>
+    </div>
+
+    <div class="layout">
+      <div class="board-card">
+        <div class="board-wrap" id="boardWrap">
+          <div class="ring-text">你是在賺錢，還是在花錢？</div>
+          <div class="board"></div>
+
+          <div class="player-slot slot-tl">玩家1 💰</div>
+          <div class="player-slot slot-tr">玩家4 💰</div>
+          <div class="player-slot slot-bl">玩家2 💰</div>
+          <div class="player-slot slot-br">玩家3 💰</div>
+
+          <div class="center-zone">
+            <div class="center-inner">
+              <div class="logo">錢途人生</div>
+              <div class="subtitle">青少年財商桌遊</div>
+              <div class="stats-row">
+                <div class="pill cash">💰 現金</div>
+                <div class="pill passive">📈 被動收入</div>
+                <div class="pill expense">💸 支出</div>
+              </div>
+              <div class="goal">目標：被動收入 ≥ 支出</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <h2 class="section-title">遊戲控制台</h2>
+
+        <div class="status-grid">
+          <div class="stat-card">
+            <h4>目前玩家</h4>
+            <div id="currentPlayerText">玩家1</div>
+          </div>
+          <div class="stat-card">
+            <h4>目前回合</h4>
+            <div id="roundText">1</div>
+          </div>
+          <div class="stat-card">
+            <h4>目前位置</h4>
+            <div id="positionText">起點</div>
+          </div>
+          <div class="stat-card">
+            <h4>遊戲狀態</h4>
+            <div id="stateText">進行中</div>
+          </div>
+        </div>
+
+        <div class="players-box">
+          <h3 class="section-title" style="font-size:18px; margin-bottom:10px;">玩家財務</h3>
+          <div id="playersList"></div>
+        </div>
+
+        <div class="dice-box">
+          <h3 class="section-title" style="font-size:18px; margin-bottom:8px;">擲骰區</h3>
+          <div>每回合移動 1～6 格，踩到不同格子就會遇到不同財務事件。</div>
+          <div class="dice-face" id="diceFace">🎲</div>
+          <div class="controls">
+            <button class="primary" id="rollBtn">擲骰並前進</button>
+            <button class="secondary" id="resetBtn">重新開始</button>
+          </div>
+        </div>
+
+        <div class="card-box">
+          <h3 class="section-title" style="font-size:18px; margin-bottom:8px;">目前卡片</h3>
+          <div id="cardContent">
+            <span class="card-type type-start">開始</span>
+            <div class="card-title">歡迎來到《錢途人生》</div>
+            <p class="card-desc">你的目標是讓 <strong>被動收入 ≥ 支出</strong>。你可以透過投資、副業與良好判斷獲勝，也可能因為衝動消費而落後。</p>
+          </div>
+          <div class="choice-row" id="choiceRow"></div>
+        </div>
+
+        <div class="rules-box">
+          <h3 class="section-title" style="font-size:18px; margin-bottom:8px;">玩法說明</h3>
+          <div class="log-item">1. 輪到你時按「擲骰並前進」。</div>
+          <div class="log-item">2. 抵達格子後會抽到該類型卡片。</div>
+          <div class="log-item">3. 有些卡片可以選擇「執行」或「跳過」。</div>
+          <div class="log-item">4. 任何時候只要你的 <strong>被動收入 ≥ 支出</strong>，你就直接獲勝。</div>
+          <div class="log-item">5. 若 20 回合結束仍無人財務自由，總資產最高者獲勝。</div>
+        </div>
+
+        <div class="rules-box">
+          <h3 class="section-title" style="font-size:18px; margin-bottom:8px;">遊戲紀錄</h3>
+          <div class="log" id="log"></div>
+          <div id="winnerBox"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const spaces = [
+      { type: 'start', main: '起點', sub: '領取收入' },
+      { type: 'opportunity', main: '機會', sub: '投資機會' },
+      { type: 'consume', main: '消費', sub: '購買誘惑' },
+      { type: 'event', main: '事件', sub: '突發狀況' },
+      { type: 'opportunity', main: '機會', sub: '副業機會' },
+      { type: 'psych', main: '心理', sub: '影響決策' },
+      { type: 'consume', main: '消費', sub: '同儕誘惑' },
+      { type: 'event', main: '事件', sub: '臨時支出' },
+      { type: 'opportunity', main: '機會', sub: '技能接案' },
+      { type: 'consume', main: '消費', sub: '品牌誘惑' },
+      { type: 'psych', main: '心理', sub: 'FOMO' },
+      { type: 'event', main: '事件', sub: '考試獎金' },
+      { type: 'opportunity', main: '機會', sub: '長期投資' },
+      { type: 'consume', main: '消費', sub: '衝動購物' },
+      { type: 'event', main: '事件', sub: '家中支出' },
+      { type: 'psych', main: '心理', sub: '理財覺醒' },
+      { type: 'opportunity', main: '機會', sub: '小額創業' },
+      { type: 'consume', main: '消費', sub: '旅遊誘惑' },
+      { type: 'event', main: '事件', sub: '手機維修' },
+      { type: 'opportunity', main: '機會', sub: '社團販售' },
+      { type: 'psych', main: '心理', sub: '延遲滿足' },
+      { type: 'consume', main: '消費', sub: '限量商品' },
+      { type: 'event', main: '事件', sub: '意外收入' },
+      { type: 'opportunity', main: '機會', sub: '被動收入' }
+    ];
+
+    const cards = {
+      opportunity: [
+        { title: '接設計小案', desc: '你利用課餘時間幫社團做海報。', execute: p => ({ cash: +1200, passive: 0, expense: 0, msg: `${p.name}接案成功，現金 +1200` }), skip: p => ({ msg: `${p.name}選擇休息，沒有接案。` }) },
+        { title: '開啟二手拍賣', desc: '投入 800 元整理與上架，若執行，現金 -800，但之後被動收入 +150。', execute: p => p.cash >= 800 ? ({ cash: -800, passive: +150, expense: 0, msg: `${p.name}經營二手拍賣，現金 -800，被動收入 +150` }) : ({ msg: `${p.name}現金不足，無法投入。` }), skip: p => ({ msg: `${p.name}先觀望這次機會。` }) },
+        { title: '定期定額', desc: '投入 1000 元學習穩定投資，現金 -1000，被動收入 +200。', execute: p => p.cash >= 1000 ? ({ cash: -1000, passive: +200, expense: 0, msg: `${p.name}開始定期投資，被動收入 +200` }) : ({ msg: `${p.name}現金不足，錯過投資。` }), skip: p => ({ msg: `${p.name}暫時沒有投資。` }) },
+        { title: '家教機會', desc: '利用擅長科目幫學弟妹複習。', execute: p => ({ cash: +1500, passive: 0, expense: 0, msg: `${p.name}接家教，現金 +1500` }), skip: p => ({ msg: `${p.name}這次沒有接家教。` }) },
+        { title: '社群接業配', desc: '短影音小爆紅，獲得一次收入。', execute: p => ({ cash: +1800, passive: 0, expense: 0, msg: `${p.name}拿到業配，現金 +1800` }), skip: p => ({ msg: `${p.name}沒有接下這次合作。` }) },
+        { title: '自動販售模板', desc: '你做出可重複販售的筆記模板。', execute: p => ({ cash: 0, passive: +250, expense: 0, msg: `${p.name}建立模板收入，被動收入 +250` }), skip: p => ({ msg: `${p.name}還沒開始製作模板。` }) }
+      ],
+      event: [
+        { title: '手機螢幕裂掉', desc: '修理費不便宜。', auto: p => ({ cash: -1200, passive: 0, expense: 0, msg: `${p.name}手機維修，現金 -1200` }) },
+        { title: '考試進步獎金', desc: '你拿到家長獎勵。', auto: p => ({ cash: +1000, passive: 0, expense: 0, msg: `${p.name}獲得考試獎金，現金 +1000` }) },
+        { title: '家中臨時支出', desc: '你主動幫忙分擔。', auto: p => ({ cash: -900, passive: 0, expense: 0, msg: `${p.name}分擔家庭支出，現金 -900` }) },
+        { title: '收到紅包', desc: '節日紅包進帳。', auto: p => ({ cash: +1400, passive: 0, expense: 0, msg: `${p.name}收到紅包，現金 +1400` }) },
+        { title: '補習費上升', desc: '固定支出增加。', auto: p => ({ cash: 0, passive: 0, expense: +150, msg: `${p.name}固定支出增加，支出 +150` }) },
+        { title: '比賽得名', desc: '你贏得獎金與自信。', auto: p => ({ cash: +1600, passive: 0, expense: 0, msg: `${p.name}比賽得名，現金 +1600` }) }
+      ],
+      consume: [
+        { title: '買限量球鞋', desc: '很心動。若購買，現金 -1800，但快樂值只是一時。', execute: p => p.cash >= 1800 ? ({ cash: -1800, passive: 0, expense: 0, msg: `${p.name}買了限量球鞋，現金 -1800` }) : ({ msg: `${p.name}錢不夠，只能放棄。` }), skip: p => ({ msg: `${p.name}忍住沒有買。` }) },
+        { title: '手遊課金', desc: '小額累積也會很多。若購買，現金 -600。', execute: p => p.cash >= 600 ? ({ cash: -600, passive: 0, expense: 0, msg: `${p.name}手遊課金，現金 -600` }) : ({ msg: `${p.name}現金不足，沒有課金。` }), skip: p => ({ msg: `${p.name}決定不課金。` }) },
+        { title: '朋友約吃高級餐廳', desc: '若參加，現金 -900。', execute: p => p.cash >= 900 ? ({ cash: -900, passive: 0, expense: 0, msg: `${p.name}參加聚餐，現金 -900` }) : ({ msg: `${p.name}現金不足，婉拒聚餐。` }), skip: p => ({ msg: `${p.name}選擇省下這筆開銷。` }) },
+        { title: '追星周邊', desc: '若購買，現金 -1200。', execute: p => p.cash >= 1200 ? ({ cash: -1200, passive: 0, expense: 0, msg: `${p.name}買了周邊商品，現金 -1200` }) : ({ msg: `${p.name}現金不足，沒有買。` }), skip: p => ({ msg: `${p.name}忍住收藏慾望。` }) },
+        { title: '短程旅行', desc: '若出發，現金 -1500，但心情很好。', execute: p => p.cash >= 1500 ? ({ cash: -1500, passive: 0, expense: -50, msg: `${p.name}去旅行放鬆，現金 -1500，壓力下降使支出 -50` }) : ({ msg: `${p.name}預算不夠，旅行延期。` }), skip: p => ({ msg: `${p.name}這次先不出遊。` }) }
+      ],
+      psych: [
+        { title: '同儕壓力', desc: '大家都在買，你也很想跟上。若執行，現金 -700；若跳過，你學會拒絕誘惑。', execute: p => p.cash >= 700 ? ({ cash: -700, passive: 0, expense: 0, msg: `${p.name}受同儕影響消費，現金 -700` }) : ({ msg: `${p.name}雖然想買，但錢不夠。` }), skip: p => ({ cash: 0, passive: +100, expense: 0, msg: `${p.name}成功拒絕誘惑，被動收入觀念 +100` }) },
+        { title: '理財覺醒', desc: '你開始理解資產與負債的差別。', execute: p => ({ cash: 0, passive: +200, expense: -50, msg: `${p.name}理財觀念提升，被動收入 +200，支出 -50` }), skip: p => ({ msg: `${p.name}錯過反思機會。` }) },
+        { title: 'FOMO 錯失恐懼', desc: '看到別人都在買，你擔心被落下。', execute: p => ({ cash: -500, passive: 0, expense: 0, msg: `${p.name}因 FOMO 消費，現金 -500` }), skip: p => ({ cash: 0, passive: +50, expense: 0, msg: `${p.name}練習延遲滿足，被動收入觀念 +50` }) },
+        { title: '延遲滿足', desc: '你願意先存錢，等待更好的機會。', execute: p => ({ cash: +300, passive: +100, expense: 0, msg: `${p.name}延遲滿足成功，現金 +300，被動收入 +100` }), skip: p => ({ msg: `${p.name}沒有把握這次成長。` }) },
+        { title: '情緒性消費', desc: '心情不好時更容易亂花。', execute: p => ({ cash: -800, passive: 0, expense: 0, msg: `${p.name}情緒性消費，現金 -800` }), skip: p => ({ cash: 0, passive: 0, expense: -50, msg: `${p.name}找到其他紓壓方式，支出 -50` }) }
+      ],
+      start: [
+        { title: '領取本月收入', desc: '回到起點時，領取主動收入與被動收入。', auto: p => ({ cash: p.salary + p.passive, passive: 0, expense: 0, msg: `${p.name}回到起點，領取收入 ${p.salary + p.passive}` }) }
+      ]
+    };
+
+    const boardWrap = document.getElementById('boardWrap');
+    const playersList = document.getElementById('playersList');
+    const currentPlayerText = document.getElementById('currentPlayerText');
+    const roundText = document.getElementById('roundText');
+    const positionText = document.getElementById('positionText');
+    const stateText = document.getElementById('stateText');
+    const diceFace = document.getElementById('diceFace');
+    const cardContent = document.getElementById('cardContent');
+    const choiceRow = document.getElementById('choiceRow');
+    const log = document.getElementById('log');
+    const winnerBox = document.getElementById('winnerBox');
+    const rollBtn = document.getElementById('rollBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const initialPlayers = () => ([
+      { name: '玩家1', cash: 3000, passive: 0, expense: 1500, salary: 900, pos: 0, colorClass: 'token-0' },
+      { name: '玩家2', cash: 2800, passive: 0, expense: 1400, salary: 850, pos: 0, colorClass: 'token-1' },
+      { name: '玩家3', cash: 3200, passive: 0, expense: 1600, salary: 950, pos: 0, colorClass: 'token-2' },
+      { name: '玩家4', cash: 2600, passive: 0, expense: 1300, salary: 800, pos: 0, colorClass: 'token-3' }
+    ]);
+
+    let players = initialPlayers();
+    let currentPlayerIndex = 0;
+    let round = 1;
+    let gameOver = false;
+    let pendingAction = null;
+    const tokenEls = [];
+    const spaceEls = [];
+
+    function rand(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function addLog(text) {
+      const div = document.createElement('div');
+      div.className = 'log-item';
+      div.textContent = text;
+      log.prepend(div);
+    }
+
+    function clampPlayer(p) {
+      p.cash = Math.max(0, Math.round(p.cash));
+      p.passive = Math.max(0, Math.round(p.passive));
+      p.expense = Math.max(500, Math.round(p.expense));
+    }
+
+    function renderBoard() {
+      boardWrap.querySelectorAll('.space').forEach(el => el.remove());
+      tokenEls.forEach(el => el.remove());
+      tokenEls.length = 0;
+      spaceEls.length = 0;
+
+      const wrapRect = boardWrap.getBoundingClientRect();
+      const cx = wrapRect.width / 2;
+      const cy = wrapRect.height / 2;
+      const radius = wrapRect.width * 0.385;
+      const total = spaces.length;
+
+      spaces.forEach((s, i) => {
+        const angle = -90 + (360 / total) * i;
+        const rad = angle * Math.PI / 180;
+        const x = cx + radius * Math.cos(rad);
+        const y = cy + radius * Math.sin(rad);
+        const el = document.createElement('div');
+        el.className = `space ${s.type}`;
+        el.innerHTML = `<div class="main">${s.main}</div><div class="sub">${s.sub}</div>`;
+        const rotate = angle + 90;
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+        el.style.transform = `translate(-50%, -50%) rotate(${rotate}deg)`;
+        boardWrap.appendChild(el);
+        spaceEls.push({ x, y, angle, el });
+      });
+
+      players.forEach((p, i) => {
+        const token = document.createElement('div');
+        token.className = `player-token ${p.colorClass}`;
+        boardWrap.appendChild(token);
+        tokenEls.push(token);
+      });
+
+      renderTokens();
+    }
+
+    function renderTokens() {
+      const offsets = [
+        { x: -12, y: -12 },
+        { x: 12, y: -12 },
+        { x: -12, y: 12 },
+        { x: 12, y: 12 }
+      ];
+      players.forEach((p, i) => {
+        const spot = spaceEls[p.pos];
+        tokenEls[i].style.left = `${spot.x + offsets[i].x}px`;
+        tokenEls[i].style.top = `${spot.y + offsets[i].y}px`;
+      });
+    }
+
+    function renderPlayers() {
+      playersList.innerHTML = '';
+      players.forEach((p, idx) => {
+        const totalAsset = p.cash + p.passive * 8 - p.expense * 2;
+        const div = document.createElement('div');
+        div.className = 'player-line';
+        div.innerHTML = `
+          <strong>${p.name}</strong>
+          現金：<span style="color:#1677d8;font-weight:900;">${p.cash}</span>　
+          被動收入：<span style="color:#d08b00;font-weight:900;">${p.passive}</span>　
+          支出：<span style="color:#ef5a4c;font-weight:900;">${p.expense}</span><br>
+          收入：${p.salary}／回起點　總資產估值：<span style="font-weight:900;">${totalAsset}</span>
+          ${idx === currentPlayerIndex && !gameOver ? '　👉 目前行動中' : ''}
+        `;
+        playersList.appendChild(div);
+      });
+      const p = players[currentPlayerIndex];
+      currentPlayerText.textContent = p.name;
+      roundText.textContent = round;
+      positionText.textContent = spaces[p.pos].main;
+      stateText.textContent = gameOver ? '已結束' : '進行中';
+    }
+
+    function renderCard(type, card) {
+      const clsMap = {
+        opportunity: 'type-opportunity',
+        event: 'type-event',
+        consume: 'type-consume',
+        psych: 'type-psych',
+        start: 'type-start'
+      };
+      const nameMap = {
+        opportunity: '機會',
+        event: '事件',
+        consume: '消費',
+        psych: '心理',
+        start: '起點'
+      };
+      cardContent.innerHTML = `
+        <span class="card-type ${clsMap[type]}">${nameMap[type]}</span>
+        <div class="card-title">${card.title}</div>
+        <p class="card-desc">${card.desc}</p>
+      `;
+    }
+
+    function applyEffect(player, effect) {
+      if (effect.cash) player.cash += effect.cash;
+      if (effect.passive) player.passive += effect.passive;
+      if (effect.expense) player.expense += effect.expense;
+      clampPlayer(player);
+      if (effect.msg) addLog(effect.msg);
+      renderPlayers();
+      renderTokens();
+      checkWinner();
+    }
+
+    function checkWinner() {
+      if (gameOver) return true;
+      const instantWinner = players.find(p => p.passive >= p.expense);
+      if (instantWinner) {
+        gameOver = true;
+        rollBtn.disabled = true;
+        winnerBox.innerHTML = `<div class="winner">🏆 ${instantWinner.name} 已達成財務自由！<br>因為被動收入 ${instantWinner.passive} ≥ 支出 ${instantWinner.expense}。</div>`;
+        stateText.textContent = '已結束';
+        addLog(`${instantWinner.name} 達成財務自由，遊戲結束。`);
+        return true;
+      }
+      if (round > 20) {
+        gameOver = true;
+        rollBtn.disabled = true;
+        const sorted = [...players].sort((a,b) => (b.cash + b.passive * 8 - b.expense * 2) - (a.cash + a.passive * 8 - a.expense * 2));
+        const top = sorted[0];
+        winnerBox.innerHTML = `<div class="winner">🏆 20 回合結束，${top.name} 的總資產最高，獲得勝利！</div>`;
+        stateText.textContent = '已結束';
+        addLog(`20 回合結束，${top.name} 以最高總資產獲勝。`);
+        return true;
+      }
+      return false;
+    }
+
+    function nextTurn() {
+      choiceRow.innerHTML = '';
+      pendingAction = null;
+      if (gameOver) return;
+      currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+      if (currentPlayerIndex === 0) round += 1;
+      renderPlayers();
+      checkWinner();
+    }
+
+    function handleLanding(player) {
+      const spot = spaces[player.pos];
+      const type = spot.type;
+      const card = rand(cards[type]);
+      renderCard(type, card);
+
+      if (card.auto) {
+        const effect = card.auto(player);
+        applyEffect(player, effect);
+        setTimeout(() => { if (!gameOver) nextTurn(); }, 500);
+        return;
+      }
+
+      pendingAction = { player, card, type };
+      choiceRow.innerHTML = `
+        <button class="primary" id="doBtn">執行選項</button>
+        <button class="secondary" id="skipBtn">這次跳過</button>
+      `;
+      document.getElementById('doBtn').onclick = () => {
+        if (!pendingAction || gameOver) return;
+        const effect = pendingAction.card.execute(pendingAction.player);
+        applyEffect(pendingAction.player, effect || {});
+        nextTurn();
+      };
+      document.getElementById('skipBtn').onclick = () => {
+        if (!pendingAction || gameOver) return;
+        const effect = pendingAction.card.skip ? pendingAction.card.skip(pendingAction.player) : { msg: `${pendingAction.player.name} 選擇跳過。` };
+        applyEffect(pendingAction.player, effect || {});
+        nextTurn();
+      };
+    }
+
+    function rollDice() {
+      if (gameOver || pendingAction) return;
+      const player = players[currentPlayerIndex];
+      const dice = Math.floor(Math.random() * 6) + 1;
+      diceFace.textContent = dice;
+      let newPos = player.pos + dice;
+      if (newPos >= spaces.length) {
+        newPos = newPos % spaces.length;
+        const income = player.salary + player.passive;
+        player.cash += income;
+        addLog(`${player.name} 繞過起點，領取收入 ${income}`);
+      }
+      player.pos = newPos;
+      clampPlayer(player);
+      renderPlayers();
+      renderTokens();
+      addLog(`${player.name} 擲出 ${dice} 點，來到「${spaces[player.pos].main}」`);
+      handleLanding(player);
+    }
+
+    function resetGame() {
+      players = initialPlayers();
+      currentPlayerIndex = 0;
+      round = 1;
+      gameOver = false;
+      pendingAction = null;
+      diceFace.textContent = '🎲';
+      log.innerHTML = '';
+      winnerBox.innerHTML = '';
+      rollBtn.disabled = false;
+      cardContent.innerHTML = `
+        <span class="card-type type-start">開始</span>
+        <div class="card-title">歡迎來到《錢途人生》</div>
+        <p class="card-desc">你的目標是讓 <strong>被動收入 ≥ 支出</strong>。你可以透過投資、副業與良好判斷獲勝，也可能因為衝動消費而落後。</p>
+      `;
+      choiceRow.innerHTML = '';
+      renderBoard();
+      renderPlayers();
+      addLog('新遊戲開始。每位玩家從起點出發。');
+    }
+
+    window.addEventListener('resize', renderBoard);
+    rollBtn.addEventListener('click', rollDice);
+    resetBtn.addEventListener('click', resetGame);
+
+    resetGame();
+  </script>
+</body>
+</html>
