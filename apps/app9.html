@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>錢途人生｜青少年財商桌遊</title>
+  <title>錢途人生｜青少年財商桌遊 完整版</title>
   <style>
     :root {
       --bg: #f6f1e8;
@@ -16,6 +16,8 @@
       --card: #ffffff;
       --line: #d9d1c3;
       --shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      --panel: rgba(255,255,255,0.88);
+      --border: rgba(31,53,94,0.08);
     }
 
     * { box-sizing: border-box; }
@@ -27,9 +29,9 @@
     }
 
     .wrap {
-      max-width: 1280px;
+      max-width: 1320px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 18px;
     }
 
     .titlebar {
@@ -39,9 +41,10 @@
 
     .titlebar h1 {
       margin: 0;
-      font-size: clamp(28px, 5vw, 48px);
+      font-size: clamp(30px, 5vw, 52px);
       color: #d95d11;
       text-shadow: 2px 2px 0 #fff1a6;
+      letter-spacing: 1px;
     }
 
     .titlebar p {
@@ -53,16 +56,87 @@
 
     .layout {
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 20px;
+      grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+      gap: 18px;
       align-items: start;
     }
 
-    .board-card, .panel {
-      background: rgba(255,255,255,0.86);
-      border: 1px solid rgba(31,53,94,0.08);
+    .board-card, .panel, .setup-card, .mobile-toolbar {
+      background: var(--panel);
+      border: 1px solid var(--border);
       border-radius: 24px;
       box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .setup-card {
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .setup-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .setup-block {
+      background: #fff;
+      border: 1px solid #ece6da;
+      border-radius: 20px;
+      padding: 14px;
+    }
+
+    .section-title {
+      font-size: 22px;
+      margin: 0 0 12px;
+      color: #1f355e;
+    }
+
+    .sub-title {
+      font-size: 16px;
+      margin: 0 0 10px;
+      color: #1f355e;
+      font-weight: 900;
+    }
+
+    .mode-grid, .character-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mode-grid { grid-template-columns: repeat(2, 1fr); }
+    .character-grid { grid-template-columns: repeat(4, 1fr); }
+
+    .choice-card {
+      border: 2px solid #d9e2f2;
+      border-radius: 18px;
+      padding: 12px;
+      cursor: pointer;
+      background: #fbfcff;
+      transition: 0.2s ease;
+      min-height: 96px;
+    }
+
+    .choice-card:hover { transform: translateY(-2px); }
+    .choice-card.active {
+      border-color: #1f7aec;
+      box-shadow: 0 8px 20px rgba(31,122,236,0.12);
+      background: #eef6ff;
+    }
+
+    .choice-card h4 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      color: #1f355e;
+    }
+
+    .choice-card p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #47607d;
     }
 
     .board-card {
@@ -72,8 +146,8 @@
 
     .board-wrap {
       position: relative;
-      width: min(90vw, 760px);
-      height: min(90vw, 760px);
+      width: min(92vw, 760px);
+      height: min(92vw, 760px);
       margin: 0 auto;
     }
 
@@ -134,7 +208,7 @@
       color: #1c4a86;
       font-size: clamp(18px, 2vw, 30px);
       font-weight: 800;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     .stats-row {
@@ -142,7 +216,7 @@
       justify-content: center;
       gap: 10px;
       flex-wrap: wrap;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     .pill {
@@ -150,7 +224,7 @@
       padding: 10px 14px;
       color: #fff;
       font-weight: 800;
-      min-width: 120px;
+      min-width: 110px;
       font-size: 16px;
       box-shadow: var(--shadow);
     }
@@ -195,8 +269,8 @@
 
     .player-token {
       position: absolute;
-      width: 26px;
-      height: 26px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       border: 3px solid white;
       box-shadow: 0 4px 10px rgba(0,0,0,0.2);
@@ -214,12 +288,12 @@
       color: #284d88;
       border: 2px solid #c8d3ea;
       border-radius: 18px;
-      padding: 10px 16px;
+      padding: 10px 14px;
       font-weight: 800;
       min-width: 150px;
       z-index: 4;
       box-shadow: var(--shadow);
-      font-size: 20px;
+      font-size: 18px;
     }
     .slot-tl { left: 0; top: 28%; transform: translate(-18%, -50%); }
     .slot-bl { left: 0; bottom: 14%; transform: translate(-18%, 50%); }
@@ -230,12 +304,6 @@
       padding: 18px;
       position: sticky;
       top: 12px;
-    }
-
-    .section-title {
-      font-size: 22px;
-      margin: 0 0 12px;
-      color: #1f355e;
     }
 
     .status-grid {
@@ -252,7 +320,7 @@
       padding: 12px;
     }
 
-    .stat-card h4 { margin: 0 0 8px; font-size: 16px; color: #1f355e; }
+    .stat-card h4 { margin: 0 0 8px; font-size: 15px; color: #1f355e; }
     .stat-card div { font-weight: 800; }
 
     .controls {
@@ -270,13 +338,17 @@
       font-weight: 800;
       cursor: pointer;
       box-shadow: var(--shadow);
+      transition: 0.2s ease;
     }
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
     .primary { background: #1f7aec; color: #fff; }
     .secondary { background: #fff; color: #1f355e; border: 1px solid #d8e0ef; }
     .danger { background: #ef5a4c; color: #fff; }
+    .success { background: #18a957; color: #fff; }
 
-    .dice-box, .card-box, .rules-box, .players-box {
+    .dice-box, .card-box, .rules-box, .players-box, .sound-box {
       background: #fff;
       border-radius: 18px;
       padding: 14px;
@@ -285,11 +357,12 @@
     }
 
     .dice-face {
-      font-size: 42px;
+      font-size: 48px;
       font-weight: 900;
       color: #1f355e;
       text-align: center;
-      margin-top: 4px;
+      margin-top: 6px;
+      min-height: 56px;
     }
 
     .card-type {
@@ -308,7 +381,6 @@
 
     .card-title { font-size: 22px; font-weight: 900; margin: 0 0 8px; color: #20304c; }
     .card-desc { margin: 0 0 12px; line-height: 1.7; }
-    .effect { font-weight: 800; color: #ca4a1f; }
 
     .choice-row {
       display: flex;
@@ -351,9 +423,96 @@
       margin-top: 10px;
     }
 
-    @media (max-width: 980px) {
+    .tiny-note {
+      font-size: 13px;
+      color: #5f738e;
+      line-height: 1.6;
+    }
+
+    .mobile-toolbar {
+      display: none;
+      position: sticky;
+      bottom: 10px;
+      z-index: 30;
+      padding: 10px;
+      margin-top: 12px;
+    }
+
+    .mobile-toolbar .controls { margin: 0; }
+    .mobile-toolbar button { flex: 1; }
+
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(18, 30, 49, 0.56);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 16px;
+    }
+
+    .modal-mask.show { display: flex; }
+
+    .modal-card {
+      width: min(94vw, 520px);
+      background: #fff;
+      border-radius: 26px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.22);
+      padding: 20px;
+      animation: popIn 0.18s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.94); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .modal-title {
+      font-size: 24px;
+      font-weight: 900;
+      color: #1f355e;
+      margin: 8px 0;
+    }
+
+    .modal-desc {
+      line-height: 1.7;
+      color: #314766;
+      margin: 0;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .badge {
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: 900;
+      background: #eef4ff;
+      color: #28549c;
+    }
+
+    @media (max-width: 1100px) {
       .layout { grid-template-columns: 1fr; }
       .panel { position: static; }
+      .mobile-toolbar { display: block; }
+    }
+
+    @media (max-width: 920px) {
+      .setup-grid { grid-template-columns: 1fr; }
+      .character-grid { grid-template-columns: repeat(2, 1fr); }
       .player-slot { display: none; }
       .board-wrap { width: min(96vw, 700px); height: min(96vw, 700px); }
       .space { width: 82px; height: 60px; border-radius: 14px; }
@@ -363,16 +522,24 @@
 
     @media (max-width: 640px) {
       .wrap { padding: 10px; }
+      .titlebar p { font-size: 15px; }
+      .board-card, .panel, .setup-card { border-radius: 20px; }
       .board-wrap { width: 96vw; height: 96vw; }
-      .space { width: 68px; height: 52px; border-radius: 12px; }
-      .space .main { font-size: 13px; }
-      .space .sub { font-size: 9px; }
-      .center-zone { inset: 26% 22%; }
-      .logo { font-size: 38px; }
-      .subtitle { font-size: 16px; }
-      .goal { font-size: 16px; }
-      .pill { min-width: 90px; font-size: 13px; padding: 8px 10px; }
-      .status-grid { grid-template-columns: 1fr; }
+      .space { width: 66px; height: 50px; border-radius: 12px; border-width: 2px; }
+      .space .main { font-size: 12px; }
+      .space .sub { font-size: 8px; }
+      .center-zone { inset: 25% 20%; padding: 12px; }
+      .logo { font-size: 34px; }
+      .subtitle { font-size: 14px; margin-bottom: 12px; }
+      .goal { font-size: 15px; }
+      .pill { min-width: 88px; font-size: 12px; padding: 8px 8px; }
+      .status-grid { grid-template-columns: 1fr 1fr; }
+      .mode-grid, .character-grid { grid-template-columns: 1fr; }
+      .section-title { font-size: 20px; }
+      button { font-size: 15px; }
+      .modal-card { padding: 16px; border-radius: 20px; }
+      .modal-title { font-size: 22px; }
+      .ring-text { top: 12px; font-size: 16px; }
     }
   </style>
 </head>
@@ -380,8 +547,28 @@
   <div class="wrap">
     <div class="titlebar">
       <h1>錢途人生</h1>
-      <p>青少年財商桌遊・HTML 單機版</p>
+      <p>青少年財商桌遊・角色選擇＋單人/雙人模式＋音效＋卡牌彈窗 完整版</p>
     </div>
+
+    <section class="setup-card">
+      <h2 class="section-title">開始設定</h2>
+      <div class="setup-grid">
+        <div class="setup-block">
+          <div class="sub-title">① 選擇遊戲模式</div>
+          <div class="mode-grid" id="modeGrid"></div>
+          <div class="tiny-note" style="margin-top:10px;">單人模式會與電腦玩家對戰；雙人模式則是兩位真人輪流操作。</div>
+        </div>
+        <div class="setup-block">
+          <div class="sub-title">② 選擇角色</div>
+          <div class="character-grid" id="characterGrid"></div>
+          <div class="controls" style="margin-top:12px;">
+            <button class="success" id="startGameBtn">開始遊戲</button>
+            <button class="secondary" id="toggleSoundBtn">音效：開啟</button>
+          </div>
+          <div class="tiny-note">角色不同，起始現金、收入與支出都不同，玩法也會改變。</div>
+        </div>
+      </div>
+    </section>
 
     <div class="layout">
       <div class="board-card">
@@ -415,11 +602,11 @@
         <div class="status-grid">
           <div class="stat-card">
             <h4>目前玩家</h4>
-            <div id="currentPlayerText">玩家1</div>
+            <div id="currentPlayerText">尚未開始</div>
           </div>
           <div class="stat-card">
             <h4>目前回合</h4>
-            <div id="roundText">1</div>
+            <div id="roundText">0</div>
           </div>
           <div class="stat-card">
             <h4>目前位置</h4>
@@ -427,7 +614,7 @@
           </div>
           <div class="stat-card">
             <h4>遊戲狀態</h4>
-            <div id="stateText">進行中</div>
+            <div id="stateText">等待開始</div>
           </div>
         </div>
 
@@ -441,8 +628,8 @@
           <div>每回合移動 1～6 格，踩到不同格子就會遇到不同財務事件。</div>
           <div class="dice-face" id="diceFace">🎲</div>
           <div class="controls">
-            <button class="primary" id="rollBtn">擲骰並前進</button>
-            <button class="secondary" id="resetBtn">重新開始</button>
+            <button class="primary" id="rollBtn" disabled>擲骰並前進</button>
+            <button class="secondary" id="resetBtn">重新設定</button>
           </div>
         </div>
 
@@ -450,17 +637,22 @@
           <h3 class="section-title" style="font-size:18px; margin-bottom:8px;">目前卡片</h3>
           <div id="cardContent">
             <span class="card-type type-start">開始</span>
-            <div class="card-title">歡迎來到《錢途人生》</div>
-            <p class="card-desc">你的目標是讓 <strong>被動收入 ≥ 支出</strong>。你可以透過投資、副業與良好判斷獲勝，也可能因為衝動消費而落後。</p>
+            <div class="card-title">先選擇模式與角色</div>
+            <p class="card-desc">按下上方「開始遊戲」後，就能進入正式對戰。遇到卡片時會跳出大視窗，手機上更好操作。</p>
           </div>
           <div class="choice-row" id="choiceRow"></div>
         </div>
 
+        <div class="sound-box">
+          <h3 class="section-title" style="font-size:18px; margin-bottom:8px;">音效與提示</h3>
+          <div class="tiny-note">本版本包含：擲骰音、移動音、抽卡音、獲利音、虧損音、勝利音。瀏覽器若限制自動播放，第一次按鈕操作後就會正常啟用。</div>
+        </div>
+
         <div class="rules-box">
           <h3 class="section-title" style="font-size:18px; margin-bottom:8px;">玩法說明</h3>
-          <div class="log-item">1. 輪到你時按「擲骰並前進」。</div>
-          <div class="log-item">2. 抵達格子後會抽到該類型卡片。</div>
-          <div class="log-item">3. 有些卡片可以選擇「執行」或「跳過」。</div>
+          <div class="log-item">1. 先選單人或雙人模式，再選你的角色。</div>
+          <div class="log-item">2. 輪到你時按「擲骰並前進」。</div>
+          <div class="log-item">3. 抵達格子後會跳出卡牌彈窗，可以選擇執行或跳過。</div>
           <div class="log-item">4. 任何時候只要你的 <strong>被動收入 ≥ 支出</strong>，你就直接獲勝。</div>
           <div class="log-item">5. 若 20 回合結束仍無人財務自由，總資產最高者獲勝。</div>
         </div>
@@ -471,6 +663,23 @@
           <div id="winnerBox"></div>
         </div>
       </aside>
+    </div>
+
+    <div class="mobile-toolbar">
+      <div class="controls">
+        <button class="primary" id="mobileRollBtn" disabled>擲骰</button>
+        <button class="secondary" id="mobileResetBtn">重設</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="modalMask">
+    <div class="modal-card">
+      <div id="modalTypeWrap"></div>
+      <div class="modal-title" id="modalTitle">卡牌標題</div>
+      <p class="modal-desc" id="modalDesc">卡牌內容</p>
+      <div class="badge-row" id="modalBadges"></div>
+      <div class="modal-actions" id="modalActions"></div>
     </div>
   </div>
 
@@ -502,39 +711,87 @@
       { type: 'opportunity', main: '機會', sub: '被動收入' }
     ];
 
+    const roleTemplates = [
+      {
+        id: 'student',
+        title: '普通高中生',
+        desc: '起點平均，穩定收入，最容易上手。',
+        cash: 3000,
+        passive: 0,
+        expense: 1450,
+        salary: 900,
+        bonus: '平衡型角色'
+      },
+      {
+        id: 'parttime',
+        title: '打工達人',
+        desc: '收入較高，但固定支出也比較多。',
+        cash: 3400,
+        passive: 0,
+        expense: 1650,
+        salary: 1100,
+        bonus: '收入高'
+      },
+      {
+        id: 'creator',
+        title: '小網紅',
+        desc: '有機會爆賺，但也容易被誘惑花錢。',
+        cash: 2800,
+        passive: 50,
+        expense: 1500,
+        salary: 850,
+        bonus: '機會卡更強'
+      },
+      {
+        id: 'wealthy',
+        title: '家境優渥',
+        desc: '起始現金較高，但消費誘惑很強。',
+        cash: 4200,
+        passive: 0,
+        expense: 1800,
+        salary: 800,
+        bonus: '起始資金高'
+      }
+    ];
+
+    const modeTemplates = [
+      { id: 'single', title: '單人模式', desc: '你 1 人 + 電腦 1 人對戰。適合測試與體驗。' },
+      { id: 'double', title: '雙人模式', desc: '兩位真人輪流操作。適合課堂、小組或朋友一起玩。' }
+    ];
+
     const cards = {
       opportunity: [
-        { title: '接設計小案', desc: '你利用課餘時間幫社團做海報。', execute: p => ({ cash: +1200, passive: 0, expense: 0, msg: `${p.name}接案成功，現金 +1200` }), skip: p => ({ msg: `${p.name}選擇休息，沒有接案。` }) },
-        { title: '開啟二手拍賣', desc: '投入 800 元整理與上架，若執行，現金 -800，但之後被動收入 +150。', execute: p => p.cash >= 800 ? ({ cash: -800, passive: +150, expense: 0, msg: `${p.name}經營二手拍賣，現金 -800，被動收入 +150` }) : ({ msg: `${p.name}現金不足，無法投入。` }), skip: p => ({ msg: `${p.name}先觀望這次機會。` }) },
-        { title: '定期定額', desc: '投入 1000 元學習穩定投資，現金 -1000，被動收入 +200。', execute: p => p.cash >= 1000 ? ({ cash: -1000, passive: +200, expense: 0, msg: `${p.name}開始定期投資，被動收入 +200` }) : ({ msg: `${p.name}現金不足，錯過投資。` }), skip: p => ({ msg: `${p.name}暫時沒有投資。` }) },
-        { title: '家教機會', desc: '利用擅長科目幫學弟妹複習。', execute: p => ({ cash: +1500, passive: 0, expense: 0, msg: `${p.name}接家教，現金 +1500` }), skip: p => ({ msg: `${p.name}這次沒有接家教。` }) },
-        { title: '社群接業配', desc: '短影音小爆紅，獲得一次收入。', execute: p => ({ cash: +1800, passive: 0, expense: 0, msg: `${p.name}拿到業配，現金 +1800` }), skip: p => ({ msg: `${p.name}沒有接下這次合作。` }) },
-        { title: '自動販售模板', desc: '你做出可重複販售的筆記模板。', execute: p => ({ cash: 0, passive: +250, expense: 0, msg: `${p.name}建立模板收入，被動收入 +250` }), skip: p => ({ msg: `${p.name}還沒開始製作模板。` }) }
+        { title: '接設計小案', desc: '你利用課餘時間幫社團做海報。', badges:['一次收入','技能變現'], execute: p => ({ cash: +1200, msg: `${p.name}接案成功，現金 +1200` }), skip: p => ({ msg: `${p.name}選擇休息，沒有接案。` }) },
+        { title: '開啟二手拍賣', desc: '投入 800 元整理與上架。若執行，現金 -800，但之後被動收入 +150。', badges:['被動收入','先投資'], execute: p => p.cash >= 800 ? ({ cash: -800, passive: +150, msg: `${p.name}經營二手拍賣，現金 -800，被動收入 +150` }) : ({ msg: `${p.name}現金不足，無法投入。` }), skip: p => ({ msg: `${p.name}先觀望這次機會。` }) },
+        { title: '定期定額', desc: '投入 1000 元學習穩定投資，現金 -1000，被動收入 +200。', badges:['投資','長期'], execute: p => p.cash >= 1000 ? ({ cash: -1000, passive: +200, msg: `${p.name}開始定期投資，被動收入 +200` }) : ({ msg: `${p.name}現金不足，錯過投資。` }), skip: p => ({ msg: `${p.name}暫時沒有投資。` }) },
+        { title: '家教機會', desc: '利用擅長科目幫學弟妹複習。', badges:['一次收入'], execute: p => ({ cash: +1500, msg: `${p.name}接家教，現金 +1500` }), skip: p => ({ msg: `${p.name}這次沒有接家教。` }) },
+        { title: '社群接業配', desc: '短影音小爆紅，獲得一次收入。', badges:['高報酬'], execute: p => ({ cash: +1800, msg: `${p.name}拿到業配，現金 +1800` }), skip: p => ({ msg: `${p.name}沒有接下這次合作。` }) },
+        { title: '自動販售模板', desc: '你做出可重複販售的筆記模板。', badges:['被動收入'], execute: p => ({ passive: +250, msg: `${p.name}建立模板收入，被動收入 +250` }), skip: p => ({ msg: `${p.name}還沒開始製作模板。` }) }
       ],
       event: [
-        { title: '手機螢幕裂掉', desc: '修理費不便宜。', auto: p => ({ cash: -1200, passive: 0, expense: 0, msg: `${p.name}手機維修，現金 -1200` }) },
-        { title: '考試進步獎金', desc: '你拿到家長獎勵。', auto: p => ({ cash: +1000, passive: 0, expense: 0, msg: `${p.name}獲得考試獎金，現金 +1000` }) },
-        { title: '家中臨時支出', desc: '你主動幫忙分擔。', auto: p => ({ cash: -900, passive: 0, expense: 0, msg: `${p.name}分擔家庭支出，現金 -900` }) },
-        { title: '收到紅包', desc: '節日紅包進帳。', auto: p => ({ cash: +1400, passive: 0, expense: 0, msg: `${p.name}收到紅包，現金 +1400` }) },
-        { title: '補習費上升', desc: '固定支出增加。', auto: p => ({ cash: 0, passive: 0, expense: +150, msg: `${p.name}固定支出增加，支出 +150` }) },
-        { title: '比賽得名', desc: '你贏得獎金與自信。', auto: p => ({ cash: +1600, passive: 0, expense: 0, msg: `${p.name}比賽得名，現金 +1600` }) }
+        { title: '手機螢幕裂掉', desc: '修理費不便宜。', badges:['突發支出'], auto: p => ({ cash: -1200, msg: `${p.name}手機維修，現金 -1200` }) },
+        { title: '考試進步獎金', desc: '你拿到家長獎勵。', badges:['好消息'], auto: p => ({ cash: +1000, msg: `${p.name}獲得考試獎金，現金 +1000` }) },
+        { title: '家中臨時支出', desc: '你主動幫忙分擔。', badges:['責任'], auto: p => ({ cash: -900, msg: `${p.name}分擔家庭支出，現金 -900` }) },
+        { title: '收到紅包', desc: '節日紅包進帳。', badges:['意外收入'], auto: p => ({ cash: +1400, msg: `${p.name}收到紅包，現金 +1400` }) },
+        { title: '補習費上升', desc: '固定支出增加。', badges:['支出增加'], auto: p => ({ expense: +150, msg: `${p.name}固定支出增加，支出 +150` }) },
+        { title: '比賽得名', desc: '你贏得獎金與自信。', badges:['獎勵'], auto: p => ({ cash: +1600, msg: `${p.name}比賽得名，現金 +1600` }) }
       ],
       consume: [
-        { title: '買限量球鞋', desc: '很心動。若購買，現金 -1800，但快樂值只是一時。', execute: p => p.cash >= 1800 ? ({ cash: -1800, passive: 0, expense: 0, msg: `${p.name}買了限量球鞋，現金 -1800` }) : ({ msg: `${p.name}錢不夠，只能放棄。` }), skip: p => ({ msg: `${p.name}忍住沒有買。` }) },
-        { title: '手遊課金', desc: '小額累積也會很多。若購買，現金 -600。', execute: p => p.cash >= 600 ? ({ cash: -600, passive: 0, expense: 0, msg: `${p.name}手遊課金，現金 -600` }) : ({ msg: `${p.name}現金不足，沒有課金。` }), skip: p => ({ msg: `${p.name}決定不課金。` }) },
-        { title: '朋友約吃高級餐廳', desc: '若參加，現金 -900。', execute: p => p.cash >= 900 ? ({ cash: -900, passive: 0, expense: 0, msg: `${p.name}參加聚餐，現金 -900` }) : ({ msg: `${p.name}現金不足，婉拒聚餐。` }), skip: p => ({ msg: `${p.name}選擇省下這筆開銷。` }) },
-        { title: '追星周邊', desc: '若購買，現金 -1200。', execute: p => p.cash >= 1200 ? ({ cash: -1200, passive: 0, expense: 0, msg: `${p.name}買了周邊商品，現金 -1200` }) : ({ msg: `${p.name}現金不足，沒有買。` }), skip: p => ({ msg: `${p.name}忍住收藏慾望。` }) },
-        { title: '短程旅行', desc: '若出發，現金 -1500，但心情很好。', execute: p => p.cash >= 1500 ? ({ cash: -1500, passive: 0, expense: -50, msg: `${p.name}去旅行放鬆，現金 -1500，壓力下降使支出 -50` }) : ({ msg: `${p.name}預算不夠，旅行延期。` }), skip: p => ({ msg: `${p.name}這次先不出遊。` }) }
+        { title: '買限量球鞋', desc: '很心動。若購買，現金 -1800，但快樂只是一時。', badges:['衝動消費'], execute: p => p.cash >= 1800 ? ({ cash: -1800, msg: `${p.name}買了限量球鞋，現金 -1800` }) : ({ msg: `${p.name}錢不夠，只能放棄。` }), skip: p => ({ msg: `${p.name}忍住沒有買。` }) },
+        { title: '手遊課金', desc: '小額累積也會很多。若購買，現金 -600。', badges:['小額消費'], execute: p => p.cash >= 600 ? ({ cash: -600, msg: `${p.name}手遊課金，現金 -600` }) : ({ msg: `${p.name}現金不足，沒有課金。` }), skip: p => ({ msg: `${p.name}決定不課金。` }) },
+        { title: '朋友約吃高級餐廳', desc: '若參加，現金 -900。', badges:['社交支出'], execute: p => p.cash >= 900 ? ({ cash: -900, msg: `${p.name}參加聚餐，現金 -900` }) : ({ msg: `${p.name}現金不足，婉拒聚餐。` }), skip: p => ({ msg: `${p.name}選擇省下這筆開銷。` }) },
+        { title: '追星周邊', desc: '若購買，現金 -1200。', badges:['收藏誘惑'], execute: p => p.cash >= 1200 ? ({ cash: -1200, msg: `${p.name}買了周邊商品，現金 -1200` }) : ({ msg: `${p.name}現金不足，沒有買。` }), skip: p => ({ msg: `${p.name}忍住收藏慾望。` }) },
+        { title: '短程旅行', desc: '若出發，現金 -1500，但壓力下降，支出 -50。', badges:['體驗消費'], execute: p => p.cash >= 1500 ? ({ cash: -1500, expense: -50, msg: `${p.name}去旅行放鬆，現金 -1500，支出 -50` }) : ({ msg: `${p.name}預算不夠，旅行延期。` }), skip: p => ({ msg: `${p.name}這次先不出遊。` }) }
       ],
       psych: [
-        { title: '同儕壓力', desc: '大家都在買，你也很想跟上。若執行，現金 -700；若跳過，你學會拒絕誘惑。', execute: p => p.cash >= 700 ? ({ cash: -700, passive: 0, expense: 0, msg: `${p.name}受同儕影響消費，現金 -700` }) : ({ msg: `${p.name}雖然想買，但錢不夠。` }), skip: p => ({ cash: 0, passive: +100, expense: 0, msg: `${p.name}成功拒絕誘惑，被動收入觀念 +100` }) },
-        { title: '理財覺醒', desc: '你開始理解資產與負債的差別。', execute: p => ({ cash: 0, passive: +200, expense: -50, msg: `${p.name}理財觀念提升，被動收入 +200，支出 -50` }), skip: p => ({ msg: `${p.name}錯過反思機會。` }) },
-        { title: 'FOMO 錯失恐懼', desc: '看到別人都在買，你擔心被落下。', execute: p => ({ cash: -500, passive: 0, expense: 0, msg: `${p.name}因 FOMO 消費，現金 -500` }), skip: p => ({ cash: 0, passive: +50, expense: 0, msg: `${p.name}練習延遲滿足，被動收入觀念 +50` }) },
-        { title: '延遲滿足', desc: '你願意先存錢，等待更好的機會。', execute: p => ({ cash: +300, passive: +100, expense: 0, msg: `${p.name}延遲滿足成功，現金 +300，被動收入 +100` }), skip: p => ({ msg: `${p.name}沒有把握這次成長。` }) },
-        { title: '情緒性消費', desc: '心情不好時更容易亂花。', execute: p => ({ cash: -800, passive: 0, expense: 0, msg: `${p.name}情緒性消費，現金 -800` }), skip: p => ({ cash: 0, passive: 0, expense: -50, msg: `${p.name}找到其他紓壓方式，支出 -50` }) }
+        { title: '同儕壓力', desc: '大家都在買，你也很想跟上。若跳過，你學會拒絕誘惑。', badges:['心理挑戰'], execute: p => p.cash >= 700 ? ({ cash: -700, msg: `${p.name}受同儕影響消費，現金 -700` }) : ({ msg: `${p.name}雖然想買，但錢不夠。` }), skip: p => ({ passive: +100, msg: `${p.name}成功拒絕誘惑，被動收入觀念 +100` }) },
+        { title: '理財覺醒', desc: '你開始理解資產與負債的差別。', badges:['成長'], execute: p => ({ passive: +200, expense: -50, msg: `${p.name}理財觀念提升，被動收入 +200，支出 -50` }), skip: p => ({ msg: `${p.name}錯過反思機會。` }) },
+        { title: 'FOMO 錯失恐懼', desc: '看到別人都在買，你擔心被落下。', badges:['情緒'], execute: p => ({ cash: -500, msg: `${p.name}因 FOMO 消費，現金 -500` }), skip: p => ({ passive: +50, msg: `${p.name}練習延遲滿足，被動收入觀念 +50` }) },
+        { title: '延遲滿足', desc: '你願意先存錢，等待更好的機會。', badges:['自制力'], execute: p => ({ cash: +300, passive: +100, msg: `${p.name}延遲滿足成功，現金 +300，被動收入 +100` }), skip: p => ({ msg: `${p.name}沒有把握這次成長。` }) },
+        { title: '情緒性消費', desc: '心情不好時更容易亂花。', badges:['警覺'], execute: p => ({ cash: -800, msg: `${p.name}情緒性消費，現金 -800` }), skip: p => ({ expense: -50, msg: `${p.name}找到其他紓壓方式，支出 -50` }) }
       ],
       start: [
-        { title: '領取本月收入', desc: '回到起點時，領取主動收入與被動收入。', auto: p => ({ cash: p.salary + p.passive, passive: 0, expense: 0, msg: `${p.name}回到起點，領取收入 ${p.salary + p.passive}` }) }
+        { title: '領取本月收入', desc: '回到起點時，領取主動收入與被動收入。', badges:['發薪日'], auto: p => ({ cash: p.salary + p.passive, msg: `${p.name}回到起點，領取收入 ${p.salary + p.passive}` }) }
       ]
     };
 
@@ -551,24 +808,37 @@
     const winnerBox = document.getElementById('winnerBox');
     const rollBtn = document.getElementById('rollBtn');
     const resetBtn = document.getElementById('resetBtn');
+    const mobileRollBtn = document.getElementById('mobileRollBtn');
+    const mobileResetBtn = document.getElementById('mobileResetBtn');
+    const modeGrid = document.getElementById('modeGrid');
+    const characterGrid = document.getElementById('characterGrid');
+    const startGameBtn = document.getElementById('startGameBtn');
+    const toggleSoundBtn = document.getElementById('toggleSoundBtn');
+    const modalMask = document.getElementById('modalMask');
+    const modalTypeWrap = document.getElementById('modalTypeWrap');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDesc = document.getElementById('modalDesc');
+    const modalBadges = document.getElementById('modalBadges');
+    const modalActions = document.getElementById('modalActions');
 
-    const initialPlayers = () => ([
-      { name: '玩家1', cash: 3000, passive: 0, expense: 1500, salary: 900, pos: 0, colorClass: 'token-0' },
-      { name: '玩家2', cash: 2800, passive: 0, expense: 1400, salary: 850, pos: 0, colorClass: 'token-1' },
-      { name: '玩家3', cash: 3200, passive: 0, expense: 1600, salary: 950, pos: 0, colorClass: 'token-2' },
-      { name: '玩家4', cash: 2600, passive: 0, expense: 1300, salary: 800, pos: 0, colorClass: 'token-3' }
-    ]);
-
-    let players = initialPlayers();
+    let selectedMode = 'single';
+    let selectedRoleId = roleTemplates[0].id;
+    let players = [];
     let currentPlayerIndex = 0;
-    let round = 1;
+    let round = 0;
+    let gameStarted = false;
     let gameOver = false;
     let pendingAction = null;
+    let soundEnabled = true;
     const tokenEls = [];
     const spaceEls = [];
 
     function rand(arr) {
       return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function deepClone(obj) {
+      return JSON.parse(JSON.stringify(obj));
     }
 
     function addLog(text) {
@@ -582,6 +852,93 @@
       p.cash = Math.max(0, Math.round(p.cash));
       p.passive = Math.max(0, Math.round(p.passive));
       p.expense = Math.max(500, Math.round(p.expense));
+    }
+
+    function createBeep(freq = 440, duration = 0.12, type = 'sine', gainValue = 0.03) {
+      if (!soundEnabled) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!window.__gameAudioCtx) window.__gameAudioCtx = new AudioCtx();
+        const ctx = window.__gameAudioCtx;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.value = gainValue;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function soundRoll() { createBeep(280, 0.08, 'square'); setTimeout(() => createBeep(360, 0.08, 'square'), 90); }
+    function soundMove() { createBeep(520, 0.06, 'triangle'); }
+    function soundCard() { createBeep(620, 0.08, 'sine'); setTimeout(() => createBeep(760, 0.1, 'sine'), 80); }
+    function soundGain() { createBeep(740, 0.08, 'triangle'); setTimeout(() => createBeep(880, 0.12, 'triangle'), 80); }
+    function soundLoss() { createBeep(240, 0.14, 'sawtooth'); }
+    function soundWin() { createBeep(660, 0.08, 'triangle'); setTimeout(() => createBeep(830, 0.1, 'triangle'), 80); setTimeout(() => createBeep(990, 0.16, 'triangle'), 160); }
+
+    function renderSetup() {
+      modeGrid.innerHTML = '';
+      modeTemplates.forEach(mode => {
+        const div = document.createElement('div');
+        div.className = `choice-card ${selectedMode === mode.id ? 'active' : ''}`;
+        div.innerHTML = `<h4>${mode.title}</h4><p>${mode.desc}</p>`;
+        div.onclick = () => {
+          selectedMode = mode.id;
+          renderSetup();
+        };
+        modeGrid.appendChild(div);
+      });
+
+      characterGrid.innerHTML = '';
+      roleTemplates.forEach(role => {
+        const div = document.createElement('div');
+        div.className = `choice-card ${selectedRoleId === role.id ? 'active' : ''}`;
+        div.innerHTML = `<h4>${role.title}</h4><p>${role.desc}<br>起始現金：${role.cash}<br>收入：${role.salary}<br>支出：${role.expense}</p>`;
+        div.onclick = () => {
+          selectedRoleId = role.id;
+          renderSetup();
+        };
+        characterGrid.appendChild(div);
+      });
+
+      toggleSoundBtn.textContent = `音效：${soundEnabled ? '開啟' : '關閉'}`;
+    }
+
+    function buildPlayers() {
+      const selectedRole = roleTemplates.find(r => r.id === selectedRoleId);
+      const p1 = {
+        name: selectedMode === 'single' ? '你' : '玩家1',
+        roleTitle: selectedRole.title,
+        cash: selectedRole.cash,
+        passive: selectedRole.passive,
+        expense: selectedRole.expense,
+        salary: selectedRole.salary,
+        pos: 0,
+        colorClass: 'token-0',
+        isAI: false,
+        bonus: selectedRole.bonus
+      };
+
+      const opponentRole = deepClone(rand(roleTemplates.filter(r => r.id !== selectedRoleId)));
+      const p2 = {
+        name: selectedMode === 'single' ? '電腦' : '玩家2',
+        roleTitle: opponentRole.title,
+        cash: opponentRole.cash,
+        passive: opponentRole.passive,
+        expense: opponentRole.expense,
+        salary: opponentRole.salary,
+        pos: 0,
+        colorClass: 'token-1',
+        isAI: selectedMode === 'single',
+        bonus: opponentRole.bonus
+      };
+
+      return [p1, p2];
     }
 
     function renderBoard() {
@@ -614,7 +971,7 @@
 
       players.forEach((p, i) => {
         const token = document.createElement('div');
-        token.className = `player-token ${p.colorClass}`;
+        token.className = `player-token ${p.colorClass || `token-${i}`}`;
         boardWrap.appendChild(token);
         tokenEls.push(token);
       });
@@ -624,42 +981,49 @@
 
     function renderTokens() {
       const offsets = [
-        { x: -12, y: -12 },
-        { x: 12, y: -12 },
+        { x: -12, y: 0 },
+        { x: 12, y: 0 },
         { x: -12, y: 12 },
         { x: 12, y: 12 }
       ];
       players.forEach((p, i) => {
+        if (!spaceEls[p.pos] || !tokenEls[i]) return;
         const spot = spaceEls[p.pos];
-        tokenEls[i].style.left = `${spot.x + offsets[i].x}px`;
-        tokenEls[i].style.top = `${spot.y + offsets[i].y}px`;
+        tokenEls[i].style.left = `${spot.x + (offsets[i]?.x || 0)}px`;
+        tokenEls[i].style.top = `${spot.y + (offsets[i]?.y || 0)}px`;
       });
     }
 
     function renderPlayers() {
       playersList.innerHTML = '';
+      if (!players.length) {
+        playersList.innerHTML = '<div class="player-line">請先在上方選擇模式與角色。</div>';
+        return;
+      }
       players.forEach((p, idx) => {
         const totalAsset = p.cash + p.passive * 8 - p.expense * 2;
         const div = document.createElement('div');
         div.className = 'player-line';
         div.innerHTML = `
-          <strong>${p.name}</strong>
+          <strong>${p.name}</strong>（${p.roleTitle}）<br>
           現金：<span style="color:#1677d8;font-weight:900;">${p.cash}</span>　
           被動收入：<span style="color:#d08b00;font-weight:900;">${p.passive}</span>　
           支出：<span style="color:#ef5a4c;font-weight:900;">${p.expense}</span><br>
-          收入：${p.salary}／回起點　總資產估值：<span style="font-weight:900;">${totalAsset}</span>
-          ${idx === currentPlayerIndex && !gameOver ? '　👉 目前行動中' : ''}
+          收入：${p.salary}／回起點　特性：${p.bonus}<br>
+          總資產估值：<span style="font-weight:900;">${totalAsset}</span>
+          ${idx === currentPlayerIndex && gameStarted && !gameOver ? '　👉 目前行動中' : ''}
         `;
         playersList.appendChild(div);
       });
+
       const p = players[currentPlayerIndex];
-      currentPlayerText.textContent = p.name;
+      currentPlayerText.textContent = p ? p.name : '尚未開始';
       roundText.textContent = round;
-      positionText.textContent = spaces[p.pos].main;
-      stateText.textContent = gameOver ? '已結束' : '進行中';
+      positionText.textContent = p ? spaces[p.pos].main : '起點';
+      stateText.textContent = gameOver ? '已結束' : (gameStarted ? '進行中' : '等待開始');
     }
 
-    function renderCard(type, card) {
+    function renderCardPanel(type, card) {
       const clsMap = {
         opportunity: 'type-opportunity',
         event: 'type-event',
@@ -681,12 +1045,80 @@
       `;
     }
 
+    function showModal(type, card, onDo, onSkip, autoClose = false) {
+      const clsMap = {
+        opportunity: 'type-opportunity',
+        event: 'type-event',
+        consume: 'type-consume',
+        psych: 'type-psych',
+        start: 'type-start'
+      };
+      const nameMap = {
+        opportunity: '機會',
+        event: '事件',
+        consume: '消費',
+        psych: '心理',
+        start: '起點'
+      };
+
+      modalTypeWrap.innerHTML = `<span class="card-type ${clsMap[type]}">${nameMap[type]}</span>`;
+      modalTitle.textContent = card.title;
+      modalDesc.textContent = card.desc;
+      modalBadges.innerHTML = '';
+      (card.badges || []).forEach(b => {
+        const span = document.createElement('span');
+        span.className = 'badge';
+        span.textContent = b;
+        modalBadges.appendChild(span);
+      });
+      modalActions.innerHTML = '';
+
+      if (autoClose) {
+        const btn = document.createElement('button');
+        btn.className = 'primary';
+        btn.textContent = '確認';
+        btn.onclick = () => {
+          hideModal();
+          onDo && onDo();
+        };
+        modalActions.appendChild(btn);
+      } else {
+        const doBtn = document.createElement('button');
+        doBtn.className = 'primary';
+        doBtn.textContent = '執行選項';
+        doBtn.onclick = () => {
+          hideModal();
+          onDo && onDo();
+        };
+        const skipBtn = document.createElement('button');
+        skipBtn.className = 'secondary';
+        skipBtn.textContent = '這次跳過';
+        skipBtn.onclick = () => {
+          hideModal();
+          onSkip && onSkip();
+        };
+        modalActions.appendChild(doBtn);
+        modalActions.appendChild(skipBtn);
+      }
+
+      modalMask.classList.add('show');
+    }
+
+    function hideModal() {
+      modalMask.classList.remove('show');
+    }
+
     function applyEffect(player, effect) {
       if (effect.cash) player.cash += effect.cash;
       if (effect.passive) player.passive += effect.passive;
       if (effect.expense) player.expense += effect.expense;
       clampPlayer(player);
       if (effect.msg) addLog(effect.msg);
+
+      const totalDelta = (effect.cash || 0) + (effect.passive || 0) * 3 - (effect.expense || 0) * 2;
+      if (totalDelta > 0) soundGain();
+      else if (totalDelta < 0) soundLoss();
+
       renderPlayers();
       renderTokens();
       checkWinner();
@@ -698,19 +1130,23 @@
       if (instantWinner) {
         gameOver = true;
         rollBtn.disabled = true;
+        mobileRollBtn.disabled = true;
         winnerBox.innerHTML = `<div class="winner">🏆 ${instantWinner.name} 已達成財務自由！<br>因為被動收入 ${instantWinner.passive} ≥ 支出 ${instantWinner.expense}。</div>`;
         stateText.textContent = '已結束';
         addLog(`${instantWinner.name} 達成財務自由，遊戲結束。`);
+        soundWin();
         return true;
       }
       if (round > 20) {
         gameOver = true;
         rollBtn.disabled = true;
+        mobileRollBtn.disabled = true;
         const sorted = [...players].sort((a,b) => (b.cash + b.passive * 8 - b.expense * 2) - (a.cash + a.passive * 8 - a.expense * 2));
         const top = sorted[0];
         winnerBox.innerHTML = `<div class="winner">🏆 20 回合結束，${top.name} 的總資產最高，獲得勝利！</div>`;
         stateText.textContent = '已結束';
         addLog(`20 回合結束，${top.name} 以最高總資產獲勝。`);
+        soundWin();
         return true;
       }
       return false;
@@ -724,86 +1160,170 @@
       if (currentPlayerIndex === 0) round += 1;
       renderPlayers();
       checkWinner();
+      maybeAITurn();
+    }
+
+    function aiDecision(card, player) {
+      if (card.auto) return 'auto';
+      if (player.cash < 700) return 'skip';
+      if (card.title.includes('定期') || card.title.includes('二手拍賣') || card.title.includes('模板') || card.title.includes('理財覺醒') || card.title.includes('延遲滿足')) return 'do';
+      if (card.title.includes('限量') || card.title.includes('課金') || card.title.includes('周邊') || card.title.includes('FOMO')) return 'skip';
+      return Math.random() > 0.45 ? 'do' : 'skip';
     }
 
     function handleLanding(player) {
       const spot = spaces[player.pos];
       const type = spot.type;
       const card = rand(cards[type]);
-      renderCard(type, card);
+      renderCardPanel(type, card);
+      soundCard();
 
       if (card.auto) {
-        const effect = card.auto(player);
-        applyEffect(player, effect);
-        setTimeout(() => { if (!gameOver) nextTurn(); }, 500);
+        showModal(type, card, () => {
+          const effect = card.auto(player);
+          applyEffect(player, effect);
+          setTimeout(() => { if (!gameOver) nextTurn(); }, 300);
+        }, null, true);
         return;
       }
 
       pendingAction = { player, card, type };
-      choiceRow.innerHTML = `
-        <button class="primary" id="doBtn">執行選項</button>
-        <button class="secondary" id="skipBtn">這次跳過</button>
-      `;
-      document.getElementById('doBtn').onclick = () => {
-        if (!pendingAction || gameOver) return;
-        const effect = pendingAction.card.execute(pendingAction.player);
-        applyEffect(pendingAction.player, effect || {});
+
+      const doAction = () => {
+        const effect = card.execute ? card.execute(player) : { msg: `${player.name} 執行了卡片效果。` };
+        applyEffect(player, effect || {});
         nextTurn();
       };
-      document.getElementById('skipBtn').onclick = () => {
-        if (!pendingAction || gameOver) return;
-        const effect = pendingAction.card.skip ? pendingAction.card.skip(pendingAction.player) : { msg: `${pendingAction.player.name} 選擇跳過。` };
-        applyEffect(pendingAction.player, effect || {});
+      const skipAction = () => {
+        const effect = card.skip ? card.skip(player) : { msg: `${player.name} 選擇跳過。` };
+        applyEffect(player, effect || {});
         nextTurn();
       };
+
+      if (player.isAI) {
+        const decision = aiDecision(card, player);
+        showModal(type, card, () => {
+          if (decision === 'do') doAction(); else skipAction();
+        }, null, true);
+      } else {
+        showModal(type, card, doAction, skipAction, false);
+      }
     }
 
     function rollDice() {
-      if (gameOver || pendingAction) return;
+      if (!gameStarted || gameOver || pendingAction) return;
       const player = players[currentPlayerIndex];
+      if (!player) return;
+      soundRoll();
       const dice = Math.floor(Math.random() * 6) + 1;
       diceFace.textContent = dice;
       let newPos = player.pos + dice;
+
       if (newPos >= spaces.length) {
         newPos = newPos % spaces.length;
         const income = player.salary + player.passive;
         player.cash += income;
         addLog(`${player.name} 繞過起點，領取收入 ${income}`);
+        soundGain();
       }
+
       player.pos = newPos;
       clampPlayer(player);
       renderPlayers();
       renderTokens();
+      soundMove();
       addLog(`${player.name} 擲出 ${dice} 點，來到「${spaces[player.pos].main}」`);
       handleLanding(player);
     }
 
-    function resetGame() {
-      players = initialPlayers();
+    function maybeAITurn() {
+      if (!gameStarted || gameOver) return;
+      const player = players[currentPlayerIndex];
+      if (player && player.isAI) {
+        stateText.textContent = '電腦思考中';
+        setTimeout(() => {
+          if (!gameOver) rollDice();
+        }, 900);
+      } else {
+        renderPlayers();
+      }
+    }
+
+    function startGame() {
+      players = buildPlayers();
       currentPlayerIndex = 0;
       round = 1;
+      gameStarted = true;
       gameOver = false;
       pendingAction = null;
       diceFace.textContent = '🎲';
       log.innerHTML = '';
       winnerBox.innerHTML = '';
-      rollBtn.disabled = false;
-      cardContent.innerHTML = `
-        <span class="card-type type-start">開始</span>
-        <div class="card-title">歡迎來到《錢途人生》</div>
-        <p class="card-desc">你的目標是讓 <strong>被動收入 ≥ 支出</strong>。你可以透過投資、副業與良好判斷獲勝，也可能因為衝動消費而落後。</p>
-      `;
+      hideModal();
       choiceRow.innerHTML = '';
+      rollBtn.disabled = false;
+      mobileRollBtn.disabled = false;
       renderBoard();
       renderPlayers();
-      addLog('新遊戲開始。每位玩家從起點出發。');
+      cardContent.innerHTML = `
+        <span class="card-type type-start">開始</span>
+        <div class="card-title">遊戲開始</div>
+        <p class="card-desc">${players[0].name} 使用「${players[0].roleTitle}」，${players[1].name} 使用「${players[1].roleTitle}」。開始朝財務自由前進吧！</p>
+      `;
+      addLog(`新遊戲開始：${players[0].name}（${players[0].roleTitle}）對上 ${players[1].name}（${players[1].roleTitle}）。`);
+      stateText.textContent = '進行中';
+      soundCard();
+      maybeAITurn();
+    }
+
+    function resetGame() {
+      players = [];
+      currentPlayerIndex = 0;
+      round = 0;
+      gameStarted = false;
+      gameOver = false;
+      pendingAction = null;
+      diceFace.textContent = '🎲';
+      log.innerHTML = '';
+      winnerBox.innerHTML = '';
+      hideModal();
+      rollBtn.disabled = true;
+      mobileRollBtn.disabled = true;
+      cardContent.innerHTML = `
+        <span class="card-type type-start">開始</span>
+        <div class="card-title">先選擇模式與角色</div>
+        <p class="card-desc">按下上方「開始遊戲」後，就能進入正式對戰。遇到卡片時會跳出大視窗，手機上更好操作。</p>
+      `;
+      choiceRow.innerHTML = '';
+      renderPlayers();
+      renderBoard();
+      currentPlayerText.textContent = '尚未開始';
+      roundText.textContent = '0';
+      positionText.textContent = '起點';
+      stateText.textContent = '等待開始';
+      addLog('已重設遊戲，請重新選擇模式與角色。');
     }
 
     window.addEventListener('resize', renderBoard);
     rollBtn.addEventListener('click', rollDice);
+    mobileRollBtn.addEventListener('click', rollDice);
     resetBtn.addEventListener('click', resetGame);
+    mobileResetBtn.addEventListener('click', resetGame);
+    startGameBtn.addEventListener('click', startGame);
+    toggleSoundBtn.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      renderSetup();
+      createBeep(500, 0.05, 'sine');
+    });
+    modalMask.addEventListener('click', (e) => {
+      if (e.target === modalMask && pendingAction && !players[currentPlayerIndex]?.isAI) {
+        // 人類玩家不允許點背景直接關閉，避免誤觸
+      }
+    });
 
-    resetGame();
+    renderSetup();
+    renderPlayers();
+    renderBoard();
   </script>
 </body>
 </html>
