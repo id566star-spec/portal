@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>可愛記帳小幫手</title>
+  <style>
+    :root {
+      --bg1: #fff6fb;
+      --bg2: #fefcff;
+      --card: rgba(255,255,255,0.92);
+      --pink: #ff8fba;
+      --pink-dark: #ff6fa7;
+      --purple: #b89cff;
+      --mint: #9fe7d7;
+      --blue: #9fc7ff;
+      --text: #4b4453;
+      --subtext: #7d7388;
+      --shadow: 0 12px 30px rgba(255, 143, 186, 0.16);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, #ffe3f0 0%, transparent 28%),
+        radial-gradient(circle at top right, #e9ddff 0%, transparent 24%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height: 100vh;
+      padding: 14px;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,244,250,0.98));
+      border-radius: 28px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 2px solid rgba(255,255,255,0.8);
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "✦ ʚɞ ✦";
+      position: absolute;
+      right: 16px;
+      top: 14px;
+      color: #ffacd0;
+      font-size: 18px;
+      letter-spacing: 3px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(26px, 6vw, 36px);
+      font-weight: 900;
+      color: var(--pink-dark);
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--subtext);
+      font-size: 14px;
+      line-height: 1.7;
+      max-width: 92%;
+    }
+
+    .stack {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      border: 2px solid rgba(255,255,255,0.75);
+    }
+
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: 19px;
+      color: #6b5a92;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 700;
+      color: #7a679c;
+    }
+
+    input, select {
+      width: 100%;
+      border: none;
+      outline: none;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #fff;
+      color: var(--text);
+      font-size: 15px;
+      box-shadow: inset 0 0 0 2px #f5d8e8;
+      transition: 0.2s ease;
+    }
+
+    input:focus, select:focus {
+      box-shadow: inset 0 0 0 2px var(--pink);
+      transform: translateY(-1px);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 13px 18px;
+      font-size: 15px;
+      font-weight: 800;
+      transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+      width: 100%;
+    }
+
+    button:hover { transform: translateY(-2px); }
+
+    .primary {
+      background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+      color: white;
+      box-shadow: 0 10px 20px rgba(255, 111, 167, 0.25);
+    }
+
+    .secondary {
+      background: linear-gradient(135deg, #c6b1ff, #9f8cff);
+      color: white;
+    }
+
+    .ghost {
+      background: #fff;
+      color: #8c79b0;
+      box-shadow: inset 0 0 0 2px #eadfff;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .stat {
+      border-radius: 20px;
+      padding: 14px;
+      color: #fff;
+      min-height: 98px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: var(--shadow);
+    }
+
+    .stat.balance { background: linear-gradient(135deg, #ff92bd, #ff73aa); }
+    .stat.income { background: linear-gradient(135deg, #97e4ce, #6dd9be); }
+    .stat.expense { background: linear-gradient(135deg, #c5b0ff, #a28dff); }
+
+    .stat .label {
+      font-size: 14px;
+      opacity: 0.95;
+      font-weight: 700;
+    }
+
+    .stat .value {
+      font-size: clamp(22px, 5vw, 30px);
+      font-weight: 900;
+      margin-top: 8px;
+      word-break: break-word;
+    }
+
+    .filter-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 420px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .item {
+      background: #fff;
+      border-radius: 18px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      align-items: center;
+      box-shadow: 0 10px 20px rgba(184, 156, 255, 0.08);
+      border: 2px solid #f9eef5;
+    }
+
+    .item-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 16px;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      color: white;
+    }
+
+    .badge.income { background: #69d4b7; }
+    .badge.expense { background: #ff89b5; }
+
+    .meta {
+      color: var(--subtext);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .amount {
+      text-align: left;
+      font-weight: 900;
+      font-size: 20px;
+    }
+
+    .amount.income { color: #38b592; }
+    .amount.expense { color: #ff5f9c; }
+
+    .item-actions {
+      margin-top: 10px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .small-btn {
+      padding: 8px 12px;
+      font-size: 13px;
+      border-radius: 999px;
+      background: #fff5fa;
+      color: #a36c8b;
+      box-shadow: inset 0 0 0 2px #ffd5e6;
+      width: auto;
+    }
+
+    .small-btn.delete {
+      background: #fff0f2;
+      color: #d55c74;
+      box-shadow: inset 0 0 0 2px #ffc4ce;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--subtext);
+      padding: 30px 16px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 20px;
+      border: 2px dashed #f2cfe0;
+      line-height: 1.8;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .chart-canvas {
+      width: 100%;
+      background: #fff;
+      border-radius: 20px;
+      border: 2px solid #f7e3ee;
+      display: block;
+    }
+
+    .section-soft {
+      background: rgba(255,255,255,0.74);
+    }
+
+    .footer-note {
+      text-align: center;
+      color: #907cae;
+      margin-top: 16px;
+      font-size: 13px;
+    }
+
+    @media (min-width: 720px) {
+      body { padding: 20px; }
+      button { width: auto; }
+      .form-grid { grid-template-columns: repeat(2, 1fr); }
+      .field.full { grid-column: 1 / -1; }
+      .stats { grid-template-columns: repeat(3, 1fr); }
+      .item { grid-template-columns: 1fr auto; }
+      .amount { text-align: right; }
+      .filter-row {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      .filter-row input,
+      .filter-row select {
+        flex: 1;
+        min-width: 180px;
+      }
+      .btn-row { gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <h1 class="title">🐰 可愛記帳小幫手</h1>
+      <p class="subtitle">簡單輸入收入與支出，自動統計結餘。資料會保存在瀏覽器，重新打開也還在，適合日常快速記帳使用。</p>
+    </section>
+
+    <div class="stack">
+      <section class="card">
+        <h2>✨ 新增一筆記錄</h2>
+        <form id="recordForm">
+          <div class="form-grid">
+            <div class="field">
+              <label for="type">類型</label>
+              <select id="type" required>
+                <option value="expense">支出</option>
+                <option value="income">收入</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="amount">金額</label>
+              <input id="amount" type="number" min="0" step="1" placeholder="例如：120" required />
+            </div>
+
+            <div class="field">
+              <label for="category">分類</label>
+              <select id="category" required></select>
+            </div>
+
+            <div class="field">
+              <label for="date">日期</label>
+              <input id="date" type="date" required />
+            </div>
+
+            <div class="field full">
+              <label for="note">備註</label>
+              <input id="note" type="text" maxlength="50" placeholder="例如：午餐、捷運、接案收入" />
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="primary" type="submit">➕ 加入記帳</button>
+            <button class="ghost" type="button" id="resetFormBtn">重設欄位</button>
+          </div>
+        </form>
+
+        <div class="card section-soft" style="margin-top: 16px; padding: 14px;">
+          <h2 id="categoryEditorTitle">支出分類管理</h2>
+          <div class="btn-row" style="margin-top:0; margin-bottom:12px;">
+            <button class="primary" type="button" data-category-tab="expense">支出分類</button>
+            <button class="ghost" type="button" data-category-tab="income">收入分類</button>
+            <button class="secondary" type="button" id="addCategoryBtn">新增分類</button>
+          </div>
+          <div class="list" id="categoryEditorList" style="max-height: 260px;"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>💖 本月小總覽</h2>
+        <div class="stats">
+          <div class="stat balance">
+            <div class="label">目前結餘</div>
+            <div class="value" id="balance">NT$ 0</div>
+          </div>
+          <div class="stat income">
+            <div class="label">總收入</div>
+            <div class="value" id="incomeTotal">NT$ 0</div>
+          </div>
+          <div class="stat expense">
+            <div class="label">總支出</div>
+            <div class="value" id="expenseTotal">NT$ 0</div>
+          </div>
+        </div>
+
+        <h2 style="margin-top: 10px;">🔍 查找記錄</h2>
+        <div class="filter-row">
+          <input id="searchInput" type="text" placeholder="搜尋備註或分類" />
+          <select id="filterType">
+            <option value="all">全部類型</option>
+            <option value="income">只看收入</option>
+            <option value="expense">只看支出</option>
+          </select>
+        </div>
+
+        <div class="card section-soft" style="margin-bottom: 16px; padding: 14px;">
+          <h2 style="margin-bottom: 12px;">📊 收支比例分析</h2>
+          <div class="chart-grid">
+            <canvas id="monthlyExpensePieChart" class="chart-canvas" width="520" height="320"></canvas>
+            <canvas id="yearlyExpensePieChart" class="chart-canvas" width="520" height="320" style="border-color:#f1e7ff;"></canvas>
+            <canvas id="monthlyIncomePieChart" class="chart-canvas" width="520" height="320" style="border-color:#e3f3ee;"></canvas>
+            <canvas id="yearlyIncomePieChart" class="chart-canvas" width="520" height="320" style="border-color:#e8f0ff;"></canvas>
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top: 0; margin-bottom: 14px;">
+          <button class="secondary" type="button" id="exportBtn">下載 JSON 備份</button>
+          <button class="ghost" type="button" id="clearAllBtn">清空全部資料</button>
+        </div>
+
+        <div class="list" id="recordList"></div>
+      </section>
+    </div>
+
+    <div class="footer-note">用甜甜的方式，把每一筆錢都照顧好 🌷</div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'cute_expense_records_v2';
+    const CATEGORY_STORAGE_KEY = 'cute_expense_categories_v2';
+
+    const defaultCategoryMap = {
+      expense: [
+        { name: '餐飲', emoji: '🍜' },
+        { name: '交通', emoji: '🚌' },
+        { name: '購物', emoji: '🛍️' },
+        { name: '娛樂', emoji: '🎮' },
+        { name: '生活', emoji: '🏠' },
+        { name: '醫療', emoji: '💊' },
+        { name: '學習', emoji: '📚' },
+        { name: '其他支出', emoji: '✨' }
+      ],
+      income: [
+        { name: '薪水', emoji: '💼' },
+        { name: '獎金', emoji: '🎁' },
+        { name: '接案', emoji: '💻' },
+        { name: '投資', emoji: '📈' },
+        { name: '退款', emoji: '💸' },
+        { name: '禮金', emoji: '🧧' },
+        { name: '其他收入', emoji: '🌟' }
+      ]
+    };
+
+    const form = document.getElementById('recordForm');
+    const typeInput = document.getElementById('type');
+    const amountInput = document.getElementById('amount');
+    const categoryInput = document.getElementById('category');
+    const dateInput = document.getElementById('date');
+    const noteInput = document.getElementById('note');
+    const recordList = document.getElementById('recordList');
+    const balanceEl = document.getElementById('balance');
+    const incomeTotalEl = document.getElementById('incomeTotal');
+    const expenseTotalEl = document.getElementById('expenseTotal');
+    const searchInput = document.getElementById('searchInput');
+    const filterType = document.getElementById('filterType');
+    const resetFormBtn = document.getElementById('resetFormBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const addCategoryBtn = document.getElementById('addCategoryBtn');
+
+    let categoryMap = loadCategoryMap();
+    let records = loadRecords();
+    let editingCategoryType = 'expense';
+
+    function todayString() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatMoney(num) {
+      return 'NT$ ' + Number(num || 0).toLocaleString('zh-TW');
+    }
+
+    function clone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    function loadCategoryMap() {
+      try {
+        const raw = localStorage.getItem(CATEGORY_STORAGE_KEY);
+        if (!raw) return clone(defaultCategoryMap);
+        const parsed = JSON.parse(raw);
+        return {
+          expense: Array.isArray(parsed.expense) && parsed.expense.length ? parsed.expense : clone(defaultCategoryMap.expense),
+          income: Array.isArray(parsed.income) && parsed.income.length ? parsed.income : clone(defaultCategoryMap.income)
+        };
+      } catch {
+        return clone(defaultCategoryMap);
+      }
+    }
+
+    function saveCategoryMap() {
+      localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(categoryMap));
+    }
+
+    function loadRecords() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveRecords() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function updateCategoryOptions() {
+      const type = typeInput.value;
+      const categories = categoryMap[type] || [];
+      categoryInput.innerHTML = categories
+        .map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.emoji)} ${escapeHtml(c.name)}</option>`)
+        .join('');
+      renderCategoryEditor();
+    }
+
+    function resetForm() {
+      form.reset();
+      typeInput.value = 'expense';
+      updateCategoryOptions();
+      dateInput.value = todayString();
+      amountInput.focus();
+    }
+
+    function getCategoryObject(type, categoryName) {
+      return (categoryMap[type] || []).find(item => item.name === categoryName);
+    }
+
+    function addRecord(data) {
+      records.unshift({
+        id: crypto.randomUUID(),
+        ...data,
+        amount: Number(data.amount)
+      });
+      saveRecords();
+      render();
+    }
+
+    function deleteRecord(id) {
+      records = records.filter(item => item.id !== id);
+      saveRecords();
+      render();
+    }
+
+    function renderCategoryEditor() {
+      const wrap = document.getElementById('categoryEditorList');
+      const title = document.getElementById('categoryEditorTitle');
+      const typeTabs = document.querySelectorAll('[data-category-tab]');
+      if (!wrap || !title) return;
+
+      title.textContent = editingCategoryType === 'expense' ? '支出分類管理' : '收入分類管理';
+      typeTabs.forEach(btn => {
+        const active = btn.dataset.categoryTab === editingCategoryType;
+        btn.className = active ? 'primary' : 'ghost';
+      });
+
+      const items = categoryMap[editingCategoryType] || [];
+      wrap.innerHTML = items.map((item, index) => `
+        <div class="item" style="grid-template-columns:1fr; gap:8px;">
+          <div class="meta" style="font-size:15px; color:#5a4f67; font-weight:800;">${escapeHtml(item.emoji)} ${escapeHtml(item.name)}</div>
+          <div class="item-actions" style="margin-top:0; justify-content:flex-start;">
+            <button class="small-btn" onclick="editCategoryPrompt('${editingCategoryType}', ${index})">編輯</button>
+            <button class="small-btn delete" onclick="deleteCategoryPrompt('${editingCategoryType}', ${index})">刪除</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addCategory(type, emoji, name) {
+      categoryMap[type].push({ emoji, name });
+      saveCategoryMap();
+      updateCategoryOptions();
+      render();
+    }
+
+    function renameCategoryReferences(type, oldName, newName, emoji) {
+      records = records.map(record => {
+        if (record.type === type && record.category === oldName) {
+          return { ...record, category: newName, categoryEmoji: emoji };
+        }
+        return record;
+      });
+      saveRecords();
+    }
+
+    function deleteCategory(type, index) {
+      const removed = categoryMap[type][index];
+      categoryMap[type].splice(index, 1);
+      const fallback = type === 'expense'
+        ? (categoryMap[type].find(item => item.name === '其他支出') || categoryMap[type][0])
+        : (categoryMap[type].find(item => item.name === '其他收入') || categoryMap[type][0]);
+
+      records = records.map(record => {
+        if (record.type === type && record.category === removed.name) {
+          return { ...record, category: fallback.name, categoryEmoji: fallback.emoji };
+        }
+        return record;
+      });
+
+      saveCategoryMap();
+      saveRecords();
+      updateCategoryOptions();
+      render();
+    }
+
+    function getFilteredRecords() {
+      const keyword = searchInput.value.trim().toLowerCase();
+      const type = filterType.value;
+
+      return records.filter(item => {
+        const matchType = type === 'all' ? true : item.type === type;
+        const text = `${item.note || ''} ${item.category || ''}`.toLowerCase();
+        const matchKeyword = keyword ? text.includes(keyword) : true;
+        return matchType && matchKeyword;
+      });
+    }
+
+    function renderStats() {
+      const income = records.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0);
+      const expense = records.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0);
+      const balance = income - expense;
+
+      incomeTotalEl.textContent = formatMoney(income);
+      expenseTotalEl.textContent = formatMoney(expense);
+      balanceEl.textContent = formatMoney(balance);
+    }
+
+    function renderList() {
+      const list = getFilteredRecords();
+
+      if (!list.length) {
+        recordList.innerHTML = `
+          <div class="empty">
+            目前還沒有符合的記錄唷。<br />
+            快新增第一筆，開始可愛記帳吧 🧸
+          </div>
+        `;
+        return;
+      }
+
+      recordList.innerHTML = list.map(item => `
+        <div class="item">
+          <div>
+            <div class="item-title">
+              <span class="badge ${item.type}">${item.type === 'income' ? '收入' : '支出'}</span>
+              <span>${escapeHtml(item.note || '未填備註')}</span>
+            </div>
+            <div class="meta">
+              分類：${escapeHtml(item.categoryEmoji || '✨')} ${escapeHtml(item.category)}<br>
+              日期：${escapeHtml(item.date)}
+            </div>
+            <div class="item-actions">
+              <button class="small-btn delete" onclick="deleteRecordById('${item.id}')">刪除</button>
+            </div>
+          </div>
+          <div class="amount ${item.type}">${item.type === 'income' ? '+' : '-'} ${formatMoney(item.amount)}</div>
+        </div>
+      `).join('');
+    }
+
+    function getPeriodCategoryTotals(period = 'month', targetType = 'expense') {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1;
+      const totals = {};
+
+      records.forEach(item => {
+        if (item.type !== targetType) return;
+        const d = new Date(item.date);
+        if (Number.isNaN(d.getTime())) return;
+        const year = d.getFullYear();
+        const month = d.getMonth() + 1;
+
+        const match = period === 'year'
+          ? year === currentYear
+          : year === currentYear && month === currentMonth;
+
+        if (!match) return;
+        totals[item.category] = (totals[item.category] || 0) + Number(item.amount || 0);
+      });
+
+      return totals;
+    }
+
+    function resizeCanvasForDisplay(canvas) {
+      const ratio = window.devicePixelRatio || 1;
+      const displayWidth = Math.max(320, Math.floor(canvas.clientWidth || canvas.parentElement.clientWidth || 520));
+      const displayHeight = Math.max(300, Math.floor(displayWidth * 0.68));
+      canvas.width = Math.floor(displayWidth * ratio);
+      canvas.height = Math.floor(displayHeight * ratio);
+      canvas.style.height = `${displayHeight}px`;
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      return { ctx, width: displayWidth, height: displayHeight };
+    }
+
+    function drawPieChart(canvasId, dataMap, titleText, centerLabel) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const { ctx, width, height } = resizeCanvasForDisplay(canvas);
+      const cx = width / 2;
+      const cy = height / 2 - 6;
+      const radius = Math.min(width, height) * 0.2;
+
+      ctx.clearRect(0, 0, width, height);
+
+      const entries = Object.entries(dataMap).filter(([, value]) => value > 0);
+      const total = entries.reduce((sum, [, value]) => sum + value, 0);
+
+      ctx.font = 'bold 18px Microsoft JhengHei';
+      ctx.fillStyle = '#6b5a92';
+      ctx.textAlign = 'left';
+      ctx.fillText(titleText, 16, 28);
+
+      if (!entries.length || total <= 0) {
+        ctx.font = '15px Microsoft JhengHei';
+        ctx.fillStyle = '#8b7f98';
+        ctx.textAlign = 'center';
+        ctx.fillText('目前沒有收支資料可以顯示圓餅圖', cx, cy + 10);
+        return;
+      }
+
+      const colors = ['#ff8fba', '#b89cff', '#9fe7d7', '#ffd37e', '#8ec5ff', '#ffb38a', '#c6a6ff', '#ff9eb1', '#87d8f7', '#f3a6d6'];
+
+      let startAngle = -Math.PI / 2;
+      entries.forEach(([label, value], index) => {
+        const sliceAngle = (value / total) * Math.PI * 2;
+        const endAngle = startAngle + sliceAngle;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = colors[index % colors.length];
+        ctx.fill();
+        startAngle = endAngle;
+      });
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * 0.52, 0, Math.PI * 2);
+      ctx.fillStyle = '#fffafc';
+      ctx.fill();
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#6b5a92';
+      ctx.font = 'bold 14px Microsoft JhengHei';
+      ctx.fillText(centerLabel, cx, cy - 4);
+      ctx.font = 'bold 16px Microsoft JhengHei';
+      ctx.fillText(formatMoney(total), cx, cy + 18);
+
+      const legendX = 16;
+      let legendY = cy + radius + 28;
+      if (legendY < 190) legendY = 190;
+      ctx.textAlign = 'left';
+
+      entries.forEach(([label, value], index) => {
+        const ratio = ((value / total) * 100).toFixed(1);
+        ctx.fillStyle = colors[index % colors.length];
+        drawRoundedRect(ctx, legendX, legendY + index * 24, 14, 14, 4);
+        ctx.fill();
+
+        ctx.fillStyle = '#5f5569';
+        ctx.font = '13px Microsoft JhengHei';
+        const categoryObj = Object.values(categoryMap).flat().find(c => c.name === label);
+        const labelText = `${categoryObj ? categoryObj.emoji + ' ' : ''}${label} ${ratio}%（${formatMoney(value)}）`;
+        ctx.fillText(labelText, legendX + 22, legendY + 12 + index * 24);
+      });
+    }
+
+    function drawRoundedRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + width, y, x + width, y + height, radius);
+      ctx.arcTo(x + width, y + height, x, y + height, radius);
+      ctx.arcTo(x, y + height, x, y, radius);
+      ctx.arcTo(x, y, x + width, y, radius);
+      ctx.closePath();
+    }
+
+    function renderCharts() {
+      drawPieChart('monthlyExpensePieChart', getPeriodCategoryTotals('month', 'expense'), '本月支出比例圓餅圖', '總支出');
+      drawPieChart('yearlyExpensePieChart', getPeriodCategoryTotals('year', 'expense'), '今年支出比例圓餅圖', '總支出');
+      drawPieChart('monthlyIncomePieChart', getPeriodCategoryTotals('month', 'income'), '本月收入比例圓餅圖', '總收入');
+      drawPieChart('yearlyIncomePieChart', getPeriodCategoryTotals('year', 'income'), '今年收入比例圓餅圖', '總收入');
+    }
+
+    function render() {
+      renderStats();
+      renderList();
+      renderCharts();
+    }
+
+    window.deleteRecordById = function(id) {
+      if (confirm('要刪除這筆記錄嗎？')) deleteRecord(id);
+    };
+
+    window.editCategoryPrompt = function(type, index) {
+      const item = categoryMap[type][index];
+      const oldName = item.name;
+      const newEmoji = prompt('請輸入分類前綴表情符號：', item.emoji);
+      if (newEmoji === null) return;
+      const newName = prompt('請輸入新的分類名稱：', item.name);
+      if (newName === null) return;
+      const emoji = newEmoji.trim() || (type === 'expense' ? '✨' : '🌟');
+      const name = newName.trim();
+      if (!name) {
+        alert('分類名稱不可空白');
+        return;
+      }
+      const duplicated = (categoryMap[type] || []).some((cat, i) => i !== index && cat.name === name);
+      if (duplicated) {
+        alert('這個分類名稱已存在');
+        return;
+      }
+      categoryMap[type][index] = { emoji, name };
+      saveCategoryMap();
+      renameCategoryReferences(type, oldName, name, emoji);
+      updateCategoryOptions();
+      render();
+    };
+
+    window.deleteCategoryPrompt = function(type, index) {
+      if ((categoryMap[type] || []).length <= 1) {
+        alert('至少要保留一個分類');
+        return;
+      }
+      const item = categoryMap[type][index];
+      if (!confirm(`要刪除分類「${item.emoji} ${item.name}」嗎？\n已使用這個分類的資料會改到其他預設分類。`)) return;
+      deleteCategory(type, index);
+    };
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const amount = Number(amountInput.value);
+      if (!amount || amount <= 0) {
+        alert('請輸入正確的金額');
+        amountInput.focus();
+        return;
+      }
+
+      const selectedCategory = getCategoryObject(typeInput.value, categoryInput.value);
+      addRecord({
+        type: typeInput.value,
+        amount,
+        category: selectedCategory ? selectedCategory.name : categoryInput.value,
+        categoryEmoji: selectedCategory ? selectedCategory.emoji : (typeInput.value === 'income' ? '🌟' : '✨'),
+        date: dateInput.value,
+        note: noteInput.value.trim()
+      });
+
+      resetForm();
+    });
+
+    typeInput.addEventListener('change', updateCategoryOptions);
+    searchInput.addEventListener('input', renderList);
+    filterType.addEventListener('change', renderList);
+    resetFormBtn.addEventListener('click', resetForm);
+
+    clearAllBtn.addEventListener('click', () => {
+      if (!records.length) {
+        alert('目前沒有資料可以清空');
+        return;
+      }
+      if (confirm('真的要清空全部記帳資料嗎？此動作無法復原。')) {
+        records = [];
+        saveRecords();
+        render();
+      }
+    });
+
+    addCategoryBtn.addEventListener('click', () => {
+      const emojiInput = prompt('請輸入分類前綴表情符號：', editingCategoryType === 'expense' ? '✨' : '🌟');
+      if (emojiInput === null) return;
+      const nameInput = prompt(`請輸入新的${editingCategoryType === 'expense' ? '支出' : '收入'}分類名稱：`);
+      if (nameInput === null) return;
+      const emoji = emojiInput.trim() || (editingCategoryType === 'expense' ? '✨' : '🌟');
+      const name = nameInput.trim();
+      if (!name) {
+        alert('分類名稱不可空白');
+        return;
+      }
+      const exists = (categoryMap[editingCategoryType] || []).some(item => item.name === name);
+      if (exists) {
+        alert('這個分類名稱已存在');
+        return;
+      }
+      addCategory(editingCategoryType, emoji, name);
+    });
+
+    document.addEventListener('click', (e) => {
+      const tab = e.target.closest('[data-category-tab]');
+      if (!tab) return;
+      editingCategoryType = tab.dataset.categoryTab;
+      renderCategoryEditor();
+    });
+
+    exportBtn.addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '記帳資料備份.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    window.addEventListener('resize', renderCharts);
+
+    updateCategoryOptions();
+    dateInput.value = todayString();
+    render();
+  </script>
+</body>
+</html>
