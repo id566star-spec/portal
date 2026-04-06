@@ -1,154 +1,327 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>小白羊💗的入口網站</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>小白羊💗的入口網站</title>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: "Microsoft JhengHei", sans-serif;
-      background: #f3f4f6;
-      padding: 16px;
-    }
+<style>
+* {
+  box-sizing: border-box;
+}
 
-    h1 {
-      font-size: 22px;
-      margin-bottom: 20px;
-    }
+body {
+  margin: 0;
+  font-family: "Microsoft JhengHei", sans-serif;
+  background: linear-gradient(135deg, #fdfbfb, #ebedee);
+  padding: 16px;
+}
 
-    /* 手機：一欄 */
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-    }
+#loginOverlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #ffe4ec, #f8f4ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
 
-    /* 平板：兩欄 */
-    @media (min-width: 600px) {
-      .grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
+.login-box {
+  width: 100%;
+  max-width: 360px;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 22px;
+  padding: 28px 22px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+  text-align: center;
+}
 
-    /* 電腦：最多四欄 */
-    @media (min-width: 1000px) {
-      .grid {
-        grid-template-columns: repeat(4, 1fr);
-      }
-    }
+.login-icon {
+  font-size: 42px;
+  margin-bottom: 10px;
+}
 
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.08);
-      cursor: pointer;
-      transition: 0.2s;
-      min-height: 110px;
+.login-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #333;
+}
 
-      /* 手機點擊更舒服 */
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
+.login-desc {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 18px;
+}
 
-    .card:active {
-      transform: scale(0.97);
-    }
+.login-input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 16px;
+  border: 1.5px solid #e5d4e8;
+  border-radius: 14px;
+  outline: none;
+  margin-bottom: 14px;
+  transition: 0.2s;
+}
 
-    .icon {
-      font-size: 28px;
-      margin-bottom: 6px;
-    }
+.login-input:focus {
+  border-color: #d88fb0;
+  box-shadow: 0 0 0 4px rgba(216,143,176,0.12);
+}
 
-    .title {
-      font-weight: bold;
-      font-size: 17px;
-    }
+.login-btn {
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #ff9eb5, #f7a8ff);
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
 
-    .desc {
-      font-size: 13px;
-      color: #666;
-      margin-top: 4px;
-    }
+.login-btn:active {
+  transform: scale(0.98);
+}
 
-  </style>
+.error-text {
+  min-height: 22px;
+  margin-top: 10px;
+  color: #d93025;
+  font-size: 14px;
+}
+
+#mainContent {
+  display: none;
+}
+
+h1 {
+  font-size: 22px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1000px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.card {
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(10px);
+  padding: 18px;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.card:active {
+  transform: scale(0.95);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-5px);
+  }
+}
+
+.icon {
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+
+.title {
+  font-weight: bold;
+  font-size: 17px;
+}
+
+.desc {
+  font-size: 13px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.safe-bottom {
+  height: 30px;
+}
+</style>
 </head>
 
 <body>
 
-<h1>小白羊💗的入口網站</h1>
+<div id="loginOverlay">
+  <div class="login-box">
+    <div class="login-icon">🔐</div>
+    <div class="login-title">小白羊💗的入口網站</div>
+    <div class="login-desc">請輸入密碼才能進入</div>
 
-<div class="grid">
+    <input
+      id="passwordInput"
+      class="login-input"
+      type="password"
+      placeholder="請輸入密碼"
+      maxlength="20"
+      onkeydown="handleEnter(event)"
+    />
 
-  <div class="card" onclick="openApp('apps/app1.html')">
-    <div class="icon">📁</div>
-    <div class="title">客戶管理</div>
-    <div class="desc">生日＋關係＋問候產生</div>
+    <button class="login-btn" onclick="checkPassword()">進入網站</button>
+    <div id="errorText" class="error-text"></div>
   </div>
+</div>
 
-  <div class="card" onclick="openApp('apps/app2.html')">
-    <div class="icon">✍️</div>
-    <div class="title">PDF簽名</div>
-    <div class="desc">可簽名與下載</div>
-  </div>
+<div id="mainContent">
+  <h1>小白羊💗的入口網站</h1>
 
-  <div class="card" onclick="openApp('apps/app3.html')">
-    <div class="icon">📄</div>
-    <div class="title">PDF檔案編輯</div>
-    <div class="desc">可刪除和新增頁面</div>
-  </div>
+  <div class="grid">
 
-  <div class="card" onclick="openApp('apps/app4.html')">
-    <div class="icon">🎯</div>
-    <div class="title">模擬考試系統</div>
-    <div class="desc">可每次更新題庫</div>
-  </div>
+    <div class="card" onclick="openApp('apps/app1.html')">
+      <div class="icon">📁</div>
+      <div class="title">客戶管理</div>
+      <div class="desc">生日＋關係＋問候產生</div>
+    </div>
 
-  <div class="card" onclick="openApp('apps/app5.html')">
-    <div class="icon">💖</div>
-    <div class="title">生活滿意度測驗</div>
-    <div class="desc">可修改答案</div>
-  </div>
+    <div class="card" onclick="openApp('apps/app2.html')">
+      <div class="icon">✍️</div>
+      <div class="title">PDF簽名</div>
+      <div class="desc">可簽名與下載</div>
+    </div>
 
-  <div class="card" onclick="openApp('apps/app6.html')">
-    <div class="icon">🔑</div>
-    <div class="title">PDF批次解密</div>
-    <div class="desc">密碼需相同</div>
-  </div>
+    <div class="card" onclick="openApp('apps/app3.html')">
+      <div class="icon">📄</div>
+      <div class="title">PDF檔案編輯</div>
+      <div class="desc">可刪除和新增頁面</div>
+    </div>
 
-  <div class="card" onclick="openApp('apps/app7.html')">
-    <div class="icon">🕙</div>
-    <div class="title">續保通知</div>
-    <div class="desc">複製+LINE分享</div>
-  </div>
+    <div class="card" onclick="openApp('apps/app4.html')">
+      <div class="icon">🎯</div>
+      <div class="title">模擬考試系統</div>
+      <div class="desc">可每次更新題庫</div>
+    </div>
+
+    <div class="card" onclick="openApp('apps/app5.html')">
+      <div class="icon">💖</div>
+      <div class="title">生活滿意度測驗</div>
+      <div class="desc">可修改答案</div>
+    </div>
+
+    <div class="card" onclick="openApp('apps/app6.html')">
+      <div class="icon">🔑</div>
+      <div class="title">PDF批次解密</div>
+      <div class="desc">密碼需相同</div>
+    </div>
+
+    <div class="card" onclick="openApp('apps/app7.html')">
+      <div class="icon">🕙</div>
+      <div class="title">續保通知</div>
+      <div class="desc">複製+LINE分享</div>
+    </div>
 
     <div class="card" onclick="openApp('apps/app8.html')">
-    <div class="icon">🔍</div>
-    <div class="title">QR code掃描器</div>
-    <div class="desc">直接複製貼上</div>
-  </div>
+      <div class="icon">🔍</div>
+      <div class="title">QR code掃描器</div>
+      <div class="desc">直接複製貼上</div>
+    </div>
 
     <div class="card" onclick="openApp('apps/app9.html')">
-    <div class="icon">🎡</div>
-    <div class="title">財富自由遊戲</div>
-    <div class="desc">適合15-18歲青少年</div>
+      <div class="icon">🎡</div>
+      <div class="title">財富自由遊戲</div>
+      <div class="desc">適合15-18歲青少年</div>
+    </div>
+
+    <div class="card" onclick="openApp('apps/app10.html')">
+      <div class="icon">🪶</div>
+      <div class="title">每日記賬</div>
+      <div class="desc">可以修改分類</div>
+    </div>
+
   </div>
 
- <div class="card" onclick="openApp('apps/app10.html')">
-    <div class="icon">🪶</div>
-    <div class="title">每日記賬</div>
-    <div class="desc">可以修改分類</div>
-  </div>
-  
+  <div class="safe-bottom"></div>
 </div>
 
 <script>
-function openApp(url){
-  window.open(url, '_blank');
+/*
+  這裡不是放明文密碼，而是放 SHA-256 後的結果
+  原始密碼：1220
+*/
+const PASSWORD_HASH = "f79b8977720743f5e7c8b5b2e3813a8a4cc9aacd97eb20fcf41a7169e66ec1b9";
+
+async function sha256(text) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 }
+
+async function checkPassword() {
+  const inputEl = document.getElementById("passwordInput");
+  const errorText = document.getElementById("errorText");
+  const input = inputEl.value.trim();
+
+  errorText.textContent = "";
+
+  const inputHash = await sha256(input);
+
+  if (inputHash === PASSWORD_HASH) {
+    if (navigator.vibrate) navigator.vibrate(30);
+    document.getElementById("loginOverlay").style.display = "none";
+    document.getElementById("mainContent").style.display = "block";
+    sessionStorage.setItem("siteUnlocked", "yes");
+  } else {
+    errorText.textContent = "密碼錯誤，請重新輸入";
+    inputEl.value = "";
+    inputEl.focus();
+    if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
+  }
+}
+
+function handleEnter(event) {
+  if (event.key === "Enter") {
+    checkPassword();
+  }
+}
+
+function openApp(url) {
+  if (navigator.vibrate) navigator.vibrate(30);
+  window.location.href = url;
+}
+
+window.onload = function () {
+  if (sessionStorage.getItem("siteUnlocked") === "yes") {
+    document.getElementById("loginOverlay").style.display = "none";
+    document.getElementById("mainContent").style.display = "block";
+  } else {
+    document.getElementById("loginOverlay").style.display = "flex";
+    document.getElementById("mainContent").style.display = "none";
+    document.getElementById("passwordInput").focus();
+  }
+};
 </script>
 
 </body>
