@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>專業交易系統版</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root{
+      --bg:#08101c;
+      --panel:#101827;
+      --panel2:#0d1524;
+      --line:rgba(255,255,255,.08);
+      --text:#eef4ff;
+      --muted:#93a4c7;
+      --blue:#3b82f6;
+      --green:#19c37d;
+      --yellow:#f5c451;
+      --red:#ff5c5c;
+      --purple:#8b5cf6;
+      --shadow:0 18px 40px rgba(0,0,0,.35);
+      --radius:18px;
+    }
+
+    body{
+      margin:0;
+      font-family:"Microsoft JhengHei","PingFang TC",sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(59,130,246,.10), transparent 26%),
+        radial-gradient(circle at top right, rgba(139,92,246,.10), transparent 24%),
+        linear-gradient(180deg,#060b14 0%, #09111d 100%);
+      min-height:100vh;
+    }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(12px);
+      background:rgba(8,13,22,.86);
+      border-bottom:1px solid var(--line);
+    }
+
+    .topbar-inner{
+      max-width:1600px;
+      margin:0 auto;
+      padding:14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .brand-icon{
+      width:46px;
+      height:46px;
+      border-radius:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(135deg,#2563eb,#8b5cf6);
+      box-shadow:var(--shadow);
+      font-size:22px;
+    }
+
+    .brand h1{
+      margin:0;
+      font-size:22px;
+      line-height:1.2;
+    }
+
+    .brand p{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .status-group{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .pill{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      font-size:13px;
+    }
+
+    .dot{
+      width:9px;
+      height:9px;
+      border-radius:50%;
+      background:#777;
+      box-shadow:0 0 0 4px rgba(255,255,255,.04);
+    }
+
+    .dot.open{ background:var(--green); }
+    .dot.closed{ background:var(--red); }
+    .dot.wait{ background:var(--yellow); }
+
+    .container{
+      max-width:1600px;
+      margin:0 auto;
+      padding:18px 16px 34px;
+    }
+
+    .panel{
+      background:rgba(15,24,39,.9);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      margin-bottom:18px;
+    }
+
+    .panel-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      flex-wrap:wrap;
+    }
+
+    .panel-title{
+      font-size:17px;
+      font-weight:700;
+    }
+
+    .panel-sub{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .panel-body{
+      padding:12px;
+    }
+
+    .hero{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:18px;
+      margin-bottom:18px;
+    }
+
+    .hero-main{
+      padding:22px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero-main::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(135deg, rgba(59,130,246,.09), rgba(139,92,246,.12) 50%, transparent 80%);
+      pointer-events:none;
+    }
+
+    .hero-main h2{
+      position:relative;
+      z-index:1;
+      margin:0;
+      font-size:30px;
+      line-height:1.2;
+    }
+
+    .hero-main p{
+      position:relative;
+      z-index:1;
+      margin:10px 0 0;
+      color:var(--muted);
+      line-height:1.8;
+      font-size:14px;
+      max-width:860px;
+    }
+
+    .tag-row{
+      position:relative;
+      z-index:1;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:16px;
+    }
+
+    .tag{
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.06);
+      font-size:12px;
+      color:#dde7ff;
+    }
+
+    .toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:18px;
+      position:relative;
+      z-index:1;
+    }
+
+    .switch-btn,.action-btn{
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      padding:10px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      transition:.18s ease;
+      font-size:13px;
+    }
+
+    .switch-btn:hover,.action-btn:hover{
+      transform:translateY(-1px);
+      background:rgba(255,255,255,.12);
+    }
+
+    .switch-btn.active{
+      background:linear-gradient(135deg,#2563eb,#19c37d);
+      border-color:transparent;
+    }
+
+    .action-btn.primary{
+      background:linear-gradient(135deg,#8b5cf6,#2563eb);
+      border-color:transparent;
+    }
+
+    .quick-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      padding:16px;
+    }
+
+    .quick-card,.mini-box{
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+    }
+
+    .quick-card h3,.mini-box h4{
+      margin:0 0 8px;
+      font-size:14px;
+    }
+
+    .quick-card p,.mini-box p{
+      margin:0;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.75;
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+      margin-bottom:18px;
+    }
+
+    .grid-3{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+      margin-bottom:18px;
+    }
+
+    .ai-card{
+      background:linear-gradient(135deg, rgba(139,92,246,.12), rgba(37,99,235,.08));
+      border:1px solid rgba(139,92,246,.22);
+    }
+
+    .ai-badge{
+      padding:5px 10px;
+      border-radius:999px;
+      font-size:11px;
+      color:#efe6ff;
+      background:rgba(139,92,246,.18);
+      border:1px solid rgba(139,92,246,.2);
+    }
+
+    .ai-summary{
+      white-space:pre-line;
+      line-height:1.85;
+      font-size:14px;
+      color:#eef3ff;
+      margin-bottom:14px;
+    }
+
+    .score-row{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .score-box{
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
+      text-align:center;
+    }
+
+    .score-box .num{
+      font-size:24px;
+      font-weight:700;
+      margin-bottom:6px;
+    }
+
+    .score-box .label{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .green{ color:var(--green); }
+    .yellow{ color:var(--yellow); }
+    .blue{ color:var(--blue); }
+    .purple{ color:#c8a6ff; }
+
+    .ai-points{
+      display:grid;
+      gap:10px;
+    }
+
+    .ai-point{
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px 14px;
+    }
+
+    .ai-point strong{
+      display:block;
+      margin-bottom:6px;
+      font-size:13px;
+    }
+
+    .ai-point span{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.7;
+    }
+
+    .chart-box{
+      height:620px;
+    }
+
+    .small-chart{
+      height:360px;
+    }
+
+    textarea{
+      width:100%;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#0a1120;
+      color:#eef4ff;
+      padding:14px;
+      font-family:inherit;
+      resize:vertical;
+      min-height:140px;
+      line-height:1.7;
+      font-size:13px;
+    }
+
+    .trade-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .trade-item{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      padding:12px 14px;
+      border-radius:14px;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line);
+    }
+
+    .trade-item .left{
+      flex:1;
+    }
+
+    .trade-item .title{
+      font-size:13px;
+      font-weight:700;
+      margin-bottom:4px;
+    }
+
+    .trade-item .desc{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.7;
+    }
+
+    .badge{
+      font-size:11px;
+      padding:5px 10px;
+      border-radius:999px;
+      white-space:nowrap;
+    }
+
+    .badge.blue{ background:rgba(59,130,246,.14); border:1px solid rgba(59,130,246,.2); }
+    .badge.green{ background:rgba(25,195,125,.14); border:1px solid rgba(25,195,125,.2); }
+    .badge.yellow{ background:rgba(245,196,81,.14); border:1px solid rgba(245,196,81,.2); }
+
+    .footer{
+      text-align:center;
+      color:var(--muted);
+      font-size:12px;
+      margin-top:8px;
+    }
+
+    @media (max-width:1200px){
+      .hero,.grid-2,.grid-3,.score-row{ grid-template-columns:1fr; }
+    }
+
+    @media (max-width:680px){
+      .hero-main h2{ font-size:24px; }
+      .chart-box{ height:460px; }
+      .small-chart{ height:300px; }
+      .quick-grid{ grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-icon">📡</div>
+        <div>
+          <h1>專業交易系統版</h1>
+          <p>美股四大指數｜台灣 ADR｜VIX替代｜夜盤觀察｜AI 盤前摘要</p>
+        </div>
+      </div>
+
+      <div class="status-group">
+        <div class="pill"><span class="dot" id="dotTaiwan"></span><span id="statusTaiwan">台股狀態判讀中</span></div>
+        <div class="pill"><span class="dot" id="dotUS"></span><span id="statusUS">美股狀態判讀中</span></div>
+        <div class="pill">台北時間 <strong id="taipeiClock">--:--:--</strong></div>
+        <div class="pill">紐約時間 <strong id="nyClock">--:--:--</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">市場跑馬燈</div>
+          <div class="panel-sub">用穩定可外嵌的商品組合做快速總覽</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="tradingview-widget-container">
+          <div class="tradingview-widget-container__widget"></div>
+          <script src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+          {
+            "symbols": [
+              { "proName": "FOREXCOM:US30", "title": "道瓊" },
+              { "proName": "TVC:IXIC", "title": "NASDAQ" },
+              { "proName": "SP:SPX", "title": "S&P 500" },
+              { "proName": "TVC:RUT", "title": "Russell 2000" },
+              { "proName": "NYSE:TSM", "title": "TSM" },
+              { "proName": "NYSE:UMC", "title": "UMC" },
+              { "proName": "NYSE:CHT", "title": "CHT" },
+              { "proName": "NASDAQ:HIMX", "title": "HIMX" },
+              { "proName": "NASDAQ:IMOS", "title": "IMOS" },
+              { "proName": "AMEX:EWT", "title": "台灣 ETF" },
+              { "proName": "AMEX:VXX", "title": "VIX替代" },
+              { "proName": "AMEX:UUP", "title": "美元 ETF" }
+            ],
+            "showSymbolLogo": true,
+            "isTransparent": true,
+            "displayMode": "adaptive",
+            "colorTheme": "dark",
+            "locale": "zh_TW"
+          }
+          </script>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="panel hero-main">
+        <h2>先判讀市場節奏，再決定今天主盯哪一區</h2>
+        <p>
+          這版把首頁整理成接近實戰交易桌的邏輯。先看四大指數、ADR、VIX替代、美元方向，再用規則型 AI 生成盤前摘要。
+          夜盤部分則用 US30、NASDAQ、TSM、台灣 ETF 作為觀察替代區。
+        </p>
+
+        <div class="tag-row">
+          <div class="tag">主圖快速切換</div>
+          <div class="tag">AI 市場摘要</div>
+          <div class="tag">夜盤觀察</div>
+          <div class="tag">交易備註</div>
+          <div class="tag">本地儲存</div>
+        </div>
+
+        <div class="toolbar">
+          <button class="switch-btn active" data-symbol="SP:SPX">S&P 500</button>
+          <button class="switch-btn" data-symbol="TVC:IXIC">NASDAQ</button>
+          <button class="switch-btn" data-symbol="FOREXCOM:US30">道瓊</button>
+          <button class="switch-btn" data-symbol="TVC:RUT">Russell 2000</button>
+          <button class="switch-btn" data-symbol="NYSE:TSM">TSM</button>
+          <button class="switch-btn" data-symbol="NYSE:UMC">UMC</button>
+          <button class="switch-btn" data-symbol="AMEX:EWT">台灣 ETF</button>
+          <button class="switch-btn" data-symbol="AMEX:VXX">VIX替代</button>
+          <button class="switch-btn" data-symbol="AMEX:UUP">美元 ETF</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="quick-grid">
+          <div class="quick-card">
+            <h3>盤前流程</h3>
+            <p>先看 TSM、NASDAQ、VIX替代、美元 ETF，再回看台灣 ETF。</p>
+          </div>
+          <div class="quick-card">
+            <h3>夜間觀察</h3>
+            <p>夜盤區用 US30、NASDAQ、TSM、台灣 ETF 觀察情緒。</p>
+          </div>
+          <div class="quick-card">
+            <h3>使用方式</h3>
+            <p>這頁不是替你下單，而是幫你把市場資訊與自己的思路整理乾淨。</p>
+          </div>
+          <div class="quick-card">
+            <h3>每日習慣</h3>
+            <p>固定每天在同一個順序看相同商品，更容易建立市場感覺。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <div class="mini-box">
+        <h4>今日盤前焦點</h4>
+        <p id="todayFocus">讀取中...</p>
+      </div>
+      <div class="mini-box">
+        <h4>今日主看市場</h4>
+        <p id="todayMarket">讀取中...</p>
+      </div>
+      <div class="mini-box">
+        <h4>今日提醒</h4>
+        <p id="todayReminder">讀取中...</p>
+      </div>
+    </div>
+
+    <div class="panel ai-card">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">AI 盤前判讀卡</div>
+          <div class="panel-sub">根據時間與市場邏輯產生的今日摘要</div>
+        </div>
+        <div class="ai-badge">AI Mode</div>
+      </div>
+      <div class="panel-body">
+        <div class="ai-summary" id="aiSummary">分析中...</div>
+
+        <div class="score-row">
+          <div class="score-box">
+            <div class="num green" id="scoreRisk">68</div>
+            <div class="label">風險偏好</div>
+          </div>
+          <div class="score-box">
+            <div class="num yellow" id="scoreVol">42</div>
+            <div class="label">波動警戒</div>
+          </div>
+          <div class="score-box">
+            <div class="num blue" id="scoreTW">71</div>
+            <div class="label">台股關注</div>
+          </div>
+          <div class="score-box">
+            <div class="num purple" id="scoreUS">66</div>
+            <div class="label">美股關注</div>
+          </div>
+        </div>
+
+        <div class="ai-points">
+          <div class="ai-point">
+            <strong>AI 建議主看區域</strong>
+            <span id="aiPoint1">讀取中...</span>
+          </div>
+          <div class="ai-point">
+            <strong>AI 風險提示</strong>
+            <span id="aiPoint2">讀取中...</span>
+          </div>
+          <div class="ai-point">
+            <strong>AI 盤前一句話</strong>
+            <span id="aiPoint3">讀取中...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">主圖表</div>
+          <div class="panel-sub">切換不同商品，快速看市場節奏</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div id="mainChart" class="chart-box"></div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">美股四大指數</div>
+            <div class="panel-sub">US30 / IXIC / SPX / RUT</div>
+          </div>
+        </div>
+        <div class="panel-body small-chart">
+          <div class="tradingview-widget-container" style="height:100%;width:100%;">
+            <div class="tradingview-widget-container__widget" style="height:100%;width:100%;"></div>
+            <script src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js" async>
+            {
+              "symbols": [
+                ["道瓊", "FOREXCOM:US30|1D"],
+                ["NASDAQ", "TVC:IXIC|1D"],
+                ["S&P 500", "SP:SPX|1D"],
+                ["Russell 2000", "TVC:RUT|1D"]
+              ],
+              "chartOnly": false,
+              "width": "100%",
+              "height": "100%",
+              "locale": "zh_TW",
+              "colorTheme": "dark",
+              "autosize": true,
+              "showVolume": false,
+              "showMA": false,
+              "hideDateRanges": false,
+              "hideMarketStatus": false,
+              "hideSymbolLogo": false,
+              "scalePosition": "right",
+              "scaleMode": "Normal",
+              "fontFamily": "Microsoft JhengHei, sans-serif",
+              "fontSize": "10",
+              "valuesTracking": "1",
+              "changeMode": "price-and-percent",
+              "chartType": "area",
+              "headerFontSize": "medium",
+              "lineWidth": 2
+            }
+            </script>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">台灣 ADR</div>
+            <div class="panel-sub">TSM / UMC / CHT / HIMX / IMOS</div>
+          </div>
+        </div>
+        <div class="panel-body small-chart">
+          <div class="tradingview-widget-container" style="height:100%;width:100%;">
+            <div class="tradingview-widget-container__widget" style="height:100%;width:100%;"></div>
+            <script src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js" async>
+            {
+              "symbols": [
+                ["TSM", "NYSE:TSM|1D"],
+                ["UMC", "NYSE:UMC|1D"],
+                ["CHT", "NYSE:CHT|1D"],
+                ["HIMX", "NASDAQ:HIMX|1D"],
+                ["IMOS", "NASDAQ:IMOS|1D"]
+              ],
+              "chartOnly": false,
+              "width": "100%",
+              "height": "100%",
+              "locale": "zh_TW",
+              "colorTheme": "dark",
+              "autosize": true,
+              "showVolume": false,
+              "showMA": false,
+              "hideDateRanges": false,
+              "hideMarketStatus": false,
+              "hideSymbolLogo": false,
+              "scalePosition": "right",
+              "scaleMode": "Normal",
+              "fontFamily": "Microsoft JhengHei, sans-serif",
+              "fontSize": "10",
+              "valuesTracking": "1",
+              "changeMode": "price-and-percent",
+              "chartType": "area",
+              "headerFontSize": "medium",
+              "lineWidth": 2
+            }
+            </script>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">VIX 與美元替代觀察</div>
+            <div class="panel-sub">VXX / UUP</div>
+          </div>
+        </div>
+        <div class="panel-body small-chart">
+          <div class="tradingview-widget-container" style="height:100%;width:100%;">
+            <div class="tradingview-widget-container__widget" style="height:100%;width:100%;"></div>
+            <script src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js" async>
+            {
+              "symbols": [
+                ["VIX替代", "AMEX:VXX|1D"],
+                ["美元 ETF", "AMEX:UUP|1D"]
+              ],
+              "chartOnly": false,
+              "width": "100%",
+              "height": "100%",
+              "locale": "zh_TW",
+              "colorTheme": "dark",
+              "autosize": true,
+              "showVolume": false,
+              "showMA": false,
+              "hideDateRanges": false,
+              "hideMarketStatus": false,
+              "hideSymbolLogo": false,
+              "scalePosition": "right",
+              "scaleMode": "Normal",
+              "fontFamily": "Microsoft JhengHei, sans-serif",
+              "fontSize": "10",
+              "valuesTracking": "1",
+              "changeMode": "price-and-percent",
+              "chartType": "area",
+              "headerFontSize": "medium",
+              "lineWidth": 2
+            }
+            </script>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">夜盤觀察替代區</div>
+            <div class="panel-sub">US30 / NASDAQ / TSM / 台灣 ETF</div>
+          </div>
+        </div>
+        <div class="panel-body small-chart">
+          <div class="tradingview-widget-container" style="height:100%;width:100%;">
+            <div class="tradingview-widget-container__widget" style="height:100%;width:100%;"></div>
+            <script src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js" async>
+            {
+              "symbols": [
+                ["道瓊替代", "FOREXCOM:US30|1D"],
+                ["NASDAQ", "TVC:IXIC|1D"],
+                ["TSM", "NYSE:TSM|1D"],
+                ["台灣 ETF", "AMEX:EWT|1D"]
+              ],
+              "chartOnly": false,
+              "width": "100%",
+              "height": "100%",
+              "locale": "zh_TW",
+              "colorTheme": "dark",
+              "autosize": true,
+              "showVolume": false,
+              "showMA": false,
+              "hideDateRanges": false,
+              "hideMarketStatus": false,
+              "hideSymbolLogo": false,
+              "scalePosition": "right",
+              "scaleMode": "Normal",
+              "fontFamily": "Microsoft JhengHei, sans-serif",
+              "fontSize": "10",
+              "valuesTracking": "1",
+              "changeMode": "price-and-percent",
+              "chartType": "area",
+              "headerFontSize": "medium",
+              "lineWidth": 2
+            }
+            </script>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">交易員觀察清單</div>
+            <div class="panel-sub">固定順序看，建立自己的盤感</div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="trade-list">
+            <div class="trade-item">
+              <div class="left">
+                <div class="title">1. 科技股風向</div>
+                <div class="desc">先看 NASDAQ、TSM、HIMX 是否同步，觀察半導體與科技板塊情緒。</div>
+              </div>
+              <div class="badge blue">科技</div>
+            </div>
+            <div class="trade-item">
+              <div class="left">
+                <div class="title">2. 大盤是否全面擴散</div>
+                <div class="desc">S&P 500 和 US30 是否同步偏強，分辨是全面行情，還是少數權值股撐盤。</div>
+              </div>
+              <div class="badge green">廣度</div>
+            </div>
+            <div class="trade-item">
+              <div class="left">
+                <div class="title">3. 風險是否升高</div>
+                <div class="desc">VIX替代若拉升，同時美元 ETF 轉強，通常代表市場壓力增加。</div>
+              </div>
+              <div class="badge yellow">風險</div>
+            </div>
+            <div class="trade-item">
+              <div class="left">
+                <div class="title">4. 夜盤情緒確認</div>
+                <div class="desc">用 US30、NASDAQ、TSM、台灣 ETF 看夜間市場是否偏多、偏空或偏震盪。</div>
+              </div>
+              <div class="badge blue">夜盤</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">我的交易備註</div>
+            <div class="panel-sub">會自動保存在瀏覽器</div>
+          </div>
+          <div>
+            <button class="action-btn" id="saveNoteBtn">儲存備註</button>
+            <button class="action-btn" id="clearNoteBtn">清空備註</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <textarea id="traderNote" placeholder="例如：
+- 今天先看 TSM ADR 有沒有延續
+- 若 VIX替代拉高，不追高
+- 夜盤觀察若轉弱，隔日先保守"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">AI 市場摘要輸出</div>
+          <div class="panel-sub">可直接複製到 LINE、記事本、群組</div>
+        </div>
+        <div>
+          <button class="action-btn primary" id="copySummaryBtn">複製市場摘要</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <textarea id="marketSummaryText" readonly></textarea>
+      </div>
+    </div>
+
+    <div class="footer">
+      若你之後想做真正的 VIX 數值與台指期夜盤數值卡，我再幫你改成 API 版。
+    </div>
+  </div>
+
+  <script src="https://s3.tradingview.com/tv.js"></script>
+  <script>
+    const taipeiClock = document.getElementById("taipeiClock");
+    const nyClock = document.getElementById("nyClock");
+    const todayFocus = document.getElementById("todayFocus");
+    const todayMarket = document.getElementById("todayMarket");
+    const todayReminder = document.getElementById("todayReminder");
+    const traderNote = document.getElementById("traderNote");
+
+    function formatTime(timeZone) {
+      return new Intl.DateTimeFormat("zh-TW", {
+        timeZone,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      }).format(new Date());
+    }
+
+    function getHourMinuteInZone(timeZone) {
+      const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone,
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      }).formatToParts(new Date());
+
+      let hour = 0;
+      let minute = 0;
+      for (const p of parts) {
+        if (p.type === "hour") hour = parseInt(p.value, 10);
+        if (p.type === "minute") minute = parseInt(p.value, 10);
+      }
+      return { hour, minute, total: hour * 60 + minute };
+    }
+
+    function setMarketStatus() {
+      taipeiClock.textContent = formatTime("Asia/Taipei");
+      nyClock.textContent = formatTime("America/New_York");
+
+      const tw = getHourMinuteInZone("Asia/Taipei");
+      const us = getHourMinuteInZone("America/New_York");
+
+      const dotTaiwan = document.getElementById("dotTaiwan");
+      const dotUS = document.getElementById("dotUS");
+      const statusTaiwan = document.getElementById("statusTaiwan");
+      const statusUS = document.getElementById("statusUS");
+
+      if (tw.total >= 510 && tw.total <= 825) {
+        dotTaiwan.className = "dot open";
+        statusTaiwan.textContent = "台股時段中";
+      } else if (tw.total >= 480 && tw.total < 510) {
+        dotTaiwan.className = "dot wait";
+        statusTaiwan.textContent = "台股開盤前";
+      } else {
+        dotTaiwan.className = "dot closed";
+        statusTaiwan.textContent = "台股已收盤";
+      }
+
+      if (us.total >= 570 && us.total <= 960) {
+        dotUS.className = "dot open";
+        statusUS.textContent = "美股交易中";
+      } else if (us.total >= 480 && us.total < 570) {
+        dotUS.className = "dot wait";
+        statusUS.textContent = "美股盤前";
+      } else {
+        dotUS.className = "dot closed";
+        statusUS.textContent = "美股已收盤";
+      }
+
+      if (tw.total < 540) {
+        todayFocus.textContent = "現在偏向台股盤前，先看 TSM、NASDAQ、VIX替代、美元 ETF，再回看台灣 ETF。";
+        todayMarket.textContent = "主看台股開盤情緒與半導體風向。";
+        todayReminder.textContent = "盤前重點是整理情緒，不急著先預設一定會大漲或大跌。";
+      } else if (tw.total >= 540 && tw.total <= 825) {
+        todayFocus.textContent = "現在偏向台股盤中，主盯台灣 ETF、TSM，風險確認看 VIX替代與美元 ETF。";
+        todayMarket.textContent = "主看台股核心權值與盤中風險變化。";
+        todayReminder.textContent = "盤中避免資訊過多，盯少數關鍵商品更有效。";
+      } else if (us.total >= 480 && us.total < 570) {
+        todayFocus.textContent = "現在偏向美股盤前，先看 US30、NASDAQ、TSM、VIX替代。";
+        todayMarket.textContent = "主看今晚美股情緒與隔日台股可能反應。";
+        todayReminder.textContent = "若科技偏強但 VIX替代同步偏強，代表表面樂觀、實際風險仍在。";
+      } else if (us.total >= 570 && us.total <= 960) {
+        todayFocus.textContent = "現在偏向美股盤中，主看 NASDAQ、S&P 500、TSM 與 VIX替代。";
+        todayMarket.textContent = "主看科技領漲是否擴散到整體市場。";
+        todayReminder.textContent = "如果只有科技股強，而大盤跟不上，通常代表結構性行情。";
+      } else {
+        todayFocus.textContent = "現在屬於休市整理時段，適合回顧今天節奏並整理明日清單。";
+        todayMarket.textContent = "主看整理與紀錄，不主看即時波動。";
+        todayReminder.textContent = "休市時最適合修正自己的流程與紀律。";
+      }
+    }
+
+    function buildAIView() {
+      const tw = getHourMinuteInZone("Asia/Taipei");
+      const us = getHourMinuteInZone("America/New_York");
+
+      let riskScore = 68;
+      let volScore = 42;
+      let twScore = 71;
+      let usScore = 66;
+
+      let mainArea = "";
+      let riskHint = "";
+      let oneLine = "";
+      let summary = "";
+
+      if (tw.total < 540) {
+        riskScore = 72; volScore = 38; twScore = 84; usScore = 56;
+        mainArea = "台股盤前，先看 TSM、NASDAQ、VIX替代、美元 ETF，最適合快速整理台股開盤情緒。";
+        riskHint = "若科技偏強且 VIX替代沒有升高，代表市場風險偏好仍偏穩；若美元 ETF 又走強，則要提高警覺。";
+        oneLine = "盤前先整理風向，不要急著替市場下結論。";
+        summary =
+`【AI 市場摘要】
+目前時段：台股盤前
+
+市場重點：
+1. 先看 TSM ADR 與 NASDAQ，確認科技股風向
+2. 再看 VIX替代是否升高，確認避險情緒
+3. 觀察美元 ETF 是否轉強，留意資金壓力
+4. 回到台灣 ETF，確認台股整體替代方向
+
+AI 判讀：
+目前較適合用「盤前情緒整理」模式，不急著預設單邊，先看科技、風險、美元三者是否同向。`;
+      } else if (tw.total >= 540 && tw.total <= 825) {
+        riskScore = 61; volScore = 49; twScore = 89; usScore = 48;
+        mainArea = "台股盤中，主看台灣 ETF 與 TSM，國際風向搭配 VIX替代與美元 ETF 做確認。";
+        riskHint = "盤中不要同時看太多商品，盯台灣 ETF、TSM、VIX替代三個焦點通常最有效。";
+        oneLine = "盤中重點不是看很多，而是看對關鍵商品。";
+        summary =
+`【AI 市場摘要】
+目前時段：台股盤中
+
+市場重點：
+1. 主看台灣 ETF，確認台股整體方向
+2. 看 TSM，觀察權值與半導體風向
+3. 看 VIX替代、美元 ETF，評估盤中風險是否升溫
+
+AI 判讀：
+現在較適合用「盤中聚焦」模式，把焦點集中在台股核心權值與風險指標。`;
+      } else if (us.total >= 480 && us.total < 570) {
+        riskScore = 66; volScore = 45; twScore = 60; usScore = 82;
+        mainArea = "美股盤前，主看 US30、NASDAQ、TSM、VIX替代，整理今晚美股氣氛並準備隔日台股。";
+        riskHint = "若美股盤前科技股偏強但 VIX替代也同步升高，代表表面樂觀但風險未退。";
+        oneLine = "美股盤前重點是確認情緒一致，還是表面強、實際風險升高。";
+        summary =
+`【AI 市場摘要】
+目前時段：美股盤前
+
+市場重點：
+1. 看 NASDAQ 與 US30 是否同步偏強
+2. 看 TSM ADR 對半導體風向的暗示
+3. 看 VIX替代與美元 ETF 是否升高，避免忽略風險面
+4. 夜盤替代區可幫你快速觀察隔日台股情緒
+
+AI 判讀：
+今晚建議先看科技股與風險指標是否同向，若不同向，盤勢可能偏震盪。`;
+      } else if (us.total >= 570 && us.total <= 960) {
+        riskScore = 57; volScore = 54; twScore = 52; usScore = 90;
+        mainArea = "美股盤中，主看 NASDAQ、S&P 500、TSM、VIX替代，觀察市場是否由科技領漲擴散到整體。";
+        riskHint = "如果只有 NASDAQ 強、但 S&P 500 跟不上，通常代表盤勢集中在少數大型科技股。";
+        oneLine = "盤中要分清楚是全面走強，還是只有少數權值股在撐盤。";
+        summary =
+`【AI 市場摘要】
+目前時段：美股盤中
+
+市場重點：
+1. 看 NASDAQ 是否持續領漲
+2. 看 S&P 500 是否同步擴散
+3. 看 TSM 是否與科技風向一致
+4. 看 VIX替代是否突然拉升
+
+AI 判讀：
+今晚適合用「強弱擴散」邏輯看盤，若科技強但大盤不跟，容易形成結構性行情。`;
+      } else {
+        riskScore = 64; volScore = 40; twScore = 69; usScore = 63;
+        mainArea = "目前屬於休市整理時段，最適合整理隔日觀察名單與交易筆記。";
+        riskHint = "休市時最適合做整理，不適合被零碎資訊牽著走。";
+        oneLine = "休市不是空白，而是整理市場脈絡的最好時間。";
+        summary =
+`【AI 市場摘要】
+目前時段：休市整理
+
+市場重點：
+1. 整理今天哪個市場最強
+2. 記錄 VIX替代、美元 ETF 是否有異常變化
+3. 準備明天先看的商品順序
+4. 夜盤區可作為美股帶動台股的觀察筆記
+
+AI 判讀：
+現在適合整理市場節奏與筆記，為下一個交易時段做準備。`;
+      }
+
+      document.getElementById("scoreRisk").textContent = riskScore;
+      document.getElementById("scoreVol").textContent = volScore;
+      document.getElementById("scoreTW").textContent = twScore;
+      document.getElementById("scoreUS").textContent = usScore;
+      document.getElementById("aiSummary").textContent = summary;
+      document.getElementById("aiPoint1").textContent = mainArea;
+      document.getElementById("aiPoint2").textContent = riskHint;
+      document.getElementById("aiPoint3").textContent = oneLine;
+      document.getElementById("marketSummaryText").value = summary;
+    }
+
+    function saveNote() {
+      localStorage.setItem("trader_note_v1", traderNote.value);
+      alert("備註已儲存");
+    }
+
+    function loadNote() {
+      traderNote.value = localStorage.getItem("trader_note_v1") || "";
+    }
+
+    function clearNote() {
+      traderNote.value = "";
+      localStorage.removeItem("trader_note_v1");
+      alert("備註已清空");
+    }
+
+    let tvWidget = null;
+
+    function loadMainChart(symbol) {
+      const chartId = "mainChart";
+      const chartEl = document.getElementById(chartId);
+      if (!chartEl) return;
+
+      chartEl.innerHTML = "";
+
+      if (typeof TradingView === "undefined" || !TradingView.widget) {
+        chartEl.innerHTML = `
+          <div style="height:100%;display:flex;align-items:center;justify-content:center;color:#93a4c7;font-size:14px;">
+            主圖表載入失敗，請重新整理頁面
+          </div>
+        `;
+        return;
+      }
+
+      tvWidget = new TradingView.widget({
+        autosize: true,
+        symbol: symbol,
+        interval: "15",
+        timezone: "Asia/Taipei",
+        theme: "dark",
+        style: "1",
+        locale: "zh_TW",
+        enable_publishing: false,
+        allow_symbol_change: true,
+        hide_top_toolbar: false,
+        hide_legend: false,
+        save_image: false,
+        container_id: chartId
+      });
+    }
+
+    document.getElementById("saveNoteBtn").addEventListener("click", saveNote);
+    document.getElementById("clearNoteBtn").addEventListener("click", clearNote);
+
+    document.getElementById("copySummaryBtn").addEventListener("click", async () => {
+      const text = document.getElementById("marketSummaryText").value;
+      try {
+        await navigator.clipboard.writeText(text);
+        alert("市場摘要已複製");
+      } catch (e) {
+        alert("複製失敗，請手動複製");
+      }
+    });
+
+    window.addEventListener("load", () => {
+      setMarketStatus();
+      buildAIView();
+      loadNote();
+      loadMainChart("SP:SPX");
+    });
+
+    setInterval(() => {
+      setMarketStatus();
+      buildAIView();
+    }, 1000);
+
+    const buttons = document.querySelectorAll(".switch-btn");
+    buttons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        buttons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        loadMainChart(btn.dataset.symbol);
+      });
+    });
+  </script>
+</body>
+</html>
