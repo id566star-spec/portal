@@ -9,7 +9,6 @@
     :root{
       --bg:#08101c;
       --panel:#101827;
-      --panel2:#0d1524;
       --line:rgba(255,255,255,.08);
       --text:#eef4ff;
       --muted:#93a4c7;
@@ -481,16 +480,16 @@
           {
             "symbols": [
               { "proName": "FOREXCOM:US30", "title": "道瓊" },
-              { "proName": "TVC:IXIC", "title": "NASDAQ" },
+              { "proName": "FOREXCOM:NAS100", "title": "NASDAQ 100" },
               { "proName": "SP:SPX", "title": "S&P 500" },
-              { "proName": "TVC:RUT", "title": "Russell 2000" },
+              { "proName": "FOREXCOM:US2000", "title": "Russell 2000" },
               { "proName": "NYSE:TSM", "title": "TSM" },
               { "proName": "NYSE:UMC", "title": "UMC" },
               { "proName": "NYSE:CHT", "title": "CHT" },
               { "proName": "NASDAQ:HIMX", "title": "HIMX" },
               { "proName": "NASDAQ:IMOS", "title": "IMOS" },
               { "proName": "AMEX:EWT", "title": "台灣 ETF" },
-              { "proName": "AMEX:VXX", "title": "VIX替代" },
+              { "proName": "CBOE:VXX", "title": "VIX替代" },
               { "proName": "AMEX:UUP", "title": "美元 ETF" }
             ],
             "showSymbolLogo": true,
@@ -509,7 +508,7 @@
         <h2>先判讀市場節奏，再決定今天主盯哪一區</h2>
         <p>
           這版把首頁整理成接近實戰交易桌的邏輯。先看四大指數、ADR、VIX替代、美元方向，再用規則型 AI 生成盤前摘要。
-          夜盤部分則用 US30、NASDAQ、TSM、台灣 ETF 作為觀察替代區。
+          夜盤部分則用 US30、NASDAQ 100、TSM、台灣 ETF 作為觀察替代區。
         </p>
 
         <div class="tag-row">
@@ -522,13 +521,13 @@
 
         <div class="toolbar">
           <button class="switch-btn active" data-symbol="SP:SPX">S&P 500</button>
-          <button class="switch-btn" data-symbol="TVC:IXIC">NASDAQ</button>
+          <button class="switch-btn" data-symbol="FOREXCOM:NAS100">NASDAQ 100</button>
           <button class="switch-btn" data-symbol="FOREXCOM:US30">道瓊</button>
-          <button class="switch-btn" data-symbol="TVC:RUT">Russell 2000</button>
+          <button class="switch-btn" data-symbol="FOREXCOM:US2000">Russell 2000</button>
           <button class="switch-btn" data-symbol="NYSE:TSM">TSM</button>
           <button class="switch-btn" data-symbol="NYSE:UMC">UMC</button>
           <button class="switch-btn" data-symbol="AMEX:EWT">台灣 ETF</button>
-          <button class="switch-btn" data-symbol="AMEX:VXX">VIX替代</button>
+          <button class="switch-btn" data-symbol="CBOE:VXX">VIX替代</button>
           <button class="switch-btn" data-symbol="AMEX:UUP">美元 ETF</button>
         </div>
       </div>
@@ -537,11 +536,11 @@
         <div class="quick-grid">
           <div class="quick-card">
             <h3>盤前流程</h3>
-            <p>先看 TSM、NASDAQ、VIX替代、美元 ETF，再回看台灣 ETF。</p>
+            <p>先看 TSM、NASDAQ 100、VIX替代、美元 ETF，再回看台灣 ETF。</p>
           </div>
           <div class="quick-card">
             <h3>夜間觀察</h3>
-            <p>夜盤區用 US30、NASDAQ、TSM、台灣 ETF 觀察情緒。</p>
+            <p>夜盤區用 US30、NASDAQ 100、TSM、台灣 ETF 觀察情緒。</p>
           </div>
           <div class="quick-card">
             <h3>使用方式</h3>
@@ -634,7 +633,7 @@
         <div class="panel-header">
           <div>
             <div class="panel-title">美股四大指數</div>
-            <div class="panel-sub">US30 / IXIC / SPX / RUT</div>
+            <div class="panel-sub">US30 / NAS100 / SPX / US2000</div>
           </div>
         </div>
         <div class="panel-body small-chart">
@@ -644,9 +643,9 @@
             {
               "symbols": [
                 ["道瓊", "FOREXCOM:US30|1D"],
-                ["NASDAQ", "TVC:IXIC|1D"],
+                ["NASDAQ 100", "FOREXCOM:NAS100|1D"],
                 ["S&P 500", "SP:SPX|1D"],
-                ["Russell 2000", "TVC:RUT|1D"]
+                ["Russell 2000", "FOREXCOM:US2000|1D"]
               ],
               "chartOnly": false,
               "width": "100%",
@@ -734,7 +733,7 @@
             <script src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js" async>
             {
               "symbols": [
-                ["VIX替代", "AMEX:VXX|1D"],
+                ["VIX替代", "CBOE:VXX|1D"],
                 ["美元 ETF", "AMEX:UUP|1D"]
               ],
               "chartOnly": false,
@@ -767,7 +766,7 @@
         <div class="panel-header">
           <div>
             <div class="panel-title">夜盤觀察替代區</div>
-            <div class="panel-sub">US30 / NASDAQ / TSM / 台灣 ETF</div>
+            <div class="panel-sub">US30 / NAS100 / TSM / 台灣 ETF</div>
           </div>
         </div>
         <div class="panel-body small-chart">
@@ -777,7 +776,7 @@
             {
               "symbols": [
                 ["道瓊替代", "FOREXCOM:US30|1D"],
-                ["NASDAQ", "TVC:IXIC|1D"],
+                ["NASDAQ 100", "FOREXCOM:NAS100|1D"],
                 ["TSM", "NYSE:TSM|1D"],
                 ["台灣 ETF", "AMEX:EWT|1D"]
               ],
@@ -821,7 +820,7 @@
             <div class="trade-item">
               <div class="left">
                 <div class="title">1. 科技股風向</div>
-                <div class="desc">先看 NASDAQ、TSM、HIMX 是否同步，觀察半導體與科技板塊情緒。</div>
+                <div class="desc">先看 NASDAQ 100、TSM、HIMX 是否同步，觀察半導體與科技板塊情緒。</div>
               </div>
               <div class="badge blue">科技</div>
             </div>
@@ -842,7 +841,7 @@
             <div class="trade-item">
               <div class="left">
                 <div class="title">4. 夜盤情緒確認</div>
-                <div class="desc">用 US30、NASDAQ、TSM、台灣 ETF 看夜間市場是否偏多、偏空或偏震盪。</div>
+                <div class="desc">用 US30、NASDAQ 100、TSM、台灣 ETF 看夜間市場是否偏多、偏空或偏震盪。</div>
               </div>
               <div class="badge blue">夜盤</div>
             </div>
@@ -886,7 +885,7 @@
     </div>
 
     <div class="footer">
-      若你之後想做真正的 VIX 數值與台指期夜盤數值卡，我再幫你改成 API 版。
+      若你之後要做真正的 VIX 數值與台指期夜盤數值卡，我再幫你改成 API 版。
     </div>
   </div>
 
@@ -961,7 +960,7 @@
       }
 
       if (tw.total < 540) {
-        todayFocus.textContent = "現在偏向台股盤前，先看 TSM、NASDAQ、VIX替代、美元 ETF，再回看台灣 ETF。";
+        todayFocus.textContent = "現在偏向台股盤前，先看 TSM、NASDAQ 100、VIX替代、美元 ETF，再回看台灣 ETF。";
         todayMarket.textContent = "主看台股開盤情緒與半導體風向。";
         todayReminder.textContent = "盤前重點是整理情緒，不急著先預設一定會大漲或大跌。";
       } else if (tw.total >= 540 && tw.total <= 825) {
@@ -969,11 +968,11 @@
         todayMarket.textContent = "主看台股核心權值與盤中風險變化。";
         todayReminder.textContent = "盤中避免資訊過多，盯少數關鍵商品更有效。";
       } else if (us.total >= 480 && us.total < 570) {
-        todayFocus.textContent = "現在偏向美股盤前，先看 US30、NASDAQ、TSM、VIX替代。";
+        todayFocus.textContent = "現在偏向美股盤前，先看 US30、NASDAQ 100、TSM、VIX替代。";
         todayMarket.textContent = "主看今晚美股情緒與隔日台股可能反應。";
         todayReminder.textContent = "若科技偏強但 VIX替代同步偏強，代表表面樂觀、實際風險仍在。";
       } else if (us.total >= 570 && us.total <= 960) {
-        todayFocus.textContent = "現在偏向美股盤中，主看 NASDAQ、S&P 500、TSM 與 VIX替代。";
+        todayFocus.textContent = "現在偏向美股盤中，主看 NASDAQ 100、S&P 500、TSM 與 VIX替代。";
         todayMarket.textContent = "主看科技領漲是否擴散到整體市場。";
         todayReminder.textContent = "如果只有科技股強，而大盤跟不上，通常代表結構性行情。";
       } else {
@@ -999,7 +998,7 @@
 
       if (tw.total < 540) {
         riskScore = 72; volScore = 38; twScore = 84; usScore = 56;
-        mainArea = "台股盤前，先看 TSM、NASDAQ、VIX替代、美元 ETF，最適合快速整理台股開盤情緒。";
+        mainArea = "台股盤前，先看 TSM、NASDAQ 100、VIX替代、美元 ETF，最適合快速整理台股開盤情緒。";
         riskHint = "若科技偏強且 VIX替代沒有升高，代表市場風險偏好仍偏穩；若美元 ETF 又走強，則要提高警覺。";
         oneLine = "盤前先整理風向，不要急著替市場下結論。";
         summary =
@@ -1007,7 +1006,7 @@
 目前時段：台股盤前
 
 市場重點：
-1. 先看 TSM ADR 與 NASDAQ，確認科技股風向
+1. 先看 TSM ADR 與 NASDAQ 100，確認科技股風向
 2. 再看 VIX替代是否升高，確認避險情緒
 3. 觀察美元 ETF 是否轉強，留意資金壓力
 4. 回到台灣 ETF，確認台股整體替代方向
@@ -1032,7 +1031,7 @@ AI 判讀：
 現在較適合用「盤中聚焦」模式，把焦點集中在台股核心權值與風險指標。`;
       } else if (us.total >= 480 && us.total < 570) {
         riskScore = 66; volScore = 45; twScore = 60; usScore = 82;
-        mainArea = "美股盤前，主看 US30、NASDAQ、TSM、VIX替代，整理今晚美股氣氛並準備隔日台股。";
+        mainArea = "美股盤前，主看 US30、NASDAQ 100、TSM、VIX替代，整理今晚美股氣氛並準備隔日台股。";
         riskHint = "若美股盤前科技股偏強但 VIX替代也同步升高，代表表面樂觀但風險未退。";
         oneLine = "美股盤前重點是確認情緒一致，還是表面強、實際風險升高。";
         summary =
@@ -1040,7 +1039,7 @@ AI 判讀：
 目前時段：美股盤前
 
 市場重點：
-1. 看 NASDAQ 與 US30 是否同步偏強
+1. 看 NASDAQ 100 與 US30 是否同步偏強
 2. 看 TSM ADR 對半導體風向的暗示
 3. 看 VIX替代與美元 ETF 是否升高，避免忽略風險面
 4. 夜盤替代區可幫你快速觀察隔日台股情緒
@@ -1049,15 +1048,15 @@ AI 判讀：
 今晚建議先看科技股與風險指標是否同向，若不同向，盤勢可能偏震盪。`;
       } else if (us.total >= 570 && us.total <= 960) {
         riskScore = 57; volScore = 54; twScore = 52; usScore = 90;
-        mainArea = "美股盤中，主看 NASDAQ、S&P 500、TSM、VIX替代，觀察市場是否由科技領漲擴散到整體。";
-        riskHint = "如果只有 NASDAQ 強、但 S&P 500 跟不上，通常代表盤勢集中在少數大型科技股。";
+        mainArea = "美股盤中，主看 NASDAQ 100、S&P 500、TSM、VIX替代，觀察市場是否由科技領漲擴散到整體。";
+        riskHint = "如果只有 NASDAQ 100 強、但 S&P 500 跟不上，通常代表盤勢集中在少數大型科技股。";
         oneLine = "盤中要分清楚是全面走強，還是只有少數權值股在撐盤。";
         summary =
 `【AI 市場摘要】
 目前時段：美股盤中
 
 市場重點：
-1. 看 NASDAQ 是否持續領漲
+1. 看 NASDAQ 100 是否持續領漲
 2. 看 S&P 500 是否同步擴散
 3. 看 TSM 是否與科技風向一致
 4. 看 VIX替代是否突然拉升
@@ -1161,7 +1160,7 @@ AI 判讀：
       setMarketStatus();
       buildAIView();
       loadNote();
-      loadMainChart("SP:SPX");
+      loadMainChart("FOREXCOM:NAS100");
     });
 
     setInterval(() => {
