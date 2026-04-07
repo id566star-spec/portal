@@ -211,6 +211,40 @@
       margin-bottom: 14px;
     }
 
+    .search-summary {
+      background: linear-gradient(135deg, rgba(255,245,250,0.95), rgba(247,241,255,0.95));
+      border: 2px solid #f3dbe8;
+      border-radius: 18px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      color: #6b5a92;
+    }
+
+    .search-summary .title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #8a78a8;
+      margin: 0 0 6px;
+    }
+
+    .search-summary .value {
+      font-size: 24px;
+      font-weight: 900;
+      color: #ff6fa7;
+      line-height: 1.2;
+    }
+
+    .search-summary .sub {
+      font-size: 13px;
+      color: #7d7388;
+      margin-top: 4px;
+    }
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
     .list {
       display: flex;
       flex-direction: column;
@@ -284,6 +318,12 @@
       color: #a36c8b;
       box-shadow: inset 0 0 0 2px #ffd5e6;
       width: auto;
+    }
+
+    .small-btn.edit {
+      background: #f5f0ff;
+      color: #7a60b6;
+      box-shadow: inset 0 0 0 2px #ded0ff;
     }
 
     .small-btn.delete {
@@ -425,12 +465,20 @@
 
         <h2 style="margin-top: 10px;">🔍 查找記錄</h2>
         <div class="filter-row">
-          <input id="searchInput" type="text" placeholder="搜尋備註或分類" />
           <select id="filterType">
             <option value="all">全部類型</option>
             <option value="income">只看收入</option>
             <option value="expense">只看支出</option>
           </select>
+          <select id="searchInput">
+            <option value="">全部分類</option>
+          </select>
+        </div>
+
+        <div class="search-summary">
+          <div class="title">查找結果加總</div>
+          <div class="value" id="filteredTotal">NT$ 0</div>
+          <div class="sub" id="filteredCount">共 0 筆資料</div>
         </div>
 
         <div class="card section-soft" style="margin-bottom: 16px; padding: 14px;">
@@ -564,7 +612,29 @@
       categoryInput.innerHTML = categories
         .map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.emoji)} ${escapeHtml(c.name)}</option>`)
         .join('');
+      updateSearchOptions();
       renderCategoryEditor();
+    }
+
+    function updateSearchOptions() {
+      const currentValue = searchInput.value;
+      const allCategories = [...(categoryMap.expense || []), ...(categoryMap.income || [])];
+      const unique = [];
+      const seen = new Set();
+
+      allCategories.forEach(item => {
+        const key = `${item.emoji}-${item.name}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(item);
+        }
+      });
+
+      searchInput.innerHTML = ['<option value="">全部分類</option>']
+        .concat(unique.map(item => `<option value="${escapeHtml(item.name)}">${escapeHtml(item.emoji)} ${escapeHtml(item.name)}</option>`))
+        .join('');
+
+      searchInput.value = unique.some(item => item.name === currentValue) ? currentValue : '';
     }
 
     function resetForm() {
@@ -585,6 +655,16 @@
         ...data,
         amount: Number(data.amount)
       });
+      saveRecords();
+      render();
+    }
+
+    function updateRecord(id, newData) {
+      records = records.map(item => item.id === id ? {
+        ...item,
+        ...newData,
+        amount: Number(newData.amount)
+      } : item);
       saveRecords();
       render();
     }
@@ -662,10 +742,30 @@
 
       return records.filter(item => {
         const matchType = type === 'all' ? true : item.type === type;
-        const text = `${item.note || ''} ${item.category || ''}`.toLowerCase();
-        const matchKeyword = keyword ? text.includes(keyword) : true;
+        const matchKeyword = keyword ? item.category.toLowerCase() === keyword : true;
         return matchType && matchKeyword;
       });
+    }
+
+    function renderFilteredSummary(list) {
+      const total = list.reduce((sum, item) => {
+        return sum + (item.type === 'income' ? Number(item.amount || 0) : -Number(item.amount || 0));
+      }, 0);
+
+      const income = list.reduce((sum, item) => {
+        return sum + (item.type === 'income' ? Number(item.amount || 0) : 0);
+      }, 0);
+
+      const expense = list.reduce((sum, item) => {
+        return sum + (item.type === 'expense' ? Number(item.amount || 0) : 0);
+      }, 0);
+
+      const filteredTotalEl = document.getElementById('filteredTotal');
+      const filteredCountEl = document.getElementById('filteredCount');
+      if (filteredTotalEl) filteredTotalEl.textContent = formatMoney(total);
+      if (filteredCountEl) {
+        filteredCountEl.textContent = `共 ${list.length} 筆資料｜收入 ${formatMoney(income)}｜支出 ${formatMoney(expense)}`;
+      }
     }
 
     function renderStats() {
@@ -680,6 +780,7 @@
 
     function renderList() {
       const list = getFilteredRecords();
+      renderFilteredSummary(list);
 
       if (!list.length) {
         recordList.innerHTML = `
@@ -703,6 +804,7 @@
               日期：${escapeHtml(item.date)}
             </div>
             <div class="item-actions">
+              <button class="small-btn edit" onclick="editRecordById('${item.id}')">編輯</button>
               <button class="small-btn delete" onclick="deleteRecordById('${item.id}')">刪除</button>
             </div>
           </div>
@@ -846,6 +948,54 @@
       if (confirm('要刪除這筆記錄嗎？')) deleteRecord(id);
     };
 
+    window.editRecordById = function(id) {
+      const item = records.find(record => record.id === id);
+      if (!item) return;
+
+      const nextType = prompt('請輸入類型：income 或 expense', item.type);
+      if (nextType === null) return;
+      const cleanType = nextType.trim().toLowerCase();
+      if (!['income', 'expense'].includes(cleanType)) {
+        alert('類型只能是 income 或 expense');
+        return;
+      }
+
+      const nextAmount = prompt('請輸入金額：', item.amount);
+      if (nextAmount === null) return;
+      const amount = Number(nextAmount);
+      if (!amount || amount <= 0) {
+        alert('請輸入正確的金額');
+        return;
+      }
+
+      const nextCategory = prompt('請輸入分類名稱：', item.category);
+      if (nextCategory === null) return;
+      const categoryName = nextCategory.trim() || item.category;
+      const matchedCategory = getCategoryObject(cleanType, categoryName);
+
+      const nextDate = prompt('請輸入日期（格式：YYYY-MM-DD）：', item.date);
+      if (nextDate === null) return;
+      const date = nextDate.trim();
+      const parts = date.split('-');
+      const validDate = parts.length === 3 && parts[0].length === 4 && parts[1].length === 2 && parts[2].length === 2 && !Number.isNaN(new Date(date).getTime());
+      if (!validDate) {
+        alert('日期格式需為 YYYY-MM-DD');
+        return;
+      }
+
+      const nextNote = prompt('請輸入備註：', item.note || '');
+      if (nextNote === null) return;
+
+      updateRecord(id, {
+        type: cleanType,
+        amount,
+        category: matchedCategory ? matchedCategory.name : categoryName,
+        categoryEmoji: matchedCategory ? matchedCategory.emoji : (cleanType === 'income' ? '🌟' : '✨'),
+        date,
+        note: nextNote.trim()
+      });
+    };
+
     window.editCategoryPrompt = function(type, index) {
       const item = categoryMap[type][index];
       const oldName = item.name;
@@ -868,6 +1018,7 @@
       saveCategoryMap();
       renameCategoryReferences(type, oldName, name, emoji);
       updateCategoryOptions();
+      updateSearchOptions();
       render();
     };
 
@@ -879,6 +1030,7 @@
       const item = categoryMap[type][index];
       if (!confirm(`要刪除分類「${item.emoji} ${item.name}」嗎？\n已使用這個分類的資料會改到其他預設分類。`)) return;
       deleteCategory(type, index);
+      updateSearchOptions();
     };
 
     form.addEventListener('submit', (e) => {
@@ -904,7 +1056,7 @@
     });
 
     typeInput.addEventListener('change', updateCategoryOptions);
-    searchInput.addEventListener('input', renderList);
+    searchInput.addEventListener('change', renderList);
     filterType.addEventListener('change', renderList);
     resetFormBtn.addEventListener('click', resetForm);
 
@@ -937,6 +1089,7 @@
         return;
       }
       addCategory(editingCategoryType, emoji, name);
+      updateSearchOptions();
     });
 
     document.addEventListener('click', (e) => {
@@ -959,6 +1112,7 @@
     window.addEventListener('resize', renderCharts);
 
     updateCategoryOptions();
+    updateSearchOptions();
     dateInput.value = todayString();
     render();
   </script>
