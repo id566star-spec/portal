@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: tw-stock-board
-    env: node
-    plan: free
-    buildCommand: npm install
-    startCommand: npm start
-    autoDeploy: true
