@@ -481,7 +481,7 @@
             "symbols": [
               { "proName": "FOREXCOM:US30", "title": "道瓊" },
               { "proName": "FOREXCOM:NAS100", "title": "NASDAQ 100" },
-              { "proName": "SP:SPX", "title": "S&P 500" },
+              { "proName": "FOREXCOM:SPX500", "title": "S&P 500" },
               { "proName": "FOREXCOM:US2000", "title": "Russell 2000" },
               { "proName": "NYSE:TSM", "title": "TSM" },
               { "proName": "NYSE:UMC", "title": "UMC" },
@@ -520,7 +520,7 @@
         </div>
 
         <div class="toolbar">
-          <button class="switch-btn active" data-symbol="SP:SPX">S&P 500</button>
+          <button class="switch-btn active" data-symbol="FOREXCOM:SPX500">S&P 500</button>
           <button class="switch-btn" data-symbol="FOREXCOM:NAS100">NASDAQ 100</button>
           <button class="switch-btn" data-symbol="FOREXCOM:US30">道瓊</button>
           <button class="switch-btn" data-symbol="FOREXCOM:US2000">Russell 2000</button>
@@ -633,7 +633,7 @@
         <div class="panel-header">
           <div>
             <div class="panel-title">美股四大指數</div>
-            <div class="panel-sub">US30 / NAS100 / SPX / US2000</div>
+            <div class="panel-sub">US30 / NAS100 / SPX500 / US2000</div>
           </div>
         </div>
         <div class="panel-body small-chart">
@@ -644,7 +644,7 @@
               "symbols": [
                 ["道瓊", "FOREXCOM:US30|1D"],
                 ["NASDAQ 100", "FOREXCOM:NAS100|1D"],
-                ["S&P 500", "SP:SPX|1D"],
+                ["S&P 500", "FOREXCOM:SPX500|1D"],
                 ["Russell 2000", "FOREXCOM:US2000|1D"]
               ],
               "chartOnly": false,
@@ -1160,7 +1160,7 @@ AI 判讀：
       setMarketStatus();
       buildAIView();
       loadNote();
-      loadMainChart("FOREXCOM:NAS100");
+      loadMainChart("FOREXCOM:SPX500");
     });
 
     setInterval(() => {
