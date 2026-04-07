@@ -3,20 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>可愛記帳小幫手</title>
+  <title>可愛記帳小幫手｜進階版</title>
   <style>
     :root {
-      --bg1: #fff6fb;
-      --bg2: #fefcff;
-      --card: rgba(255,255,255,0.92);
+      --bg1: #fff7fb;
+      --bg2: #f7f4ff;
+      --card: rgba(255,255,255,0.94);
       --pink: #ff8fba;
       --pink-dark: #ff6fa7;
       --purple: #b89cff;
-      --mint: #9fe7d7;
+      --mint: #8fe4cf;
       --blue: #9fc7ff;
       --text: #4b4453;
       --subtext: #7d7388;
-      --shadow: 0 12px 30px rgba(255, 143, 186, 0.16);
+      --line: #f3dbe8;
+      --shadow: 0 14px 36px rgba(255, 143, 186, 0.14);
       --radius: 24px;
     }
 
@@ -27,24 +28,24 @@
       font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
       color: var(--text);
       background:
-        radial-gradient(circle at top left, #ffe3f0 0%, transparent 28%),
-        radial-gradient(circle at top right, #e9ddff 0%, transparent 24%),
+        radial-gradient(circle at top left, #ffe7f2 0%, transparent 28%),
+        radial-gradient(circle at top right, #ece2ff 0%, transparent 24%),
         linear-gradient(180deg, var(--bg1), var(--bg2));
       min-height: 100vh;
       padding: 14px;
     }
 
     .container {
-      max-width: 760px;
+      max-width: 860px;
       margin: 0 auto;
     }
 
     .hero {
-      background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,244,250,0.98));
+      background: linear-gradient(135deg, rgba(255,255,255,0.97), rgba(255,244,250,0.98));
       border-radius: 28px;
       padding: 20px;
       box-shadow: var(--shadow);
-      border: 2px solid rgba(255,255,255,0.8);
+      border: 2px solid rgba(255,255,255,0.85);
       margin-bottom: 16px;
       position: relative;
       overflow: hidden;
@@ -53,8 +54,8 @@
     .hero::after {
       content: "✦ ʚɞ ✦";
       position: absolute;
-      right: 16px;
-      top: 14px;
+      right: 18px;
+      top: 16px;
       color: #ffacd0;
       font-size: 18px;
       letter-spacing: 3px;
@@ -62,7 +63,7 @@
 
     .title {
       margin: 0;
-      font-size: clamp(26px, 6vw, 36px);
+      font-size: clamp(28px, 6vw, 38px);
       font-weight: 900;
       color: var(--pink-dark);
     }
@@ -77,7 +78,6 @@
 
     .stack {
       display: grid;
-      grid-template-columns: 1fr;
       gap: 16px;
     }
 
@@ -87,16 +87,18 @@
       border-radius: var(--radius);
       padding: 16px;
       box-shadow: var(--shadow);
-      border: 2px solid rgba(255,255,255,0.75);
+      border: 2px solid rgba(255,255,255,0.8);
     }
 
     .card h2 {
       margin: 0 0 12px;
-      font-size: 19px;
+      font-size: 18px;
       color: #6b5a92;
     }
 
-    .form-grid {
+    .form-grid,
+    .filter-grid,
+    .edit-grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: 12px;
@@ -163,10 +165,20 @@
       color: white;
     }
 
+    .mint {
+      background: linear-gradient(135deg, #94e6d1, #67d7bb);
+      color: white;
+    }
+
     .ghost {
       background: #fff;
       color: #8c79b0;
       box-shadow: inset 0 0 0 2px #eadfff;
+    }
+
+    .danger {
+      background: linear-gradient(135deg, #ff9db2, #ff7d9f);
+      color: white;
     }
 
     .stats {
@@ -193,7 +205,7 @@
 
     .stat .label {
       font-size: 14px;
-      opacity: 0.95;
+      opacity: 0.96;
       font-weight: 700;
     }
 
@@ -204,16 +216,9 @@
       word-break: break-word;
     }
 
-    .filter-row {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
     .search-summary {
       background: linear-gradient(135deg, rgba(255,245,250,0.95), rgba(247,241,255,0.95));
-      border: 2px solid #f3dbe8;
+      border: 2px solid var(--line);
       border-radius: 18px;
       padding: 12px 14px;
       margin-bottom: 14px;
@@ -236,13 +241,8 @@
 
     .search-summary .sub {
       font-size: 13px;
-      color: #7d7388;
+      color: var(--subtext);
       margin-top: 4px;
-    }
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 14px;
     }
 
     .list {
@@ -256,7 +256,7 @@
 
     .item {
       background: #fff;
-      border-radius: 18px;
+      border-radius: 20px;
       padding: 14px;
       display: grid;
       grid-template-columns: 1fr;
@@ -360,6 +360,36 @@
       background: rgba(255,255,255,0.74);
     }
 
+    .editor-panel {
+      display: none;
+      margin-top: 14px;
+      border: 2px solid #edd9f5;
+      background: linear-gradient(135deg, rgba(255,250,252,0.96), rgba(248,244,255,0.96));
+    }
+
+    .editor-panel.show {
+      display: block;
+    }
+
+    .editor-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .editor-title {
+      font-size: 16px;
+      font-weight: 900;
+      color: #6b5a92;
+    }
+
+    .mini-text {
+      font-size: 13px;
+      color: var(--subtext);
+    }
+
     .footer-note {
       text-align: center;
       color: #907cae;
@@ -370,29 +400,23 @@
     @media (min-width: 720px) {
       body { padding: 20px; }
       button { width: auto; }
-      .form-grid { grid-template-columns: repeat(2, 1fr); }
+      .form-grid,
+      .filter-grid,
+      .edit-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
       .field.full { grid-column: 1 / -1; }
       .stats { grid-template-columns: repeat(3, 1fr); }
       .item { grid-template-columns: 1fr auto; }
       .amount { text-align: right; }
-      .filter-row {
-        flex-direction: row;
-        flex-wrap: wrap;
-      }
-      .filter-row input,
-      .filter-row select {
-        flex: 1;
-        min-width: 180px;
-      }
-      .btn-row { gap: 12px; }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <section class="hero">
-      <h1 class="title">🐰 可愛記帳小幫手</h1>
-      <p class="subtitle">簡單輸入收入與支出，自動統計結餘。資料會保存在瀏覽器，重新打開也還在，適合日常快速記帳使用。</p>
+      <h1 class="title">🐰 可愛記帳小幫手｜進階版 UI</h1>
+      <p class="subtitle">改成更像 App 的操作方式，不再用跳出視窗編輯。你可以直接在頁面內新增、篩選、編輯與管理分類。</p>
     </section>
 
     <div class="stack">
@@ -407,43 +431,38 @@
                 <option value="income">收入</option>
               </select>
             </div>
-
             <div class="field">
               <label for="amount">金額</label>
               <input id="amount" type="number" min="0" step="1" placeholder="例如：120" required />
             </div>
-
             <div class="field">
               <label for="category">分類</label>
               <select id="category" required></select>
             </div>
-
             <div class="field">
               <label for="date">日期</label>
               <input id="date" type="date" required />
             </div>
-
             <div class="field full">
               <label for="note">備註</label>
-              <input id="note" type="text" maxlength="50" placeholder="例如：午餐、捷運、接案收入" />
+              <input id="note" type="text" maxlength="50" placeholder="例如：午餐、捷運、租金收入" />
             </div>
           </div>
-
           <div class="btn-row">
             <button class="primary" type="submit">➕ 加入記帳</button>
             <button class="ghost" type="button" id="resetFormBtn">重設欄位</button>
           </div>
         </form>
+      </section>
 
-        <div class="card section-soft" style="margin-top: 16px; padding: 14px;">
-          <h2 id="categoryEditorTitle">支出分類管理</h2>
-          <div class="btn-row" style="margin-top:0; margin-bottom:12px;">
-            <button class="primary" type="button" data-category-tab="expense">支出分類</button>
-            <button class="ghost" type="button" data-category-tab="income">收入分類</button>
-            <button class="secondary" type="button" id="addCategoryBtn">新增分類</button>
-          </div>
-          <div class="list" id="categoryEditorList" style="max-height: 260px;"></div>
+      <section class="card section-soft">
+        <h2 id="categoryEditorTitle">支出分類管理</h2>
+        <div class="btn-row" style="margin-top:0; margin-bottom:12px;">
+          <button class="primary" type="button" data-category-tab="expense">支出分類</button>
+          <button class="ghost" type="button" data-category-tab="income">收入分類</button>
+          <button class="secondary" type="button" id="addCategoryBtn">新增分類</button>
         </div>
+        <div class="list" id="categoryEditorList" style="max-height: 260px;"></div>
       </section>
 
       <section class="card">
@@ -463,16 +482,22 @@
           </div>
         </div>
 
-        <h2 style="margin-top: 10px;">🔍 查找記錄</h2>
-        <div class="filter-row">
-          <select id="filterType">
-            <option value="all">全部類型</option>
-            <option value="income">只看收入</option>
-            <option value="expense">只看支出</option>
-          </select>
-          <select id="searchInput">
-            <option value="">全部分類</option>
-          </select>
+        <h2>🔍 查找記錄</h2>
+        <div class="filter-grid">
+          <div class="field">
+            <label for="filterType">類型篩選</label>
+            <select id="filterType">
+              <option value="all">全部類型</option>
+              <option value="income">只看收入</option>
+              <option value="expense">只看支出</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="searchInput">分類篩選</label>
+            <select id="searchInput">
+              <option value="">全部分類</option>
+            </select>
+          </div>
         </div>
 
         <div class="search-summary">
@@ -481,7 +506,47 @@
           <div class="sub" id="filteredCount">共 0 筆資料</div>
         </div>
 
-        <div class="card section-soft" style="margin-bottom: 16px; padding: 14px;">
+        <div class="card editor-panel" id="editorPanel">
+          <div class="editor-head">
+            <div>
+              <div class="editor-title">✏️ 編輯這筆記錄</div>
+              <div class="mini-text">直接在頁面內修改，不用跳出視窗</div>
+            </div>
+          </div>
+          <form id="editForm">
+            <div class="edit-grid">
+              <div class="field">
+                <label for="editType">類型</label>
+                <select id="editType" required>
+                  <option value="expense">支出</option>
+                  <option value="income">收入</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="editAmount">金額</label>
+                <input id="editAmount" type="number" min="0" step="1" required />
+              </div>
+              <div class="field">
+                <label for="editCategory">分類</label>
+                <select id="editCategory" required></select>
+              </div>
+              <div class="field">
+                <label for="editDate">日期</label>
+                <input id="editDate" type="date" required />
+              </div>
+              <div class="field full">
+                <label for="editNote">備註</label>
+                <input id="editNote" type="text" maxlength="50" />
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="mint" type="submit">儲存修改</button>
+              <button class="ghost" type="button" id="cancelEditBtn">取消編輯</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card section-soft" style="margin-top: 16px; margin-bottom: 16px;">
           <h2 style="margin-bottom: 12px;">📊 收支比例分析</h2>
           <div class="chart-grid">
             <canvas id="monthlyExpensePieChart" class="chart-canvas" width="520" height="320"></canvas>
@@ -493,7 +558,7 @@
 
         <div class="btn-row" style="margin-top: 0; margin-bottom: 14px;">
           <button class="secondary" type="button" id="exportBtn">下載 JSON 備份</button>
-          <button class="ghost" type="button" id="clearAllBtn">清空全部資料</button>
+          <button class="danger" type="button" id="clearAllBtn">清空全部資料</button>
         </div>
 
         <div class="list" id="recordList"></div>
@@ -504,8 +569,8 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'cute_expense_records_v2';
-    const CATEGORY_STORAGE_KEY = 'cute_expense_categories_v2';
+    const STORAGE_KEY = 'cute_expense_records_advanced_v1';
+    const CATEGORY_STORAGE_KEY = 'cute_expense_categories_advanced_v1';
 
     const defaultCategoryMap = {
       expense: [
@@ -513,19 +578,16 @@
         { name: '交通', emoji: '🚌' },
         { name: '購物', emoji: '🛍️' },
         { name: '娛樂', emoji: '🎮' },
-        { name: '生活', emoji: '🏠' },
         { name: '醫療', emoji: '💊' },
         { name: '學習', emoji: '📚' },
-        { name: '其他支出', emoji: '✨' }
+        { name: '電信', emoji: '📱' },
+        { name: '養育', emoji: '🧒' }
       ],
       income: [
         { name: '薪水', emoji: '💼' },
-        { name: '獎金', emoji: '🎁' },
-        { name: '接案', emoji: '💻' },
         { name: '投資', emoji: '📈' },
-        { name: '退款', emoji: '💸' },
-        { name: '禮金', emoji: '🧧' },
-        { name: '其他收入', emoji: '🌟' }
+        { name: '房租', emoji: '🏠' },
+        { name: '松果', emoji: '🌲' }
       ]
     };
 
@@ -535,6 +597,16 @@
     const categoryInput = document.getElementById('category');
     const dateInput = document.getElementById('date');
     const noteInput = document.getElementById('note');
+
+    const editForm = document.getElementById('editForm');
+    const editorPanel = document.getElementById('editorPanel');
+    const editType = document.getElementById('editType');
+    const editAmount = document.getElementById('editAmount');
+    const editCategory = document.getElementById('editCategory');
+    const editDate = document.getElementById('editDate');
+    const editNote = document.getElementById('editNote');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+
     const recordList = document.getElementById('recordList');
     const balanceEl = document.getElementById('balance');
     const incomeTotalEl = document.getElementById('incomeTotal');
@@ -549,21 +621,30 @@
     let categoryMap = loadCategoryMap();
     let records = loadRecords();
     let editingCategoryType = 'expense';
-
-    function todayString() {
-      const now = new Date();
-      const y = now.getFullYear();
-      const m = String(now.getMonth() + 1).padStart(2, '0');
-      const d = String(now.getDate()).padStart(2, '0');
-      return `${y}-${m}-${d}`;
-    }
-
-    function formatMoney(num) {
-      return 'NT$ ' + Number(num || 0).toLocaleString('zh-TW');
-    }
+    let editingRecordId = null;
 
     function clone(obj) {
       return JSON.parse(JSON.stringify(obj));
+    }
+
+    function todayString() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    }
+
+    function formatMoney(num) {
+      const value = Number(num || 0);
+      const sign = value < 0 ? '-' : '';
+      return `${sign}NT$ ${Math.abs(value).toLocaleString('zh-TW')}`;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
     function loadCategoryMap() {
@@ -572,8 +653,8 @@
         if (!raw) return clone(defaultCategoryMap);
         const parsed = JSON.parse(raw);
         return {
-          expense: Array.isArray(parsed.expense) && parsed.expense.length ? parsed.expense : clone(defaultCategoryMap.expense),
-          income: Array.isArray(parsed.income) && parsed.income.length ? parsed.income : clone(defaultCategoryMap.income)
+          expense: Array.isArray(parsed.expense) && parsed.expense.length ? parsed.expense.filter(x => x && x.name) : clone(defaultCategoryMap.expense),
+          income: Array.isArray(parsed.income) && parsed.income.length ? parsed.income.filter(x => x && x.name) : clone(defaultCategoryMap.income)
         };
       } catch {
         return clone(defaultCategoryMap);
@@ -597,33 +678,46 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
     }
 
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+    function getCategoryObject(type, categoryName) {
+      return (categoryMap[type] || []).find(item => item.name === categoryName);
+    }
+
+    function fillCategorySelect(selectEl, type, currentValue = '') {
+      let categories = categoryMap[type] || [];
+      if (!categories.length) {
+        categories = clone(defaultCategoryMap[type] || []);
+        categoryMap[type] = categories;
+        saveCategoryMap();
+      }
+      selectEl.innerHTML = categories
+        .map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.emoji || '✨')} ${escapeHtml(c.name)}</option>`)
+        .join('');
+      if (currentValue) selectEl.value = currentValue;
     }
 
     function updateCategoryOptions() {
-      const type = typeInput.value;
-      const categories = categoryMap[type] || [];
-      categoryInput.innerHTML = categories
-        .map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.emoji)} ${escapeHtml(c.name)}</option>`)
-        .join('');
-      updateSearchOptions();
+      fillCategorySelect(categoryInput, typeInput.value);
       renderCategoryEditor();
+    }
+
+    function updateEditCategoryOptions(currentValue = '') {
+      fillCategorySelect(editCategory, editType.value, currentValue);
     }
 
     function updateSearchOptions() {
       const currentValue = searchInput.value;
-      const allCategories = [...(categoryMap.expense || []), ...(categoryMap.income || [])];
+      const typeFilter = filterType.value;
+      let categories = [];
+
+      if (typeFilter === 'income') categories = categoryMap.income || [];
+      else if (typeFilter === 'expense') categories = categoryMap.expense || [];
+      else categories = [...(categoryMap.expense || []), ...(categoryMap.income || [])];
+
       const unique = [];
       const seen = new Set();
-
-      allCategories.forEach(item => {
-        const key = `${item.emoji}-${item.name}`;
+      categories.forEach(item => {
+        if (!item || !item.name) return;
+        const key = `${item.emoji || '✨'}-${item.name}`;
         if (!seen.has(key)) {
           seen.add(key);
           unique.push(item);
@@ -631,7 +725,7 @@
       });
 
       searchInput.innerHTML = ['<option value="">全部分類</option>']
-        .concat(unique.map(item => `<option value="${escapeHtml(item.name)}">${escapeHtml(item.emoji)} ${escapeHtml(item.name)}</option>`))
+        .concat(unique.map(item => `<option value="${escapeHtml(item.name)}">${escapeHtml(item.emoji || '✨')} ${escapeHtml(item.name)}</option>`))
         .join('');
 
       searchInput.value = unique.some(item => item.name === currentValue) ? currentValue : '';
@@ -645,64 +739,48 @@
       amountInput.focus();
     }
 
-    function getCategoryObject(type, categoryName) {
-      return (categoryMap[type] || []).find(item => item.name === categoryName);
+    function closeEditor() {
+      editingRecordId = null;
+      editorPanel.classList.remove('show');
+      editForm.reset();
+    }
+
+    function openEditor(record) {
+      editingRecordId = record.id;
+      editType.value = record.type;
+      updateEditCategoryOptions(record.category);
+      editAmount.value = record.amount;
+      editDate.value = record.date;
+      editNote.value = record.note || '';
+      editorPanel.classList.add('show');
+      editorPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function addRecord(data) {
-      records.unshift({
-        id: crypto.randomUUID(),
-        ...data,
-        amount: Number(data.amount)
-      });
+      records.unshift({ id: crypto.randomUUID(), ...data, amount: Number(data.amount) });
       saveRecords();
       render();
     }
 
     function updateRecord(id, newData) {
-      records = records.map(item => item.id === id ? {
-        ...item,
-        ...newData,
-        amount: Number(newData.amount)
-      } : item);
+      records = records.map(item => item.id === id ? { ...item, ...newData, amount: Number(newData.amount) } : item);
       saveRecords();
       render();
     }
 
     function deleteRecord(id) {
       records = records.filter(item => item.id !== id);
+      if (editingRecordId === id) closeEditor();
       saveRecords();
       render();
-    }
-
-    function renderCategoryEditor() {
-      const wrap = document.getElementById('categoryEditorList');
-      const title = document.getElementById('categoryEditorTitle');
-      const typeTabs = document.querySelectorAll('[data-category-tab]');
-      if (!wrap || !title) return;
-
-      title.textContent = editingCategoryType === 'expense' ? '支出分類管理' : '收入分類管理';
-      typeTabs.forEach(btn => {
-        const active = btn.dataset.categoryTab === editingCategoryType;
-        btn.className = active ? 'primary' : 'ghost';
-      });
-
-      const items = categoryMap[editingCategoryType] || [];
-      wrap.innerHTML = items.map((item, index) => `
-        <div class="item" style="grid-template-columns:1fr; gap:8px;">
-          <div class="meta" style="font-size:15px; color:#5a4f67; font-weight:800;">${escapeHtml(item.emoji)} ${escapeHtml(item.name)}</div>
-          <div class="item-actions" style="margin-top:0; justify-content:flex-start;">
-            <button class="small-btn" onclick="editCategoryPrompt('${editingCategoryType}', ${index})">編輯</button>
-            <button class="small-btn delete" onclick="deleteCategoryPrompt('${editingCategoryType}', ${index})">刪除</button>
-          </div>
-        </div>
-      `).join('');
     }
 
     function addCategory(type, emoji, name) {
       categoryMap[type].push({ emoji, name });
       saveCategoryMap();
       updateCategoryOptions();
+      updateEditCategoryOptions();
+      updateSearchOptions();
       render();
     }
 
@@ -719,9 +797,7 @@
     function deleteCategory(type, index) {
       const removed = categoryMap[type][index];
       categoryMap[type].splice(index, 1);
-      const fallback = type === 'expense'
-        ? (categoryMap[type].find(item => item.name === '其他支出') || categoryMap[type][0])
-        : (categoryMap[type].find(item => item.name === '其他收入') || categoryMap[type][0]);
+      const fallback = categoryMap[type][0] || clone(defaultCategoryMap[type])[0];
 
       records = records.map(record => {
         if (record.type === type && record.category === removed.name) {
@@ -733,46 +809,52 @@
       saveCategoryMap();
       saveRecords();
       updateCategoryOptions();
+      updateEditCategoryOptions();
+      updateSearchOptions();
       render();
     }
 
-    function getFilteredRecords() {
-      const keyword = searchInput.value.trim().toLowerCase();
-      const type = filterType.value;
+    function renderCategoryEditor() {
+      const wrap = document.getElementById('categoryEditorList');
+      const title = document.getElementById('categoryEditorTitle');
+      const typeTabs = document.querySelectorAll('[data-category-tab]');
+      title.textContent = editingCategoryType === 'expense' ? '支出分類管理' : '收入分類管理';
+      typeTabs.forEach(btn => btn.className = btn.dataset.categoryTab === editingCategoryType ? 'primary' : 'ghost');
 
+      const items = categoryMap[editingCategoryType] || [];
+      wrap.innerHTML = items.map((item, index) => `
+        <div class="item" style="grid-template-columns:1fr; gap:8px;">
+          <div class="meta" style="font-size:15px; color:#5a4f67; font-weight:800;">${escapeHtml(item.emoji)} ${escapeHtml(item.name)}</div>
+          <div class="item-actions" style="margin-top:0; justify-content:flex-start;">
+            <button class="small-btn edit" onclick="editCategoryPrompt('${editingCategoryType}', ${index})">編輯</button>
+            <button class="small-btn delete" onclick="deleteCategoryPrompt('${editingCategoryType}', ${index})">刪除</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function getFilteredRecords() {
+      const categoryKeyword = searchInput.value.trim().toLowerCase();
+      const type = filterType.value;
       return records.filter(item => {
         const matchType = type === 'all' ? true : item.type === type;
-        const matchKeyword = keyword ? item.category.toLowerCase() === keyword : true;
-        return matchType && matchKeyword;
+        const matchCategory = categoryKeyword ? item.category.toLowerCase() === categoryKeyword : true;
+        return matchType && matchCategory;
       });
     }
 
     function renderFilteredSummary(list) {
-      const total = list.reduce((sum, item) => {
-        return sum + (item.type === 'income' ? Number(item.amount || 0) : -Number(item.amount || 0));
-      }, 0);
-
-      const income = list.reduce((sum, item) => {
-        return sum + (item.type === 'income' ? Number(item.amount || 0) : 0);
-      }, 0);
-
-      const expense = list.reduce((sum, item) => {
-        return sum + (item.type === 'expense' ? Number(item.amount || 0) : 0);
-      }, 0);
-
-      const filteredTotalEl = document.getElementById('filteredTotal');
-      const filteredCountEl = document.getElementById('filteredCount');
-      if (filteredTotalEl) filteredTotalEl.textContent = formatMoney(total);
-      if (filteredCountEl) {
-        filteredCountEl.textContent = `共 ${list.length} 筆資料｜收入 ${formatMoney(income)}｜支出 ${formatMoney(expense)}`;
-      }
+      const total = list.reduce((sum, item) => sum + (item.type === 'income' ? Number(item.amount || 0) : -Number(item.amount || 0)), 0);
+      const income = list.reduce((sum, item) => sum + (item.type === 'income' ? Number(item.amount || 0) : 0), 0);
+      const expense = list.reduce((sum, item) => sum + (item.type === 'expense' ? Number(item.amount || 0) : 0), 0);
+      document.getElementById('filteredTotal').textContent = formatMoney(total);
+      document.getElementById('filteredCount').textContent = `共 ${list.length} 筆資料｜收入 ${formatMoney(income)}｜支出 ${formatMoney(expense)}`;
     }
 
     function renderStats() {
       const income = records.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0);
       const expense = records.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0);
       const balance = income - expense;
-
       incomeTotalEl.textContent = formatMoney(income);
       expenseTotalEl.textContent = formatMoney(expense);
       balanceEl.textContent = formatMoney(balance);
@@ -781,14 +863,8 @@
     function renderList() {
       const list = getFilteredRecords();
       renderFilteredSummary(list);
-
       if (!list.length) {
-        recordList.innerHTML = `
-          <div class="empty">
-            目前還沒有符合的記錄唷。<br />
-            快新增第一筆，開始可愛記帳吧 🧸
-          </div>
-        `;
+        recordList.innerHTML = `<div class="empty">目前還沒有符合的記錄唷。<br />快新增第一筆，開始可愛記帳吧 🧸</div>`;
         return;
       }
 
@@ -818,22 +894,16 @@
       const currentYear = now.getFullYear();
       const currentMonth = now.getMonth() + 1;
       const totals = {};
-
       records.forEach(item => {
         if (item.type !== targetType) return;
         const d = new Date(item.date);
         if (Number.isNaN(d.getTime())) return;
         const year = d.getFullYear();
         const month = d.getMonth() + 1;
-
-        const match = period === 'year'
-          ? year === currentYear
-          : year === currentYear && month === currentMonth;
-
+        const match = period === 'year' ? year === currentYear : year === currentYear && month === currentMonth;
         if (!match) return;
         totals[item.category] = (totals[item.category] || 0) + Number(item.amount || 0);
       });
-
       return totals;
     }
 
@@ -849,6 +919,16 @@
       return { ctx, width: displayWidth, height: displayHeight };
     }
 
+    function drawRoundedRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + width, y, x + width, y + height, radius);
+      ctx.arcTo(x + width, y + height, x, y + height, radius);
+      ctx.arcTo(x, y + height, x, y, radius);
+      ctx.arcTo(x, y, x + width, y, radius);
+      ctx.closePath();
+    }
+
     function drawPieChart(canvasId, dataMap, titleText, centerLabel) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
@@ -856,7 +936,6 @@
       const cx = width / 2;
       const cy = height / 2 - 6;
       const radius = Math.min(width, height) * 0.2;
-
       ctx.clearRect(0, 0, width, height);
 
       const entries = Object.entries(dataMap).filter(([, value]) => value > 0);
@@ -876,7 +955,6 @@
       }
 
       const colors = ['#ff8fba', '#b89cff', '#9fe7d7', '#ffd37e', '#8ec5ff', '#ffb38a', '#c6a6ff', '#ff9eb1', '#87d8f7', '#f3a6d6'];
-
       let startAngle = -Math.PI / 2;
       entries.forEach(([label, value], index) => {
         const sliceAngle = (value / total) * Math.PI * 2;
@@ -912,23 +990,12 @@
         ctx.fillStyle = colors[index % colors.length];
         drawRoundedRect(ctx, legendX, legendY + index * 24, 14, 14, 4);
         ctx.fill();
-
         ctx.fillStyle = '#5f5569';
         ctx.font = '13px Microsoft JhengHei';
         const categoryObj = Object.values(categoryMap).flat().find(c => c.name === label);
         const labelText = `${categoryObj ? categoryObj.emoji + ' ' : ''}${label} ${ratio}%（${formatMoney(value)}）`;
         ctx.fillText(labelText, legendX + 22, legendY + 12 + index * 24);
       });
-    }
-
-    function drawRoundedRect(ctx, x, y, width, height, radius) {
-      ctx.beginPath();
-      ctx.moveTo(x + radius, y);
-      ctx.arcTo(x + width, y, x + width, y + height, radius);
-      ctx.arcTo(x + width, y + height, x, y + height, radius);
-      ctx.arcTo(x, y + height, x, y, radius);
-      ctx.arcTo(x, y, x + width, y, radius);
-      ctx.closePath();
     }
 
     function renderCharts() {
@@ -951,49 +1018,7 @@
     window.editRecordById = function(id) {
       const item = records.find(record => record.id === id);
       if (!item) return;
-
-      const nextType = prompt('請輸入類型：income 或 expense', item.type);
-      if (nextType === null) return;
-      const cleanType = nextType.trim().toLowerCase();
-      if (!['income', 'expense'].includes(cleanType)) {
-        alert('類型只能是 income 或 expense');
-        return;
-      }
-
-      const nextAmount = prompt('請輸入金額：', item.amount);
-      if (nextAmount === null) return;
-      const amount = Number(nextAmount);
-      if (!amount || amount <= 0) {
-        alert('請輸入正確的金額');
-        return;
-      }
-
-      const nextCategory = prompt('請輸入分類名稱：', item.category);
-      if (nextCategory === null) return;
-      const categoryName = nextCategory.trim() || item.category;
-      const matchedCategory = getCategoryObject(cleanType, categoryName);
-
-      const nextDate = prompt('請輸入日期（格式：YYYY-MM-DD）：', item.date);
-      if (nextDate === null) return;
-      const date = nextDate.trim();
-      const parts = date.split('-');
-      const validDate = parts.length === 3 && parts[0].length === 4 && parts[1].length === 2 && parts[2].length === 2 && !Number.isNaN(new Date(date).getTime());
-      if (!validDate) {
-        alert('日期格式需為 YYYY-MM-DD');
-        return;
-      }
-
-      const nextNote = prompt('請輸入備註：', item.note || '');
-      if (nextNote === null) return;
-
-      updateRecord(id, {
-        type: cleanType,
-        amount,
-        category: matchedCategory ? matchedCategory.name : categoryName,
-        categoryEmoji: matchedCategory ? matchedCategory.emoji : (cleanType === 'income' ? '🌟' : '✨'),
-        date,
-        note: nextNote.trim()
-      });
+      openEditor(item);
     };
 
     window.editCategoryPrompt = function(type, index) {
@@ -1005,43 +1030,29 @@
       if (newName === null) return;
       const emoji = newEmoji.trim() || (type === 'expense' ? '✨' : '🌟');
       const name = newName.trim();
-      if (!name) {
-        alert('分類名稱不可空白');
-        return;
-      }
+      if (!name) return alert('分類名稱不可空白');
       const duplicated = (categoryMap[type] || []).some((cat, i) => i !== index && cat.name === name);
-      if (duplicated) {
-        alert('這個分類名稱已存在');
-        return;
-      }
+      if (duplicated) return alert('這個分類名稱已存在');
       categoryMap[type][index] = { emoji, name };
       saveCategoryMap();
       renameCategoryReferences(type, oldName, name, emoji);
       updateCategoryOptions();
+      updateEditCategoryOptions();
       updateSearchOptions();
       render();
     };
 
     window.deleteCategoryPrompt = function(type, index) {
-      if ((categoryMap[type] || []).length <= 1) {
-        alert('至少要保留一個分類');
-        return;
-      }
+      if ((categoryMap[type] || []).length <= 1) return alert('至少要保留一個分類');
       const item = categoryMap[type][index];
-      if (!confirm(`要刪除分類「${item.emoji} ${item.name}」嗎？\n已使用這個分類的資料會改到其他預設分類。`)) return;
+      if (!confirm(`要刪除分類「${item.emoji} ${item.name}」嗎？\n已使用這個分類的資料會改到其他分類。`)) return;
       deleteCategory(type, index);
-      updateSearchOptions();
     };
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const amount = Number(amountInput.value);
-      if (!amount || amount <= 0) {
-        alert('請輸入正確的金額');
-        amountInput.focus();
-        return;
-      }
-
+      if (!amount || amount <= 0) return alert('請輸入正確的金額');
       const selectedCategory = getCategoryObject(typeInput.value, categoryInput.value);
       addRecord({
         type: typeInput.value,
@@ -1051,22 +1062,41 @@
         date: dateInput.value,
         note: noteInput.value.trim()
       });
-
       resetForm();
     });
 
+    editForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!editingRecordId) return;
+      const amount = Number(editAmount.value);
+      if (!amount || amount <= 0) return alert('請輸入正確的金額');
+      const selectedCategory = getCategoryObject(editType.value, editCategory.value);
+      updateRecord(editingRecordId, {
+        type: editType.value,
+        amount,
+        category: selectedCategory ? selectedCategory.name : editCategory.value,
+        categoryEmoji: selectedCategory ? selectedCategory.emoji : (editType.value === 'income' ? '🌟' : '✨'),
+        date: editDate.value,
+        note: editNote.value.trim()
+      });
+      closeEditor();
+    });
+
     typeInput.addEventListener('change', updateCategoryOptions);
+    editType.addEventListener('change', () => updateEditCategoryOptions());
     searchInput.addEventListener('change', renderList);
-    filterType.addEventListener('change', renderList);
+    filterType.addEventListener('change', () => {
+      updateSearchOptions();
+      renderList();
+    });
     resetFormBtn.addEventListener('click', resetForm);
+    cancelEditBtn.addEventListener('click', closeEditor);
 
     clearAllBtn.addEventListener('click', () => {
-      if (!records.length) {
-        alert('目前沒有資料可以清空');
-        return;
-      }
+      if (!records.length) return alert('目前沒有資料可以清空');
       if (confirm('真的要清空全部記帳資料嗎？此動作無法復原。')) {
         records = [];
+        closeEditor();
         saveRecords();
         render();
       }
@@ -1079,17 +1109,10 @@
       if (nameInput === null) return;
       const emoji = emojiInput.trim() || (editingCategoryType === 'expense' ? '✨' : '🌟');
       const name = nameInput.trim();
-      if (!name) {
-        alert('分類名稱不可空白');
-        return;
-      }
+      if (!name) return alert('分類名稱不可空白');
       const exists = (categoryMap[editingCategoryType] || []).some(item => item.name === name);
-      if (exists) {
-        alert('這個分類名稱已存在');
-        return;
-      }
+      if (exists) return alert('這個分類名稱已存在');
       addCategory(editingCategoryType, emoji, name);
-      updateSearchOptions();
     });
 
     document.addEventListener('click', (e) => {
@@ -1104,7 +1127,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = '記帳資料備份.json';
+      a.download = '記帳資料備份_進階版.json';
       a.click();
       URL.revokeObjectURL(url);
     });
@@ -1112,6 +1135,7 @@
     window.addEventListener('resize', renderCharts);
 
     updateCategoryOptions();
+    updateEditCategoryOptions();
     updateSearchOptions();
     dateInput.value = todayString();
     render();
