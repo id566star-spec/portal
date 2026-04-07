@@ -460,8 +460,28 @@
         <div class="btn-row" style="margin-top:0; margin-bottom:12px;">
           <button class="primary" type="button" data-category-tab="expense">支出分類</button>
           <button class="ghost" type="button" data-category-tab="income">收入分類</button>
-          <button class="secondary" type="button" id="addCategoryBtn">新增分類</button>
         </div>
+
+        <div class="card" style="padding:14px; margin-bottom:12px; background:rgba(255,255,255,0.9); border:2px solid #eddcf5;">
+          <div class="editor-title" id="categoryFormTitle">➕ 新增分類</div>
+          <form id="categoryForm">
+            <div class="edit-grid" style="margin-top:12px;">
+              <div class="field">
+                <label for="categoryEmojiInput">表情符號</label>
+                <input id="categoryEmojiInput" type="text" maxlength="4" placeholder="例如：🍜" />
+              </div>
+              <div class="field">
+                <label for="categoryNameInput">分類名稱</label>
+                <input id="categoryNameInput" type="text" maxlength="20" placeholder="例如：餐飲" />
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="secondary" type="submit" id="saveCategoryBtn">儲存分類</button>
+              <button class="ghost" type="button" id="cancelCategoryEditBtn">取消</button>
+            </div>
+          </form>
+        </div>
+
         <div class="list" id="categoryEditorList" style="max-height: 260px;"></div>
       </section>
 
@@ -569,8 +589,8 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'cute_expense_records_advanced_v1';
-    const CATEGORY_STORAGE_KEY = 'cute_expense_categories_advanced_v1';
+    const STORAGE_KEY = 'cute_expense_records_advanced_v2';
+    const CATEGORY_STORAGE_KEY = 'cute_expense_categories_advanced_v2';
 
     const defaultCategoryMap = {
       expense: [
@@ -616,12 +636,18 @@
     const resetFormBtn = document.getElementById('resetFormBtn');
     const clearAllBtn = document.getElementById('clearAllBtn');
     const exportBtn = document.getElementById('exportBtn');
-    const addCategoryBtn = document.getElementById('addCategoryBtn');
+
+    const categoryForm = document.getElementById('categoryForm');
+    const categoryFormTitle = document.getElementById('categoryFormTitle');
+    const categoryEmojiInput = document.getElementById('categoryEmojiInput');
+    const categoryNameInput = document.getElementById('categoryNameInput');
+    const cancelCategoryEditBtn = document.getElementById('cancelCategoryEditBtn');
 
     let categoryMap = loadCategoryMap();
     let records = loadRecords();
     let editingCategoryType = 'expense';
     let editingRecordId = null;
+    let editingCategoryIndex = null;
 
     function clone(obj) {
       return JSON.parse(JSON.stringify(obj));
@@ -652,9 +678,14 @@
         const raw = localStorage.getItem(CATEGORY_STORAGE_KEY);
         if (!raw) return clone(defaultCategoryMap);
         const parsed = JSON.parse(raw);
+
         return {
-          expense: Array.isArray(parsed.expense) && parsed.expense.length ? parsed.expense.filter(x => x && x.name) : clone(defaultCategoryMap.expense),
-          income: Array.isArray(parsed.income) && parsed.income.length ? parsed.income.filter(x => x && x.name) : clone(defaultCategoryMap.income)
+          expense: Array.isArray(parsed.expense) && parsed.expense.length
+            ? parsed.expense.filter(x => x && x.name)
+            : clone(defaultCategoryMap.expense),
+          income: Array.isArray(parsed.income) && parsed.income.length
+            ? parsed.income.filter(x => x && x.name)
+            : clone(defaultCategoryMap.income)
         };
       } catch {
         return clone(defaultCategoryMap);
@@ -689,9 +720,11 @@
         categoryMap[type] = categories;
         saveCategoryMap();
       }
+
       selectEl.innerHTML = categories
         .map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.emoji || '✨')} ${escapeHtml(c.name)}</option>`)
         .join('');
+
       if (currentValue) selectEl.value = currentValue;
     }
 
@@ -715,6 +748,7 @@
 
       const unique = [];
       const seen = new Set();
+
       categories.forEach(item => {
         if (!item || !item.name) return;
         const key = `${item.emoji || '✨'}-${item.name}`;
@@ -763,7 +797,9 @@
     }
 
     function updateRecord(id, newData) {
-      records = records.map(item => item.id === id ? { ...item, ...newData, amount: Number(newData.amount) } : item);
+      records = records.map(item =>
+        item.id === id ? { ...item, ...newData, amount: Number(newData.amount) } : item
+      );
       saveRecords();
       render();
     }
@@ -775,12 +811,32 @@
       render();
     }
 
+    function resetCategoryForm() {
+      editingCategoryIndex = null;
+      categoryFormTitle.textContent = '➕ 新增分類';
+      categoryEmojiInput.value = '';
+      categoryNameInput.value = '';
+    }
+
     function addCategory(type, emoji, name) {
       categoryMap[type].push({ emoji, name });
       saveCategoryMap();
       updateCategoryOptions();
       updateEditCategoryOptions();
       updateSearchOptions();
+      resetCategoryForm();
+      render();
+    }
+
+    function updateCategory(type, index, emoji, name) {
+      const oldName = categoryMap[type][index].name;
+      categoryMap[type][index] = { emoji, name };
+      saveCategoryMap();
+      renameCategoryReferences(type, oldName, name, emoji);
+      updateCategoryOptions();
+      updateEditCategoryOptions();
+      updateSearchOptions();
+      resetCategoryForm();
       render();
     }
 
@@ -811,6 +867,7 @@
       updateCategoryOptions();
       updateEditCategoryOptions();
       updateSearchOptions();
+      resetCategoryForm();
       render();
     }
 
@@ -818,15 +875,18 @@
       const wrap = document.getElementById('categoryEditorList');
       const title = document.getElementById('categoryEditorTitle');
       const typeTabs = document.querySelectorAll('[data-category-tab]');
+
       title.textContent = editingCategoryType === 'expense' ? '支出分類管理' : '收入分類管理';
-      typeTabs.forEach(btn => btn.className = btn.dataset.categoryTab === editingCategoryType ? 'primary' : 'ghost');
+      typeTabs.forEach(btn => {
+        btn.className = btn.dataset.categoryTab === editingCategoryType ? 'primary' : 'ghost';
+      });
 
       const items = categoryMap[editingCategoryType] || [];
       wrap.innerHTML = items.map((item, index) => `
         <div class="item" style="grid-template-columns:1fr; gap:8px;">
           <div class="meta" style="font-size:15px; color:#5a4f67; font-weight:800;">${escapeHtml(item.emoji)} ${escapeHtml(item.name)}</div>
           <div class="item-actions" style="margin-top:0; justify-content:flex-start;">
-            <button class="small-btn edit" onclick="editCategoryPrompt('${editingCategoryType}', ${index})">編輯</button>
+            <button class="small-btn edit" onclick="startEditCategory('${editingCategoryType}', ${index})">編輯</button>
             <button class="small-btn delete" onclick="deleteCategoryPrompt('${editingCategoryType}', ${index})">刪除</button>
           </div>
         </div>
@@ -836,6 +896,7 @@
     function getFilteredRecords() {
       const categoryKeyword = searchInput.value.trim().toLowerCase();
       const type = filterType.value;
+
       return records.filter(item => {
         const matchType = type === 'all' ? true : item.type === type;
         const matchCategory = categoryKeyword ? item.category.toLowerCase() === categoryKeyword : true;
@@ -847,14 +908,17 @@
       const total = list.reduce((sum, item) => sum + (item.type === 'income' ? Number(item.amount || 0) : -Number(item.amount || 0)), 0);
       const income = list.reduce((sum, item) => sum + (item.type === 'income' ? Number(item.amount || 0) : 0), 0);
       const expense = list.reduce((sum, item) => sum + (item.type === 'expense' ? Number(item.amount || 0) : 0), 0);
+
       document.getElementById('filteredTotal').textContent = formatMoney(total);
-      document.getElementById('filteredCount').textContent = `共 ${list.length} 筆資料｜收入 ${formatMoney(income)}｜支出 ${formatMoney(expense)}`;
+      document.getElementById('filteredCount').textContent =
+        `共 ${list.length} 筆資料｜收入 ${formatMoney(income)}｜支出 ${formatMoney(expense)}`;
     }
 
     function renderStats() {
       const income = records.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0);
       const expense = records.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0);
       const balance = income - expense;
+
       incomeTotalEl.textContent = formatMoney(income);
       expenseTotalEl.textContent = formatMoney(expense);
       balanceEl.textContent = formatMoney(balance);
@@ -863,6 +927,7 @@
     function renderList() {
       const list = getFilteredRecords();
       renderFilteredSummary(list);
+
       if (!list.length) {
         recordList.innerHTML = `<div class="empty">目前還沒有符合的記錄唷。<br />快新增第一筆，開始可愛記帳吧 🧸</div>`;
         return;
@@ -894,16 +959,22 @@
       const currentYear = now.getFullYear();
       const currentMonth = now.getMonth() + 1;
       const totals = {};
+
       records.forEach(item => {
         if (item.type !== targetType) return;
         const d = new Date(item.date);
         if (Number.isNaN(d.getTime())) return;
+
         const year = d.getFullYear();
         const month = d.getMonth() + 1;
-        const match = period === 'year' ? year === currentYear : year === currentYear && month === currentMonth;
+        const match = period === 'year'
+          ? year === currentYear
+          : year === currentYear && month === currentMonth;
+
         if (!match) return;
         totals[item.category] = (totals[item.category] || 0) + Number(item.amount || 0);
       });
+
       return totals;
     }
 
@@ -911,9 +982,11 @@
       const ratio = window.devicePixelRatio || 1;
       const displayWidth = Math.max(320, Math.floor(canvas.clientWidth || canvas.parentElement.clientWidth || 520));
       const displayHeight = Math.max(300, Math.floor(displayWidth * 0.68));
+
       canvas.width = Math.floor(displayWidth * ratio);
       canvas.height = Math.floor(displayHeight * ratio);
       canvas.style.height = `${displayHeight}px`;
+
       const ctx = canvas.getContext('2d');
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       return { ctx, width: displayWidth, height: displayHeight };
@@ -932,10 +1005,12 @@
     function drawPieChart(canvasId, dataMap, titleText, centerLabel) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
+
       const { ctx, width, height } = resizeCanvasForDisplay(canvas);
       const cx = width / 2;
       const cy = height / 2 - 6;
       const radius = Math.min(width, height) * 0.2;
+
       ctx.clearRect(0, 0, width, height);
 
       const entries = Object.entries(dataMap).filter(([, value]) => value > 0);
@@ -955,16 +1030,19 @@
       }
 
       const colors = ['#ff8fba', '#b89cff', '#9fe7d7', '#ffd37e', '#8ec5ff', '#ffb38a', '#c6a6ff', '#ff9eb1', '#87d8f7', '#f3a6d6'];
+
       let startAngle = -Math.PI / 2;
       entries.forEach(([label, value], index) => {
         const sliceAngle = (value / total) * Math.PI * 2;
         const endAngle = startAngle + sliceAngle;
+
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.arc(cx, cy, radius, startAngle, endAngle);
         ctx.closePath();
         ctx.fillStyle = colors[index % colors.length];
         ctx.fill();
+
         startAngle = endAngle;
       });
 
@@ -987,9 +1065,11 @@
 
       entries.forEach(([label, value], index) => {
         const ratio = ((value / total) * 100).toFixed(1);
+
         ctx.fillStyle = colors[index % colors.length];
         drawRoundedRect(ctx, legendX, legendY + index * 24, 14, 14, 4);
         ctx.fill();
+
         ctx.fillStyle = '#5f5569';
         ctx.font = '13px Microsoft JhengHei';
         const categoryObj = Object.values(categoryMap).flat().find(c => c.name === label);
@@ -1021,25 +1101,15 @@
       openEditor(item);
     };
 
-    window.editCategoryPrompt = function(type, index) {
+    window.startEditCategory = function(type, index) {
       const item = categoryMap[type][index];
-      const oldName = item.name;
-      const newEmoji = prompt('請輸入分類前綴表情符號：', item.emoji);
-      if (newEmoji === null) return;
-      const newName = prompt('請輸入新的分類名稱：', item.name);
-      if (newName === null) return;
-      const emoji = newEmoji.trim() || (type === 'expense' ? '✨' : '🌟');
-      const name = newName.trim();
-      if (!name) return alert('分類名稱不可空白');
-      const duplicated = (categoryMap[type] || []).some((cat, i) => i !== index && cat.name === name);
-      if (duplicated) return alert('這個分類名稱已存在');
-      categoryMap[type][index] = { emoji, name };
-      saveCategoryMap();
-      renameCategoryReferences(type, oldName, name, emoji);
-      updateCategoryOptions();
-      updateEditCategoryOptions();
-      updateSearchOptions();
-      render();
+      editingCategoryType = type;
+      editingCategoryIndex = index;
+      categoryFormTitle.textContent = '✏️ 編輯分類';
+      categoryEmojiInput.value = item.emoji || '';
+      categoryNameInput.value = item.name || '';
+      renderCategoryEditor();
+      categoryEmojiInput.focus();
     };
 
     window.deleteCategoryPrompt = function(type, index) {
@@ -1053,6 +1123,7 @@
       e.preventDefault();
       const amount = Number(amountInput.value);
       if (!amount || amount <= 0) return alert('請輸入正確的金額');
+
       const selectedCategory = getCategoryObject(typeInput.value, categoryInput.value);
       addRecord({
         type: typeInput.value,
@@ -1068,8 +1139,10 @@
     editForm.addEventListener('submit', (e) => {
       e.preventDefault();
       if (!editingRecordId) return;
+
       const amount = Number(editAmount.value);
       if (!amount || amount <= 0) return alert('請輸入正確的金額');
+
       const selectedCategory = getCategoryObject(editType.value, editCategory.value);
       updateRecord(editingRecordId, {
         type: editType.value,
@@ -1082,15 +1155,40 @@
       closeEditor();
     });
 
+    categoryForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const emoji = (categoryEmojiInput.value || '').trim() || (editingCategoryType === 'expense' ? '✨' : '🌟');
+      const name = (categoryNameInput.value || '').trim();
+
+      if (!name) return alert('分類名稱不可空白');
+
+      const duplicated = (categoryMap[editingCategoryType] || []).some((item, idx) => {
+        if (editingCategoryIndex === null) return item.name === name;
+        return idx !== editingCategoryIndex && item.name === name;
+      });
+
+      if (duplicated) return alert('這個分類名稱已存在');
+
+      if (editingCategoryIndex === null) {
+        addCategory(editingCategoryType, emoji, name);
+      } else {
+        updateCategory(editingCategoryType, editingCategoryIndex, emoji, name);
+      }
+    });
+
     typeInput.addEventListener('change', updateCategoryOptions);
     editType.addEventListener('change', () => updateEditCategoryOptions());
     searchInput.addEventListener('change', renderList);
+
     filterType.addEventListener('change', () => {
       updateSearchOptions();
       renderList();
     });
+
     resetFormBtn.addEventListener('click', resetForm);
     cancelEditBtn.addEventListener('click', closeEditor);
+    cancelCategoryEditBtn.addEventListener('click', resetCategoryForm);
 
     clearAllBtn.addEventListener('click', () => {
       if (!records.length) return alert('目前沒有資料可以清空');
@@ -1102,23 +1200,11 @@
       }
     });
 
-    addCategoryBtn.addEventListener('click', () => {
-      const emojiInput = prompt('請輸入分類前綴表情符號：', editingCategoryType === 'expense' ? '✨' : '🌟');
-      if (emojiInput === null) return;
-      const nameInput = prompt(`請輸入新的${editingCategoryType === 'expense' ? '支出' : '收入'}分類名稱：`);
-      if (nameInput === null) return;
-      const emoji = emojiInput.trim() || (editingCategoryType === 'expense' ? '✨' : '🌟');
-      const name = nameInput.trim();
-      if (!name) return alert('分類名稱不可空白');
-      const exists = (categoryMap[editingCategoryType] || []).some(item => item.name === name);
-      if (exists) return alert('這個分類名稱已存在');
-      addCategory(editingCategoryType, emoji, name);
-    });
-
     document.addEventListener('click', (e) => {
       const tab = e.target.closest('[data-category-tab]');
       if (!tab) return;
       editingCategoryType = tab.dataset.categoryTab;
+      resetCategoryForm();
       renderCategoryEditor();
     });
 
@@ -1137,6 +1223,7 @@
     updateCategoryOptions();
     updateEditCategoryOptions();
     updateSearchOptions();
+    resetCategoryForm();
     dateInput.value = todayString();
     render();
   </script>
