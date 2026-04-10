@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>成長日記 · 柔軟時光</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: linear-gradient(145deg, #fef9e8 0%, #fff5e6 100%);
+            font-family: 'Segoe UI', 'Roboto', 'Noto Sans TC', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+            color: #4a3b2c;
+            padding: 20px 16px 40px;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            max-width: 550px;
+            margin: 0 auto;
+            background: rgba(255, 255, 245, 0.9);
+            border-radius: 48px 32px 48px 32px;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1), 0 0 0 1px rgba(245, 215, 170, 0.3);
+            overflow: hidden;
+            backdrop-filter: blur(2px);
+            transition: all 0.2s ease;
+        }
+
+        .page {
+            padding: 24px 22px 32px;
+            display: none;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .active-page {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        /* 共用頂部區塊：顯示累積天數 */
+        .global-stats-header {
+            background: #fef2e2;
+            border-radius: 60px;
+            padding: 8px 18px;
+            margin-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            border: 1px solid #f7e5ce;
+        }
+        .total-days-badge {
+            background: #e9cf9e;
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #4f351b;
+        }
+        .greeting-mini {
+            font-size: 0.85rem;
+            color: #b47c44;
+        }
+
+        .logo-area {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .logo-area h1 {
+            font-size: 2rem;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #e4b363, #c98f42);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: none;
+        }
+        .logo-area p {
+            font-size: 0.85rem;
+            color: #b48b54;
+            margin-top: 6px;
+        }
+
+        .auth-card {
+            background: #fffdf9;
+            border-radius: 36px;
+            padding: 28px 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,200,0.8);
+        }
+        .input-group {
+            margin-bottom: 24px;
+        }
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #a57441;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 1rem;
+            border: 1.5px solid #f0e0ce;
+            border-radius: 60px;
+            background: white;
+            font-family: inherit;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #e2bc7c;
+            box-shadow: 0 0 0 3px rgba(226,188,124,0.2);
+        }
+        .btn {
+            background: #f3d9b1;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 1rem;
+            color: #5a3e24;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            margin-top: 8px;
+            transition: 0.2s;
+        }
+        .btn-primary {
+            background: #e7c48b;
+            color: #3e2c1a;
+            font-weight: 800;
+        }
+        .btn-primary:active {
+            transform: scale(0.97);
+            background: #dcb477;
+        }
+        .switch-text {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.85rem;
+        }
+        .switch-text span {
+            color: #c28a3e;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .error-msg {
+            color: #c56a3c;
+            font-size: 0.75rem;
+            margin-top: 6px;
+            padding-left: 12px;
+        }
+
+        /* 日曆 */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .month-year {
+            font-size: 1.45rem;
+            font-weight: bold;
+            color: #be8a4c;
+        }
+        .today-quote {
+            background: #f9efdf;
+            border-radius: 60px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            color: #ac7c44;
+            font-style: italic;
+            margin: 15px 0 18px 0;
+            text-align: center;
+        }
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: 600;
+            color: #c2955e;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px 6px;
+            margin-bottom: 24px;
+        }
+        .cal-day {
+            aspect-ratio: 1 / 1;
+            background: #fff7ed;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            font-size: 1rem;
+            color: #5f4a30;
+            cursor: pointer;
+            border: 1px solid #f5e4ce;
+            position: relative;
+        }
+        .cal-day.today {
+            border: 2px solid #e9bc7d;
+            background: #fff2e2;
+        }
+        .check-icon {
+            font-size: 1.2rem;
+            margin-top: 2px;
+        }
+        .cal-day.has-log {
+            background: #e9f3e6;
+            border-color: #bad4a4;
+        }
+        .cal-day.no-log {
+            background: #fff2e6;
+        }
+        .empty-day {
+            background: transparent;
+            cursor: default;
+            border: 1px solid #f0e3d4;
+            color: #d9c2a5;
+        }
+
+        /* 底部導航 */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            background: #fff7ed;
+            border-top: 2px solid #f7e8d4;
+            padding: 12px 10px;
+            margin-top: 12px;
+            border-radius: 32px 32px 28px 28px;
+        }
+        .nav-btn {
+            background: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #aa7b48;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 40px;
+        }
+        .nav-icon {
+            font-size: 1.6rem;
+        }
+
+        /* 打卡問題頁面 - 圈叉樣式 */
+        .question-item {
+            background: #fefaf3;
+            margin-bottom: 18px;
+            border-radius: 28px;
+            padding: 14px 18px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        .q-title {
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 8px;
+            color: #a2713c;
+        }
+        .toggle-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .toggle-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 6px 16px;
+            border-radius: 60px;
+            background: white;
+            border: 1px solid #e7cfb3;
+            transition: all 0.1s;
+        }
+        .toggle-option.selected-circle {
+            background: #d9f0d3;
+            border-color: #7fb073;
+            color: #2d6320;
+        }
+        .toggle-option.selected-cross {
+            background: #ffe1db;
+            border-color: #e0a28e;
+            color: #b1452a;
+        }
+        .circle-symbol {
+            font-size: 1.5rem;
+            font-weight: normal;
+        }
+        .cross-symbol {
+            font-size: 1.5rem;
+            font-weight: normal;
+        }
+        textarea {
+            width: 100%;
+            border-radius: 24px;
+            border: 1px solid #eedbc2;
+            padding: 12px;
+            font-family: inherit;
+            background: white;
+            resize: vertical;
+        }
+        .save-log-btn {
+            background: #e0bc83;
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        /* 徽章/排行榜/圖表 */
+        .stats-card {
+            background: #fffbf4;
+            border-radius: 36px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+        .badge-list {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 16px;
+        }
+        .badge {
+            background: #fbefdb;
+            border-radius: 60px;
+            padding: 12px 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3e3cf;
+        }
+        canvas {
+            max-width: 100%;
+            background: #fffef7;
+            border-radius: 28px;
+            padding: 10px;
+        }
+        h3 {
+            margin-bottom: 16px;
+            color: #bb8749;
+        }
+        .back-home {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #ba8b48;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-container">
+    <!-- 登入/註冊頁 -->
+    <div id="authPage" class="page active-page">
+        <div class="logo-area">
+            <h1>📔 成長日記 · 柔軟時光</h1>
+            <p>每天10分鐘，溫柔記錄更好的自己</p>
+        </div>
+        <div class="auth-card">
+            <div id="loginPanel">
+                <div class="input-group">
+                    <label>暱稱</label>
+                    <input type="text" id="loginNickname" placeholder="輸入你的暱稱" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label>4位數字密碼</label>
+                    <input type="password" id="loginPassword" maxlength="4" placeholder="****" inputmode="numeric">
+                </div>
+                <button class="btn btn-primary" id="doLoginBtn">登入</button>
+                <div class="switch-text">還沒有帳號？ <span id="gotoRegisterBtn">註冊</span></div>
+                <div id="loginError" class="error-msg"></div>
+            </div>
+            <div id="registerPanel" style="display:none;">
+                <div class="input-group">
+                    <label>暱稱</label>
+                    <input type="text" id="regNickname" placeholder="取個溫暖的暱稱">
+                </div>
+                <div class="input-group">
+                    <label>4位數字密碼</label>
+                    <input type="password" id="regPassword" maxlength="4" placeholder="四位數字" inputmode="numeric">
+                </div>
+                <button class="btn btn-primary" id="doRegBtn">註冊</button>
+                <div class="switch-text">已有帳號？ <span id="gotoLoginBtn">登入</span></div>
+                <div id="regError" class="error-msg"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主應用區 -->
+    <div id="appMain" style="display:none;">
+        <!-- 每一個頁面都會顯示這個共用累積卡片 (用動態更新) -->
+        <div id="globalHeaderContainer" class="global-stats-header">
+            <span class="greeting-mini" id="globalNickGreeting"></span>
+            <span class="total-days-badge" id="globalTotalDays">📆 累積打卡 0 天</span>
+        </div>
+
+        <!-- 日曆首頁 -->
+        <div id="dailyPage" class="page active-page" style="padding-top: 8px;">
+            <div class="logo-area" style="margin-bottom:4px">
+                <h2 style="font-size:1.6rem;">🌱 今日曆程</h2>
+            </div>
+            <div class="today-quote" id="dailyQuote">✨ 每一天都是新的開始，溫柔對待自己 ✨</div>
+            <div class="calendar-header">
+                <div class="month-year" id="monthYearDisplay"></div>
+                <div style="display:flex; gap:12px;">
+                    <button id="prevMonthBtn" style="background:none; border:none; font-size:1.3rem; cursor:pointer;">◀</button>
+                    <button id="nextMonthBtn" style="background:none; border:none; font-size:1.3rem; cursor:pointer;">▶</button>
+                </div>
+            </div>
+            <div class="weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+            <div id="calendarGrid" class="calendar-grid"></div>
+            <div class="bottom-nav">
+                <button class="nav-btn" data-nav="daily"><span class="nav-icon">📆</span><span>打卡</span></button>
+                <button class="nav-btn" data-nav="badge"><span class="nav-icon">🏅</span><span>徽章</span></button>
+                <button class="nav-btn" data-nav="rank"><span class="nav-icon">🏆</span><span>排行榜</span></button>
+                <button class="nav-btn" data-nav="chart"><span class="nav-icon">📊</span><span>圖表</span></button>
+            </div>
+        </div>
+
+        <!-- 打卡編輯頁 (圈叉版) -->
+        <div id="checkinPage" class="page" style="padding-top: 8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2>📝 今日打卡</h2>
+                <button id="closeCheckinBtn" style="background:none; border:none; font-size:1.7rem; cursor:pointer;">✕</button>
+            </div>
+            <div id="checkinDateTitle" style="margin:8px 0 16px; font-weight:500;"></div>
+            <form id="checkinForm">
+                <div id="questionsContainer"></div>
+                <button type="button" id="submitCheckinBtn" class="btn btn-primary save-log-btn">✨ 儲存今日記錄 ✨</button>
+            </form>
+        </div>
+
+        <!-- 徽章頁 -->
+        <div id="badgePage" class="page" style="padding-top: 8px;">
+            <h2>🏅 我的徽章</h2>
+            <div id="badgeContent" class="stats-card"></div>
+            <div class="back-home" data-navback="daily">◀ 回首頁</div>
+        </div>
+        <!-- 排行榜 -->
+        <div id="rankPage" class="page" style="padding-top: 8px;">
+            <h2>📊 排行榜</h2>
+            <div id="rankList" class="stats-card"></div>
+            <div class="back-home" data-navback="daily">◀ 回首頁</div>
+        </div>
+        <!-- 成果圖表 -->
+        <div id="chartPage" class="page" style="padding-top: 8px;">
+            <h2>📈 累積打卡圖表</h2>
+            <canvas id="progressChart" width="400" height="250" style="max-width:100%"></canvas>
+            <div class="back-home" data-navback="daily">◀ 回首頁</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- 儲存系統 ----------
+    let users = [];       // {nickname, password, logs:{ "YYYY-MM-DD": { q1_7:bool[], q8, q9, q10 } } }
+    let currentUser = null;
+    let currentDisplayYearMonth = null;
+    let chartInstance = null;
+
+    // 正面積極清單 (1-7題)
+    const POSITIVE_ITEMS = [
+        "🌞 早起10分鐘深呼吸 / 冥想", "🥗 健康飲食 / 喝足水", "📚 學習或閱讀30分鐘", "💪 運動伸展15分鐘", 
+        "✍️ 完成重要工作/任務", "❤️ 善待他人或鼓勵自己一句話", "🌙 睡前反省與放鬆"
+    ];
+    const SHORT_QUESTIONS = [
+        "a. 今天做的好的一件事？（哪怕只是小事，也值得被看見🌱）",
+        "b. 今天可以更好的一件事？（不批判自己，只是觀察💗）",
+        "c. 我可以怎麼想會更好？（一個小小的改變就够了✨）"
+    ];
+
+    const QUOTES = [
+        "✨ 溫柔擁抱今天的努力", "🌟 微小進步，終將閃耀", "🌼 你是自己生活的詩人", 
+        "💖 今天也要好好愛自己", "🍃 每個平凡日子都值得記錄", "🌻 行動，就是最好的成長",
+        "🕯️ 允許自己不完美，但持續前行"
+    ];
+
+    function getRandomQuote() {
+        return QUOTES[Math.floor(Math.random() * QUOTES.length)];
+    }
+
+    function loadData() {
+        const stored = localStorage.getItem("growth_diary_users");
+        if(stored) {
+            users = JSON.parse(stored);
+        } else {
+            users = [];
+            const demoLogs = {};
+            const todayStr = getTodayStr();
+            demoLogs[todayStr] = {
+                q1_7: [true, true, false, true, false, true, false],
+                q8: "今天主動幫助同事",
+                q9: "分心滑手機太久",
+                q10: "設定番茄時鐘專注"
+            };
+            users.push({ nickname: "小光", password: "1234", logs: demoLogs });
+            users.push({ nickname: "柔柔", password: "0000", logs: {} });
+        }
+    }
+
+    function saveUsers() {
+        localStorage.setItem("growth_diary_users", JSON.stringify(users));
+    }
+
+    function getTodayStr() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function hasLogForDate(user, dateStr) {
+        if(!user || !user.logs) return false;
+        return !!user.logs[dateStr];
+    }
+
+    function login(nickname, pwd) {
+        const user = users.find(u => u.nickname === nickname && u.password === pwd);
+        if(user) {
+            currentUser = user;
+            if(!currentUser.logs) currentUser.logs = {};
+            saveUsers();
+            return true;
+        }
+        return false;
+    }
+
+    function register(nickname, pwd) {
+        if(users.find(u => u.nickname === nickname)) return false;
+        if(!/^\d{4}$/.test(pwd)) return false;
+        users.push({ nickname, password: pwd, logs: {} });
+        saveUsers();
+        return true;
+    }
+
+    // 獲取累積打卡天數
+    function getTotalCheckinCount(user) {
+        if(!user || !user.logs) return 0;
+        return Object.keys(user.logs).length;
+    }
+
+    // 更新頂部 global header 的累積天數與暱稱
+    function updateGlobalHeader() {
+        if(!currentUser) return;
+        const total = getTotalCheckinCount(currentUser);
+        const globalDaysSpan = document.getElementById("globalTotalDays");
+        const globalGreet = document.getElementById("globalNickGreeting");
+        if(globalDaysSpan) globalDaysSpan.innerHTML = `📆 累積打卡 ${total} 天`;
+        if(globalGreet) globalGreet.innerHTML = `🧸 ${currentUser.nickname}`;
+    }
+
+    // 渲染日曆
+    function renderCalendar() {
+        if(!currentUser) return;
+        let year = currentDisplayYearMonth.year;
+        let month = currentDisplayYearMonth.month;
+        const firstDay = new Date(year, month, 1);
+        let startWeekday = firstDay.getDay();
+        let offset = (startWeekday === 0 ? 6 : startWeekday-1);
+        const daysInMonth = new Date(year, month+1, 0).getDate();
+        const todayStr = getTodayStr();
+        const grid = document.getElementById("calendarGrid");
+        grid.innerHTML = "";
+        for(let i=0;i<offset;i++) {
+            const emptyDiv = document.createElement("div");
+            emptyDiv.className = "cal-day empty-day";
+            grid.appendChild(emptyDiv);
+        }
+        for(let d=1; d<=daysInMonth; d++) {
+            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const hasLog = hasLogForDate(currentUser, dateStr);
+            const isToday = (dateStr === todayStr);
+            const dayDiv = document.createElement("div");
+            dayDiv.className = `cal-day ${hasLog ? 'has-log' : 'no-log'} ${isToday ? 'today' : ''}`;
+            dayDiv.innerHTML = `<div style="font-weight:bold;">${d}</div><div class="check-icon">${hasLog ? '✅' : '⚪'}</div>`;
+            dayDiv.addEventListener("click", (function(date){ return function() { openCheckinForDate(date); }; })(dateStr));
+            grid.appendChild(dayDiv);
+        }
+        document.getElementById("monthYearDisplay").innerText = `${year}年 ${month+1}月`;
+        document.getElementById("dailyQuote").innerText = getRandomQuote();
+    }
+
+    // 開啟打卡頁面 (圈叉版)
+    function openCheckinForDate(dateStr) {
+        if(!currentUser) return;
+        document.getElementById("checkinDateTitle").innerHTML = `📅 ${dateStr}`;
+        const log = currentUser.logs[dateStr] || { q1_7: new Array(7).fill(false), q8: "", q9: "", q10: "" };
+        const container = document.getElementById("questionsContainer");
+        container.innerHTML = "";
+        
+        // 產生1-7題，每題使用「圈圈(有做到)」和「叉叉(未做到)」二選一
+        for(let i=0;i<7;i++) {
+            const currentVal = (log.q1_7 && typeof log.q1_7[i] === 'boolean') ? log.q1_7[i] : false;
+            const qDiv = document.createElement("div");
+            qDiv.className = "question-item";
+            qDiv.innerHTML = `
+                <div class="q-title">✔️ ${POSITIVE_ITEMS[i]}</div>
+                <div class="toggle-group" data-qidx="${i}">
+                    <div class="toggle-option ${currentVal === true ? 'selected-circle' : ''}" data-choice="true">
+                        <span class="circle-symbol">⭕</span> <span>有做到</span>
+                    </div>
+                    <div class="toggle-option ${currentVal === false ? 'selected-cross' : ''}" data-choice="false">
+                        <span class="cross-symbol">❌</span> <span>未做到</span>
+                    </div>
+                </div>
+            `;
+            const group = qDiv.querySelector(".toggle-group");
+            const optionCircle = group.querySelector('[data-choice="true"]');
+            const optionCross = group.querySelector('[data-choice="false"]');
+            
+            const updateSelection = (selectedVal) => {
+                if(selectedVal === true) {
+                    optionCircle.classList.add("selected-circle");
+                    optionCross.classList.remove("selected-cross");
+                } else {
+                    optionCross.classList.add("selected-cross");
+                    optionCircle.classList.remove("selected-circle");
+                }
+                window[`_tempQ_${i}`] = selectedVal;
+            };
+            optionCircle.addEventListener("click", () => updateSelection(true));
+            optionCross.addEventListener("click", () => updateSelection(false));
+            if(currentVal === true) updateSelection(true);
+            else updateSelection(false);
+            container.appendChild(qDiv);
+        }
+        
+        // 簡答題 8-10
+        for(let s=0;s<3;s++) {
+            const textDiv = document.createElement("div");
+            textDiv.className = "question-item";
+            const answerKey = `q${8+s}`;
+            textDiv.innerHTML = `<div class="q-title">📝 ${SHORT_QUESTIONS[s]}</div><textarea rows="2" id="short_${s}" placeholder="寫下你的想法...">${log[answerKey] || ""}</textarea>`;
+            container.appendChild(textDiv);
+        }
+        
+        window._tempCheckinDate = dateStr;
+        // 儲存當前選中的值以便儲存
+        window._tempQValues = [];
+        for(let i=0;i<7;i++) {
+            const existing = (log.q1_7 && log.q1_7[i] !== undefined) ? log.q1_7[i] : false;
+            window._tempQValues[i] = existing;
+            const groupDiv = container.querySelector(`.toggle-group[data-qidx="${i}"]`);
+            if(groupDiv) {
+                const circle = groupDiv.querySelector('[data-choice="true"]');
+                const cross = groupDiv.querySelector('[data-choice="false"]');
+                const updateFunc = (val) => { window._tempQValues[i] = val; };
+                circle.addEventListener("click", () => updateFunc(true));
+                cross.addEventListener("click", () => updateFunc(false));
+            }
+        }
+        switchPage("checkinPage");
+    }
+    
+    function saveCurrentCheckin() {
+        const date = window._tempCheckinDate;
+        if(!date || !currentUser) return;
+        // 收集1-7題狀態 (從暫存)
+        const q1_7 = [];
+        for(let i=0;i<7;i++) {
+            let val = window._tempQValues[i];
+            if(val === undefined) {
+                const groupDiv = document.querySelector(`.toggle-group[data-qidx="${i}"]`);
+                if(groupDiv) {
+                    const isCircleSelected = groupDiv.querySelector('[data-choice="true"]')?.classList.contains("selected-circle");
+                    val = !!isCircleSelected;
+                } else {
+                    val = false;
+                }
+            }
+            q1_7.push(val === true);
+        }
+        const q8 = document.getElementById("short_0")?.value || "";
+        const q9 = document.getElementById("short_1")?.value || "";
+        const q10 = document.getElementById("short_2")?.value || "";
+        
+        if(!currentUser.logs) currentUser.logs = {};
+        currentUser.logs[date] = { q1_7, q8, q9, q10 };
+        saveUsers();
+        alert("✓ 已溫柔記錄今天的成長");
+        // 更新全域累積天數標頭
+        updateGlobalHeader();
+        switchPage("dailyPage");
+        renderCalendar();
+        refreshBadgeRankChart();
+    }
+    
+    function refreshBadgeContent() {
+        const total = getTotalCheckinCount(currentUser);
+        const badgeDiv = document.getElementById("badgeContent");
+        let badgeHtml = `<div style="font-size:1.2rem;">✨ 累積打卡 ${total} 天 ✨</div><div class="badge-list">`;
+        if(total>=1) badgeHtml += `<div class="badge">🌱 萌芽新星</div>`;
+        if(total>=5) badgeHtml += `<div class="badge">📖 堅持學徒</div>`;
+        if(total>=15) badgeHtml += `<div class="badge">🔥 熱情成長家</div>`;
+        if(total>=30) badgeHtml += `<div class="badge">🏆 恆星紀錄者</div>`;
+        if(total===0) badgeHtml += `<div class="badge">💪 踏出第一步</div>`;
+        badgeHtml += `</div><p>每5天解鎖新徽章，繼續加油！</p>`;
+        badgeDiv.innerHTML = badgeHtml;
+    }
+    
+    function refreshRanking() {
+        const sorted = [...users].sort((a,b)=>getTotalCheckinCount(b)-getTotalCheckinCount(a));
+        const rankDiv = document.getElementById("rankList");
+        rankDiv.innerHTML = sorted.map((u,idx)=>`<div class="rank-item"><span>${idx+1}. ${u.nickname}</span><span>🏅 ${getTotalCheckinCount(u)}天</span></div>`).join("");
+    }
+    
+    function refreshChart() {
+        if(!currentUser) return;
+        const logs = currentUser.logs || {};
+        const last30 = [];
+        const todayDate = new Date();
+        for(let i=29;i>=0;i--) {
+            const d = new Date();
+            d.setDate(todayDate.getDate()-i);
+            const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            last30.push(ds);
+        }
+        const dataPoints = last30.map(ds => logs[ds] ? 1 : 0);
+        const ctx = document.getElementById("progressChart").getContext("2d");
+        if(chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: last30.map(s=>s.slice(5)), datasets: [{ label: '打卡日', data: dataPoints, backgroundColor: '#f3cf9a', borderRadius: 8 }] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } } }
+        });
+    }
+    
+    function refreshBadgeRankChart() {
+        refreshBadgeContent();
+        refreshRanking();
+        refreshChart();
+        updateGlobalHeader(); // 確保每次切換都更新累積天數
+    }
+    
+    function switchPage(pageId) {
+        document.querySelectorAll("#appMain .page").forEach(p => p.classList.remove("active-page"));
+        document.getElementById(pageId).classList.add("active-page");
+        if(pageId === "badgePage") refreshBadgeContent();
+        if(pageId === "rankPage") refreshRanking();
+        if(pageId === "chartPage") refreshChart();
+        if(pageId === "dailyPage") renderCalendar();
+        // 每次切換頁面也刷新頂部數據 (確保一致性)
+        updateGlobalHeader();
+    }
+    
+    function initAfterLogin() {
+        document.getElementById("authPage").style.display = "none";
+        document.getElementById("appMain").style.display = "block";
+        // 更新頂部顯示
+        updateGlobalHeader();
+        const now = new Date();
+        currentDisplayYearMonth = { year: now.getFullYear(), month: now.getMonth() };
+        renderCalendar();
+        refreshBadgeRankChart();
+        
+        document.querySelectorAll(".nav-btn").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const nav = btn.getAttribute("data-nav");
+                if(nav === "daily") switchPage("dailyPage");
+                if(nav === "badge") switchPage("badgePage");
+                if(nav === "rank") switchPage("rankPage");
+                if(nav === "chart") switchPage("chartPage");
+            });
+        });
+        document.querySelectorAll("[data-navback]").forEach(el => {
+            el.addEventListener("click", () => switchPage("dailyPage"));
+        });
+        document.getElementById("closeCheckinBtn").addEventListener("click", () => switchPage("dailyPage"));
+        document.getElementById("submitCheckinBtn").addEventListener("click", saveCurrentCheckin);
+        document.getElementById("prevMonthBtn").addEventListener("click", () => {
+            let newMonth = currentDisplayYearMonth.month - 1;
+            let newYear = currentDisplayYearMonth.year;
+            if(newMonth<0){ newMonth=11; newYear--; }
+            currentDisplayYearMonth = { year: newYear, month: newMonth };
+            renderCalendar();
+        });
+        document.getElementById("nextMonthBtn").addEventListener("click", () => {
+            let newMonth = currentDisplayYearMonth.month + 1;
+            let newYear = currentDisplayYearMonth.year;
+            if(newMonth>11){ newMonth=0; newYear++; }
+            currentDisplayYearMonth = { year: newYear, month: newMonth };
+            renderCalendar();
+        });
+    }
+    
+    // 註冊登入事件
+    document.getElementById("doLoginBtn").addEventListener("click", () => {
+        const nick = document.getElementById("loginNickname").value.trim();
+        const pwd = document.getElementById("loginPassword").value;
+        if(login(nick, pwd)) {
+            initAfterLogin();
+        } else {
+            document.getElementById("loginError").innerText = "暱稱或密碼錯誤 (四位數字)";
+        }
+    });
+    document.getElementById("doRegBtn").addEventListener("click", () => {
+        const nick = document.getElementById("regNickname").value.trim();
+        const pwd = document.getElementById("regPassword").value;
+        if(register(nick, pwd)) {
+            alert("註冊成功！請登入");
+            document.getElementById("loginNickname").value = nick;
+            document.getElementById("loginPassword").value = pwd;
+            document.getElementById("registerPanel").style.display = "none";
+            document.getElementById("loginPanel").style.display = "block";
+        } else {
+            document.getElementById("regError").innerText = "暱稱已存在或密碼需4位數字";
+        }
+    });
+    document.getElementById("gotoRegisterBtn").addEventListener("click", () => {
+        document.getElementById("loginPanel").style.display = "none";
+        document.getElementById("registerPanel").style.display = "block";
+    });
+    document.getElementById("gotoLoginBtn").addEventListener("click", () => {
+        document.getElementById("registerPanel").style.display = "none";
+        document.getElementById("loginPanel").style.display = "block";
+    });
+    loadData();
+</script>
+</body>
+</html>
