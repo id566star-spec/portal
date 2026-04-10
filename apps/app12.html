@@ -599,7 +599,7 @@
             const isToday = (dateStr === todayStr);
             const dayDiv = document.createElement("div");
             dayDiv.className = `cal-day ${hasLog ? 'has-log' : 'no-log'} ${isToday ? 'today' : ''}`;
-            dayDiv.innerHTML = `<div style="font-weight:bold;">${d}</div><div class="check-icon">${hasLog ? '✅' : '⚪'}</div>`;
+            dayDiv.innerHTML = `<div style="font-weight:bold;">${d}</div><div class="check-icon">${hasLog ? '✅' : '🔒'}</div>`;
             dayDiv.addEventListener("click", (function(date){ return function() { openCheckinForDate(date); }; })(dateStr));
             grid.appendChild(dayDiv);
         }
