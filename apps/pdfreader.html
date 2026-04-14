@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Reader 三段模式</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft JhengHei", Arial, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      background: #ffffff;
+      border-bottom: 1px solid #d1d5db;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .topbar .group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    button, input[type="number"], input[type="file"], select {
+      height: 38px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 0 12px;
+      font-size: 14px;
+      background: white;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background: #f8fafc;
+    }
+
+    button.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+
+    #viewerWrap {
+      flex: 1;
+      overflow: auto;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      transition: background 0.2s ease;
+      background: #e5e7eb;
+    }
+
+    #viewerContainer {
+      position: relative;
+      display: inline-block;
+      line-height: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+
+    canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      background: white;
+    }
+
+    .pdf-filter {
+      position: relative;
+      display: inline-block;
+    }
+
+    .pdf-filter::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: 0;
+    }
+
+    /* 模式 1：一般 */
+    .mode-normal canvas {
+      filter: none;
+    }
+    .mode-normal::after {
+      background: transparent;
+      mix-blend-mode: normal;
+    }
+
+    /* 模式 2：深色反轉 */
+    .mode-dark canvas {
+      filter: invert(1) hue-rotate(180deg) contrast(0.95) brightness(0.92);
+    }
+    .mode-dark::after {
+      background: rgba(0, 0, 0, 0.06);
+      mix-blend-mode: multiply;
+    }
+
+    /* 模式 3：暖色護眼 */
+    .mode-warm canvas {
+      filter: sepia(0.28) saturate(0.9) brightness(1.02) contrast(0.96);
+    }
+    .mode-warm::after {
+      background: rgba(255, 235, 190, 0.18);
+      mix-blend-mode: multiply;
+    }
+
+    .status {
+      font-size: 14px;
+      color: #374151;
+      min-width: 150px;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: #6b7280;
+      padding: 8px 12px 12px;
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    @media (max-width: 768px) {
+      .topbar {
+        padding: 10px;
+      }
+
+      button, input[type="number"], input[type="file"], select {
+        height: 36px;
+        font-size: 13px;
+      }
+
+      #viewerWrap {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="group">
+      <input type="file" id="fileInput" accept="application/pdf" />
+    </div>
+
+    <div class="group">
+      <button id="prevBtn">上一頁</button>
+      <button id="nextBtn">下一頁</button>
+      <span class="status">第 <span id="pageNum">0</span> / <span id="pageCount">0</span> 頁</span>
+    </div>
+
+    <div class="group">
+      <label>跳頁：</label>
+      <input type="number" id="pageInput" min="1" value="1" style="width:80px;" />
+      <button id="goPageBtn">前往</button>
+    </div>
+
+    <div class="group">
+      <button id="zoomOutBtn">縮小</button>
+      <button id="zoomInBtn">放大</button>
+      <button id="fitWidthBtn">適合寬度</button>
+    </div>
+
+    <div class="group">
+      <button id="modeNormalBtn" class="active">一般</button>
+      <button id="modeDarkBtn">深色反轉</button>
+      <button id="modeWarmBtn">暖色護眼</button>
+    </div>
+  </div>
+
+  <div class="hint">
+    使用方式：先選擇 PDF 檔案，再用右上角三個按鈕一鍵切換閱讀模式。
+  </div>
+
+  <div id="viewerWrap">
+    <div id="viewerContainer" class="pdf-filter mode-normal">
+      <canvas id="pdfCanvas"></canvas>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+    const fileInput = document.getElementById("fileInput");
+    const canvas = document.getElementById("pdfCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const pageNumEl = document.getElementById("pageNum");
+    const pageCountEl = document.getElementById("pageCount");
+    const pageInput = document.getElementById("pageInput");
+    const goPageBtn = document.getElementById("goPageBtn");
+    const zoomInBtn = document.getElementById("zoomInBtn");
+    const zoomOutBtn = document.getElementById("zoomOutBtn");
+    const fitWidthBtn = document.getElementById("fitWidthBtn");
+
+    const modeNormalBtn = document.getElementById("modeNormalBtn");
+    const modeDarkBtn = document.getElementById("modeDarkBtn");
+    const modeWarmBtn = document.getElementById("modeWarmBtn");
+
+    const viewerWrap = document.getElementById("viewerWrap");
+    const viewerContainer = document.getElementById("viewerContainer");
+
+    let pdfDoc = null;
+    let currentPage = 1;
+    let scale = 1.25;
+    let isRendering = false;
+    let pendingPage = null;
+
+    function setActiveMode(mode) {
+      viewerContainer.classList.remove("mode-normal", "mode-dark", "mode-warm");
+      modeNormalBtn.classList.remove("active");
+      modeDarkBtn.classList.remove("active");
+      modeWarmBtn.classList.remove("active");
+
+      if (mode === "normal") {
+        viewerContainer.classList.add("mode-normal");
+        modeNormalBtn.classList.add("active");
+        viewerWrap.style.background = "#e5e7eb";
+      } else if (mode === "dark") {
+        viewerContainer.classList.add("mode-dark");
+        modeDarkBtn.classList.add("active");
+        viewerWrap.style.background = "#111827";
+      } else if (mode === "warm") {
+        viewerContainer.classList.add("mode-warm");
+        modeWarmBtn.classList.add("active");
+        viewerWrap.style.background = "#d6c8aa";
+      }
+    }
+
+    async function renderPage(pageNum) {
+      if (!pdfDoc) return;
+      isRendering = true;
+
+      const page = await pdfDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale });
+
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
+      canvas.style.width = viewport.width + "px";
+      canvas.style.height = viewport.height + "px";
+
+      const renderContext = {
+        canvasContext: ctx,
+        viewport: viewport
+      };
+
+      await page.render(renderContext).promise;
+
+      currentPage = pageNum;
+      pageNumEl.textContent = currentPage;
+      pageInput.value = currentPage;
+
+      isRendering = false;
+
+      if (pendingPage !== null) {
+        const nextPageToRender = pendingPage;
+        pendingPage = null;
+        renderPage(nextPageToRender);
+      }
+    }
+
+    function queueRenderPage(pageNum) {
+      if (isRendering) {
+        pendingPage = pageNum;
+      } else {
+        renderPage(pageNum);
+      }
+    }
+
+    function goToPage(pageNum) {
+      if (!pdfDoc) return;
+      if (pageNum < 1 || pageNum > pdfDoc.numPages) return;
+      queueRenderPage(pageNum);
+    }
+
+    function updatePageCount() {
+      pageCountEl.textContent = pdfDoc ? pdfDoc.numPages : 0;
+      pageNumEl.textContent = pdfDoc ? currentPage : 0;
+      pageInput.max = pdfDoc ? pdfDoc.numPages : 1;
+    }
+
+    async function fitToWidth() {
+      if (!pdfDoc) return;
+      const page = await pdfDoc.getPage(currentPage);
+      const unscaledViewport = page.getViewport({ scale: 1 });
+
+      const availableWidth = viewerWrap.clientWidth - 40;
+      scale = availableWidth / unscaledViewport.width;
+      if (scale < 0.3) scale = 0.3;
+
+      queueRenderPage(currentPage);
+    }
+
+    fileInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const fileReader = new FileReader();
+      fileReader.onload = async function() {
+        const typedArray = new Uint8Array(this.result);
+
+        try {
+          pdfDoc = await pdfjsLib.getDocument({ data: typedArray }).promise;
+          currentPage = 1;
+          scale = 1.25;
+          updatePageCount();
+          await renderPage(currentPage);
+        } catch (err) {
+          alert("PDF 載入失敗：" + err.message);
+        }
+      };
+      fileReader.readAsArrayBuffer(file);
+    });
+
+    prevBtn.addEventListener("click", () => {
+      if (!pdfDoc || currentPage <= 1) return;
+      goToPage(currentPage - 1);
+    });
+
+    nextBtn.addEventListener("click", () => {
+      if (!pdfDoc || currentPage >= pdfDoc.numPages) return;
+      goToPage(currentPage + 1);
+    });
+
+    goPageBtn.addEventListener("click", () => {
+      const target = parseInt(pageInput.value, 10);
+      if (!target || !pdfDoc) return;
+      goToPage(target);
+    });
+
+    pageInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        goPageBtn.click();
+      }
+    });
+
+    zoomInBtn.addEventListener("click", () => {
+      if (!pdfDoc) return;
+      scale += 0.15;
+      queueRenderPage(currentPage);
+    });
+
+    zoomOutBtn.addEventListener("click", () => {
+      if (!pdfDoc) return;
+      scale = Math.max(0.3, scale - 0.15);
+      queueRenderPage(currentPage);
+    });
+
+    fitWidthBtn.addEventListener("click", fitToWidth);
+
+    modeNormalBtn.addEventListener("click", () => setActiveMode("normal"));
+    modeDarkBtn.addEventListener("click", () => setActiveMode("dark"));
+    modeWarmBtn.addEventListener("click", () => setActiveMode("warm"));
+
+    window.addEventListener("resize", () => {
+      // 保持目前畫面，不強制重算；若你想改成自動適合寬度可取消下面註解
+      // if (pdfDoc) fitToWidth();
+    });
+
+    setActiveMode("normal");
+  </script>
+</body>
+</html>
