@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Reader 連續捲動版</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft JhengHei", Arial, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      background: #ffffff;
+      border-bottom: 1px solid #d1d5db;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button, input[type="file"] {
+      height: 40px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 0 14px;
+      background: white;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #f8fafc;
+    }
+
+    button.active {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: white;
+    }
+
+    .status {
+      font-size: 14px;
+      color: #374151;
+      font-weight: 600;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: #6b7280;
+      padding: 8px 12px 12px;
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    #viewerWrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 12px 40px;
+      transition: background 0.2s ease;
+      background: #e5e7eb;
+    }
+
+    #pdfPages {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .page-box {
+      position: relative;
+      margin: 0 auto 18px;
+      width: fit-content;
+      line-height: 0;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+      background: white;
+    }
+
+    .page-box canvas {
+      display: block;
+    }
+
+    .page-label {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      background: rgba(0,0,0,0.65);
+      color: white;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      line-height: 1.2;
+      z-index: 2;
+    }
+
+    .page-filter::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    /* 一般模式 */
+    .mode-normal .page-box canvas {
+      filter: none;
+    }
+
+    .mode-normal .page-box::after {
+      background: transparent;
+      mix-blend-mode: normal;
+    }
+
+    /* 深色反轉 */
+    .mode-dark .page-box canvas {
+      filter: invert(1) hue-rotate(180deg) contrast(0.95) brightness(0.92);
+    }
+
+    .mode-dark .page-box::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.06);
+      mix-blend-mode: multiply;
+      pointer-events: none;
+    }
+
+    /* 暖色護眼 */
+    .mode-warm .page-box canvas {
+      filter: sepia(0.28) saturate(0.92) brightness(1.02) contrast(0.96);
+    }
+
+    .mode-warm .page-box::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 235, 190, 0.18);
+      mix-blend-mode: multiply;
+      pointer-events: none;
+    }
+
+    .loading {
+      text-align: center;
+      color: #374151;
+      font-size: 16px;
+      padding: 30px 10px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 768px) {
+      .topbar {
+        padding: 10px;
+      }
+
+      button, input[type="file"] {
+        height: 36px;
+        font-size: 13px;
+      }
+
+      #viewerWrap {
+        padding: 14px 8px 30px;
+      }
+
+      .page-label {
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="group">
+      <input type="file" id="fileInput" accept="application/pdf" />
+    </div>
+
+    <div class="group">
+      <button id="zoomOutBtn">縮小</button>
+      <button id="zoomInBtn">放大</button>
+      <button id="fitWidthBtn">適合寬度</button>
+    </div>
+
+    <div class="group">
+      <button id="modeNormalBtn" class="active">一般</button>
+      <button id="modeDarkBtn">深色反轉</button>
+      <button id="modeWarmBtn">暖色護眼</button>
+    </div>
+
+    <div class="group">
+      <span class="status">總頁數：<span id="pageCount">0</span></span>
+    </div>
+  </div>
+
+  <div class="hint">
+    這個版本會一次載入整份 PDF，直接往下滑就能看後面的頁面，不用手動翻頁。
+  </div>
+
+  <div id="viewerWrap">
+    <div id="pdfPages" class="mode-normal">
+      <div class="loading">請先選擇 PDF 檔案</div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+    const fileInput = document.getElementById("fileInput");
+    const pdfPages = document.getElementById("pdfPages");
+    const pageCountEl = document.getElementById("pageCount");
+
+    const zoomInBtn = document.getElementById("zoomInBtn");
+    const zoomOutBtn = document.getElementById("zoomOutBtn");
+    const fitWidthBtn = document.getElementById("fitWidthBtn");
+
+    const modeNormalBtn = document.getElementById("modeNormalBtn");
+    const modeDarkBtn = document.getElementById("modeDarkBtn");
+    const modeWarmBtn = document.getElementById("modeWarmBtn");
+
+    let pdfDoc = null;
+    let scale = 1.2;
+    let currentMode = "normal";
+    let rendering = false;
+
+    function setMode(mode) {
+      currentMode = mode;
+
+      pdfPages.classList.remove("mode-normal", "mode-dark", "mode-warm");
+      pdfPages.classList.add("mode-" + mode);
+
+      modeNormalBtn.classList.remove("active");
+      modeDarkBtn.classList.remove("active");
+      modeWarmBtn.classList.remove("active");
+
+      if (mode === "normal") {
+        modeNormalBtn.classList.add("active");
+        document.getElementById("viewerWrap").style.background = "#e5e7eb";
+      } else if (mode === "dark") {
+        modeDarkBtn.classList.add("active");
+        document.getElementById("viewerWrap").style.background = "#111827";
+      } else if (mode === "warm") {
+        modeWarmBtn.classList.add("active");
+        document.getElementById("viewerWrap").style.background = "#d6c8aa";
+      }
+    }
+
+    async function renderAllPages() {
+      if (!pdfDoc || rendering) return;
+
+      rendering = true;
+      pdfPages.innerHTML = `<div class="loading">PDF 載入中，請稍候...</div>`;
+
+      try {
+        const fragment = document.createDocumentFragment();
+
+        for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+          const page = await pdfDoc.getPage(pageNum);
+          const viewport = page.getViewport({ scale });
+
+          const pageBox = document.createElement("div");
+          pageBox.className = "page-box";
+
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+
+          canvas.width = Math.floor(viewport.width);
+          canvas.height = Math.floor(viewport.height);
+          canvas.style.width = viewport.width + "px";
+          canvas.style.height = viewport.height + "px";
+
+          const pageLabel = document.createElement("div");
+          pageLabel.className = "page-label";
+          pageLabel.textContent = `${pageNum} / ${pdfDoc.numPages}`;
+
+          pageBox.appendChild(canvas);
+          pageBox.appendChild(pageLabel);
+          fragment.appendChild(pageBox);
+
+          await page.render({
+            canvasContext: ctx,
+            viewport: viewport
+          }).promise;
+        }
+
+        pdfPages.innerHTML = "";
+        pdfPages.appendChild(fragment);
+        setMode(currentMode);
+      } catch (err) {
+        pdfPages.innerHTML = `<div class="loading">PDF 載入失敗：${err.message}</div>`;
+      } finally {
+        rendering = false;
+      }
+    }
+
+    async function fitToWidth() {
+      if (!pdfDoc) return;
+
+      const firstPage = await pdfDoc.getPage(1);
+      const baseViewport = firstPage.getViewport({ scale: 1 });
+
+      const containerWidth = pdfPages.clientWidth || document.getElementById("viewerWrap").clientWidth;
+      const availableWidth = Math.max(containerWidth - 20, 300);
+
+      scale = availableWidth / baseViewport.width;
+      if (scale < 0.35) scale = 0.35;
+
+      renderAllPages();
+    }
+
+    fileInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = async function() {
+        try {
+          pdfPages.innerHTML = `<div class="loading">正在讀取 PDF...</div>`;
+          const typedArray = new Uint8Array(this.result);
+          pdfDoc = await pdfjsLib.getDocument({ data: typedArray }).promise;
+          pageCountEl.textContent = pdfDoc.numPages;
+          await renderAllPages();
+        } catch (err) {
+          pdfPages.innerHTML = `<div class="loading">PDF 開啟失敗：${err.message}</div>`;
+          pageCountEl.textContent = "0";
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    });
+
+    zoomInBtn.addEventListener("click", () => {
+      if (!pdfDoc) return;
+      scale += 0.15;
+      renderAllPages();
+    });
+
+    zoomOutBtn.addEventListener("click", () => {
+      if (!pdfDoc) return;
+      scale = Math.max(0.35, scale - 0.15);
+      renderAllPages();
+    });
+
+    fitWidthBtn.addEventListener("click", () => {
+      fitToWidth();
+    });
+
+    modeNormalBtn.addEventListener("click", () => setMode("normal"));
+    modeDarkBtn.addEventListener("click", () => setMode("dark"));
+    modeWarmBtn.addEventListener("click", () => setMode("warm"));
+
+    setMode("normal");
+  </script>
+</body>
+</html>
