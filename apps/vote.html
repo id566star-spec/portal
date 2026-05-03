@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公司旅遊住宿投票系統 - 小琉球包棟</title>
+    <style>
+        :root { --primary: #3498db; --bg: #f5f7fa; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 700px; width: 100%; }
+        
+        /* 登錄界面 */
+        #login-screen { text-align: center; padding: 40px 0; }
+        input[type="text"] { padding: 12px; width: 60%; border: 2px solid #ddd; border-radius: 6px; font-size: 16px; margin-bottom: 20px; outline: none; }
+        input[type="text"]:focus { border-color: var(--primary); }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 12px 30px; border-radius: 6px; cursor: pointer; font-size: 16px; }
+
+        /* 投票界面 */
+        #vote-screen { display: none; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .user-info { font-size: 0.9em; color: #666; text-align: right; margin-bottom: 10px; }
+        
+        .option-list { margin-bottom: 30px; }
+        .option-item { display: flex; align-items: center; background: #fff; border: 1px solid #eee; padding: 15px; margin-bottom: 10px; border-radius: 10px; transition: 0.2s; }
+        .option-item:hover { background: #fcfcfc; border-color: var(--primary); }
+        .option-info { flex: 1; }
+        .option-info a { color: var(--primary); text-decoration: none; font-size: 0.9em; }
+        
+        /* 統計區 */
+        .stats-area { background: #f9fafb; padding: 20px; border-radius: 10px; margin-top: 40px; }
+        .stat-row { margin-bottom: 15px; }
+        .bar-container { height: 10px; background: #e0e0e0; border-radius: 5px; margin-top: 5px; overflow: hidden; }
+        .bar-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.6s cubic-bezier(0.1, 0, 0.2, 1); }
+        
+        /* 投票紀錄 */
+        .log-area { margin-top: 20px; font-size: 0.85em; color: #555; border-top: 1px solid #eee; padding-top: 20px; }
+        .log-item { margin-bottom: 5px; padding-left: 10px; border-left: 3px solid #3498db; }
+
+        .btn-reset { margin-top: 30px; background: none; border: 1px solid #ddd; color: #999; padding: 5px 10px; border-radius: 4px; cursor: pointer; display: block; width: 100%; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 1. 暱稱輸入界面 -->
+    <div id="login-screen">
+        <h2>👋 公司旅遊住宿包棟投票</h2>
+        <p>請輸入您的暱稱以開始投票</p>
+        <input type="text" id="username-input" placeholder="例如：王小明" maxlength="10">
+        <br>
+        <button class="btn-main" onclick="enterVote()">進入系統</button>
+    </div>
+
+    <!-- 2. 投票主界面 -->
+    <div id="vote-screen">
+        <div class="user-info">目前使用者：<span id="display-name" style="font-weight: bold; color: var(--primary);"></span></div>
+        <div class="header">
+            <h2>🏠 小琉球民宿候選名單</h2>
+            <p>每人可選多項，最後選出前 2 名</p>
+        </div>
+
+        <div id="options-container" class="option-list"></div>
+
+        <div class="stats-area">
+            <h3>📊 即時統計結果</h3>
+            <div id="stats-display"></div>
+            
+            <div class="log-area">
+                <h4>📜 最近投票紀錄</h4>
+                <div id="vote-logs">尚未有投票紀錄</div>
+            </div>
+        </div>
+
+        <button class="btn-reset" onclick="clearData()">清空所有數據 (管理員用)</button>
+    </div>
+</div>
+
+<script>
+    const villas = [
+        { name: "小琉球地中海 M-Villa", url: "https://www.mvilla.com.tw/" },
+        { name: "尊順祿藝術 WVILLA", url: "https://www.wvilla.com.tw/" },
+        { name: "逗琉 DORY", url: "https://www.dory.com.tw/" },
+        { name: "拉美 LAMEI", url: "https://www.lamei.com.tw/" },
+        { name: "極宿 EXBNB", url: "https://www.exbnb.club.tw/" }
+    ];
+
+    let currentUser = "";
+    // 儲存格式: { votes: [0,0,0,0,0], logs: [{user: 'xxx', target: 'yyy'}] }
+    let db = JSON.parse(localStorage.getItem('companyTripDB')) || { votes: new Array(villas.length).fill(0), logs: [] };
+
+    function enterVote() {
+        const input = document.getElementById('username-input');
+        if (!input.value.trim()) return alert("請輸入暱稱！");
+        currentUser = input.value.trim();
+        
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('vote-screen').style.display = 'block';
+        document.getElementById('display-name').innerText = currentUser;
+        render();
+    }
+
+    function castVote(index) {
+        db.votes[index]++;
+        db.logs.unshift({ user: currentUser, target: villas[index].name, time: new Date().toLocaleTimeString() });
+        
+        // 只保留最近 10 筆紀錄
+        if(db.logs.length > 10) db.logs.pop();
+        
+        localStorage.setItem('companyTripDB', JSON.stringify(db));
+        render();
+    }
+
+    function render() {
+        // 渲染選項
+        const container = document.getElementById('options-container');
+        container.innerHTML = villas.map((v, i) => `
+            <div class="option-item">
+                <div class="option-info">
+                    <strong>${v.name}</strong><br>
+                    <a href="${v.url}" target="_blank">🔗 點此看官網相簿</a>
+                </div>
+                <button class="btn-main" style="padding: 8px 15px;" onclick="castVote(${i})">投一票</button>
+            </div>
+        `).join('');
+
+        // 渲染統計
+        const statsDisplay = document.getElementById('stats-display');
+        const total = db.votes.reduce((a, b) => a + b, 0);
+        
+        statsDisplay.innerHTML = villas.map((v, i) => {
+            const pct = total === 0 ? 0 : Math.round((db.votes[i] / total) * 100);
+            return `
+                <div class="stat-row">
+                    <div style="display:flex; justify-content:space-between; font-size:0.9em;">
+                        <span>${v.name}</span>
+                        <span><b>${db.votes[i]} 票</b> (${pct}%)</span>
+                    </div>
+                    <div class="bar-container"><div class="bar-fill" style="width:${pct}%"></div></div>
+                </div>
+            `;
+        }).join('');
+
+        // 渲染日誌
+        const logDisplay = document.getElementById('vote-logs');
+        if(db.logs.length > 0) {
+            logDisplay.innerHTML = db.logs.map(l => `
+                <div class="log-item"><strong>${l.user}</strong> 投給了 ${l.target} <span style="color:#ccc; float:right;">${l.time}</span></div>
+            `).join('');
+        }
+    }
+
+    function clearData() {
+        if(confirm("確定要刪除所有投票紀錄與統計嗎？")) {
+            localStorage.removeItem('companyTripDB');
+            location.reload();
+        }
+    }
+</script>
+
+</body>
+</html>
