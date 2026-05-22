@@ -1,417 +1,558 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PDF Reader SVG 向量版</title>
-
-  <style>
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: "Microsoft JhengHei", Arial, sans-serif;
-      background: #f3f4f6;
-      color: #111827;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .topbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      padding: 12px;
-      background: #ffffff;
-      border-bottom: 1px solid #d1d5db;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    button, input[type="file"] {
-      height: 40px;
-      border: 1px solid #cbd5e1;
-      border-radius: 10px;
-      padding: 0 14px;
-      background: white;
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #f8fafc;
-    }
-
-    button.active {
-      background: #2563eb;
-      border-color: #2563eb;
-      color: white;
-    }
-
-    .status {
-      font-size: 14px;
-      color: #374151;
-      font-weight: 600;
-    }
-
-    .hint {
-      font-size: 13px;
-      color: #6b7280;
-      padding: 8px 12px 12px;
-      background: #ffffff;
-      border-bottom: 1px solid #e5e7eb;
-      line-height: 1.6;
-    }
-
-    #viewerWrap {
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px 12px 40px;
-      transition: background 0.2s ease;
-      background: #e5e7eb;
-    }
-
-    #pdfPages {
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    .page-box {
-      position: relative;
-      margin: 0 auto 18px;
-      width: fit-content;
-      line-height: 0;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.14);
-      background: white;
-    }
-
-    .page-inner {
-      position: relative;
-      display: block;
-      transform-origin: top left;
-    }
-
-    .page-inner svg {
-      display: block;
-      width: auto;
-      height: auto;
-      max-width: none;
-      background: white;
-    }
-
-    .page-label {
-      position: absolute;
-      right: 10px;
-      bottom: 10px;
-      background: rgba(0,0,0,0.65);
-      color: white;
-      font-size: 12px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      line-height: 1.2;
-      z-index: 5;
-    }
-
-    .loading {
-      text-align: center;
-      color: #374151;
-      font-size: 16px;
-      padding: 30px 10px;
-      font-weight: 700;
-    }
-
-    /* 模式：一般 */
-    .mode-normal .page-inner {
-      filter: none;
-    }
-
-    /* 模式：深色反轉 */
-    .mode-dark .page-inner {
-      filter: invert(1) hue-rotate(180deg) contrast(0.95) brightness(0.92);
-    }
-
-    /* 模式：暖色護眼 */
-    .mode-warm .page-inner {
-      filter: sepia(0.28) saturate(0.92) brightness(1.02) contrast(0.96);
-    }
-
-    .mode-warm .page-box::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: rgba(255, 235, 190, 0.18);
-      mix-blend-mode: multiply;
-      pointer-events: none;
-      z-index: 2;
-    }
-
-    .mode-dark .page-box::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.06);
-      mix-blend-mode: multiply;
-      pointer-events: none;
-      z-index: 2;
-    }
-
-    @media (max-width: 768px) {
-      .topbar {
-        padding: 10px;
-      }
-
-      button, input[type="file"] {
-        height: 36px;
-        font-size: 13px;
-      }
-
-      #viewerWrap {
-        padding: 14px 8px 30px;
-      }
-
-      .page-label {
-        font-size: 11px;
-      }
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Professional PDF Reader</title>
+<style>
+*{box-sizing:border-box}
+html,body{
+  margin:0;height:100%;overflow:hidden;
+  font-family:"Microsoft JhengHei",Arial,sans-serif;
+  background:#edf1f5;color:#111827;
+}
+.topbar{
+  min-height:64px;display:flex;align-items:center;gap:12px;
+  padding:10px 16px;background:#fff;border-bottom:1px solid #d7dde5;
+  position:relative;z-index:100;flex-wrap:wrap;
+}
+.group{display:flex;align-items:center;gap:8px}
+.spacer{flex:1}
+button,input,select{
+  height:40px;border:none;border-radius:8px;padding:0 14px;
+  background:#f3f4f6;color:#111827;font-size:14px;outline:none;
+}
+button{cursor:pointer;font-weight:700}
+button:hover{background:#e5e7eb}
+button.active{background:#2563eb;color:#fff}
+input[type="file"]{padding:8px}
+input[type="text"]{width:150px}
+select{cursor:pointer;font-weight:700}
+.main{display:flex;height:calc(100% - 64px)}
+.sidebar{
+  width:220px;background:#fff;border-right:1px solid #d7dde5;
+  overflow-y:auto;padding:10px;
+}
+.thumb{
+  position:relative;margin-bottom:12px;border-radius:8px;overflow:hidden;
+  cursor:pointer;background:#f8fafc;border:2px solid transparent;
+}
+.thumb.active{border-color:#2563eb}
+.thumb canvas{width:100%;display:block}
+.thumb-label{
+  position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.7);
+  color:#fff;font-size:11px;padding:2px 6px;border-radius:999px;
+}
+.viewer{flex:1;overflow-y:auto;padding:24px;transition:background .2s}
+#pages{max-width:1200px;margin:0 auto}
+.page{
+  position:relative;margin:0 auto 28px;background:#fff;border-radius:8px;
+  overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.12);
+}
+.canvas-wrap{position:relative}
+.page canvas{display:block;width:100%}
+.text-view{display:none;max-width:980px;margin:0 auto}
+.viewer.text-mode #pages{display:none}
+.viewer.text-mode .text-view{display:block}
+.text-page{
+  margin:0 auto 22px;padding:24px 28px;background:#fff;border-radius:8px;
+  box-shadow:0 8px 24px rgba(0,0,0,.1);
+}
+.text-page-header{
+  margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e5e7eb;
+  color:#4b5563;font-size:13px;font-weight:700;
+}
+.text-page pre{
+  margin:0;white-space:pre-wrap;word-break:break-word;line-height:1.75;
+  font-size:16px;color:#111827;font-family:"Microsoft JhengHei",Arial,sans-serif;
+  user-select:text;
+}
+.txt-highlight{background:rgba(255,235,59,.65);border-radius:2px}
+.txt-highlight.current{background:rgba(255,130,0,.65)}
+.page-number{
+  position:absolute;right:12px;bottom:12px;background:rgba(0,0,0,.72);
+  color:#fff;font-size:12px;padding:4px 10px;border-radius:999px;z-index:5;
+}
+.viewer.normal{background:#e9edf2}
+.viewer.dark{background:#111827}
+.viewer.warm{background:#d7ccb2}
+.viewer.dark .page{filter:invert(1) hue-rotate(180deg) contrast(.95) brightness(.92)}
+.viewer.warm .page{filter:sepia(.25) saturate(.95) brightness(1.02) contrast(.97)}
+.viewer.dark .text-page{background:#1f2937;color:#f9fafb}
+.viewer.dark .text-page-header{border-color:#374151;color:#d1d5db}
+.viewer.dark .text-page pre{color:#f9fafb}
+.viewer.warm .text-page{background:#fff9eb}
+.loading{text-align:center;padding:40px;font-size:18px;font-weight:700;color:#374151}
+@media (max-width:900px){
+  .sidebar{display:none}
+  .main{height:calc(100% - 110px)}
+  input[type="text"]{width:100px}
+}
+</style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="group">
-      <input type="file" id="fileInput" accept="application/pdf" />
-    </div>
-
-    <div class="group">
-      <button id="zoomOutBtn">縮小</button>
-      <button id="zoomInBtn">放大</button>
-      <button id="fitWidthBtn">適合寬度</button>
-    </div>
-
-    <div class="group">
-      <button id="modeNormalBtn" class="active">一般</button>
-      <button id="modeDarkBtn">深色反轉</button>
-      <button id="modeWarmBtn">暖色護眼</button>
-    </div>
-
-    <div class="group">
-      <span class="status">總頁數：<span id="pageCount">0</span></span>
-      <span class="status">縮放：<span id="zoomText">100%</span></span>
-    </div>
+<div class="topbar">
+  <div class="group"><input type="file" id="fileInput" accept="application/pdf"></div>
+  <div class="group">
+    <button id="zoomOutBtn">-</button>
+    <button id="zoomInBtn">+</button>
+    <button id="fitBtn">適合寬度</button>
   </div>
-
-  <div class="hint">
-    這版改成 SVG 向量顯示，放大縮小會比 canvas 更清楚。<br>
-    直接往下捲動即可閱讀整份 PDF。
+  <div class="group">
+    <button id="normalBtn" class="active">一般</button>
+    <button id="darkBtn">深色</button>
+    <button id="warmBtn">暖色</button>
   </div>
-
-  <div id="viewerWrap">
-    <div id="pdfPages" class="mode-normal">
-      <div class="loading">請先選擇 PDF 檔案</div>
-    </div>
+  <div class="group" style="border-left:2px solid #d7dde5;padding-left:10px">
+    <button id="selectModeBtn" title="切換成整份 PDF 抽出的純文字內容">TXT 模式: 關</button>
+    <select id="langTargetSelect" title="設定複製文字後貼上時的語言格式">
+      <option value="original">保持原文字</option>
+      <option value="zh-tw">貼上變繁體</option>
+      <option value="zh-cn">貼上變简体</option>
+    </select>
   </div>
+  <div class="group" style="border-left:2px solid #d7dde5;padding-left:10px">
+    <input type="text" id="searchInput" placeholder="搜尋文字">
+    <button id="searchBtn">搜尋</button>
+    <button id="nextSearchBtn" title="尋找下一個" style="padding:0 10px">↓</button>
+  </div>
+  <div class="spacer"></div>
+  <div class="group">
+    <div>頁數：<span id="pageCount">0</span></div>
+    <div>縮放：<span id="zoomLabel">100%</span></div>
+  </div>
+</div>
+<div class="main">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="viewer normal" id="viewer">
+    <div id="pages"><div class="loading">請選擇 PDF 檔案</div></div>
+    <div class="text-view" id="textView"></div>
+  </div>
+</div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-    const fileInput = document.getElementById("fileInput");
-    const pdfPages = document.getElementById("pdfPages");
-    const pageCountEl = document.getElementById("pageCount");
-    const zoomText = document.getElementById("zoomText");
+const fileInput = document.getElementById("fileInput");
+const pagesEl = document.getElementById("pages");
+const textViewEl = document.getElementById("textView");
+const sidebarEl = document.getElementById("sidebar");
+const viewerEl = document.getElementById("viewer");
+const zoomLabel = document.getElementById("zoomLabel");
+const pageCountEl = document.getElementById("pageCount");
+const zoomInBtn = document.getElementById("zoomInBtn");
+const zoomOutBtn = document.getElementById("zoomOutBtn");
+const fitBtn = document.getElementById("fitBtn");
+const normalBtn = document.getElementById("normalBtn");
+const darkBtn = document.getElementById("darkBtn");
+const warmBtn = document.getElementById("warmBtn");
+const searchInput = document.getElementById("searchInput");
+const searchBtn = document.getElementById("searchBtn");
+const nextSearchBtn = document.getElementById("nextSearchBtn");
+const selectModeBtn = document.getElementById("selectModeBtn");
+const langTargetSelect = document.getElementById("langTargetSelect");
 
-    const zoomInBtn = document.getElementById("zoomInBtn");
-    const zoomOutBtn = document.getElementById("zoomOutBtn");
-    const fitWidthBtn = document.getElementById("fitWidthBtn");
+let pdfDoc = null;
+let zoom = 1.3;
+let renderToken = 0;
+let renderedPages = [];
+let extractedTextPages = [];
+let allMatches = [];
+let currentMatchIndex = -1;
+let isTextMode = false;
 
-    const modeNormalBtn = document.getElementById("modeNormalBtn");
-    const modeDarkBtn = document.getElementById("modeDarkBtn");
-    const modeWarmBtn = document.getElementById("modeWarmBtn");
-    const viewerWrap = document.getElementById("viewerWrap");
+const converters = {
+  "zh-tw": null,
+  "zh-cn": null
+};
 
-    let pdfDoc = null;
-    let zoom = 1.0;
-    let currentMode = "normal";
-    let rendering = false;
-    let basePageWidth = 0;
+const fallbackPairs = [
+  ["国","國"],["台","臺"],["湾","灣"],["学","學"],["习","習"],["书","書"],
+  ["体","體"],["会","會"],["发","發"],["复","復"],["后","後"],["里","裡"],
+  ["面","麵"],["干","乾"],["云","雲"],["叶","葉"],["万","萬"],["与","與"],
+  ["专","專"],["业","業"],["东","東"],["丝","絲"],["两","兩"],["严","嚴"],
+  ["丧","喪"],["个","個"],["丰","豐"],["临","臨"],["丽","麗"],["举","舉"],
+  ["义","義"],["乌","烏"],["乐","樂"],["乔","喬"],["乡","鄉"],["买","買"],
+  ["乱","亂"],["争","爭"],["于","於"],["亏","虧"],["亚","亞"],["产","產"],
+  ["亩","畝"],["亲","親"],["亿","億"],["仅","僅"],["从","從"],["仓","倉"],
+  ["仪","儀"],["们","們"],["价","價"],["众","眾"],["优","優"],["传","傳"],
+  ["伤","傷"],["伪","偽"],["余","餘"],["侠","俠"],["侣","侶"],["侥","僥"],
+  ["侦","偵"],["侧","側"],["侨","僑"],["俩","倆"],["俭","儉"],["债","債"],
+  ["倾","傾"],["偿","償"],["储","儲"],["兰","蘭"],["关","關"],["兴","興"],
+  ["养","養"],["兽","獸"],["内","內"],["册","冊"],["写","寫"],["军","軍"],
+  ["农","農"],["冲","衝"],["决","決"],["况","況"],["冻","凍"],["净","淨"],
+  ["几","幾"],["凤","鳳"],["凭","憑"],["击","擊"],["划","劃"],["刘","劉"],
+  ["则","則"],["刚","剛"],["创","創"],["删","刪"],["剂","劑"],["劳","勞"],
+  ["势","勢"],["勋","勳"],["区","區"],["医","醫"],["华","華"],["协","協"],
+  ["单","單"],["卖","賣"],["卢","盧"],["卫","衛"],["厂","廠"],["厅","廳"],
+  ["历","歷"],["压","壓"],["厌","厭"],["县","縣"],["参","參"],["双","雙"],
+  ["变","變"],["叙","敘"],["叠","疊"],["号","號"],["叹","嘆"],["听","聽"],
+  ["启","啟"],["吴","吳"],["呕","嘔"],["响","響"],["哑","啞"],["唤","喚"],
+  ["员","員"],["问","問"],["间","間"],["闻","聞"],["闽","閩"],["门","門"],
+  ["闭","閉"],["开","開"],["闲","閒"],["队","隊"],["阳","陽"],["阴","陰"],
+  ["阵","陣"],["阶","階"],["际","際"],["陆","陸"],["陈","陳"],["险","險"],
+  ["难","難"],["电","電"],["页","頁"],["项","項"],["顺","順"],["须","須"],
+  ["顾","顧"],["顿","頓"],["领","領"],["颇","頗"],["频","頻"],["题","題"],
+  ["额","額"],["风","風"],["飞","飛"],["饭","飯"],["馆","館"],["马","馬"],
+  ["鱼","魚"],["鸟","鳥"],["黄","黃"],["龙","龍"],["车","車"],["转","轉"],
+  ["轮","輪"],["软","軟"],["较","較"],["边","邊"],["达","達"],["过","過"],
+  ["运","運"],["还","還"],["进","進"],["远","遠"],["连","連"],["迟","遲"],
+  ["选","選"],["遗","遺"],["邮","郵"],["郑","鄭"],["邻","鄰"],["针","針"],
+  ["钉","釘"],["钟","鐘"],["钢","鋼"],["钱","錢"],["错","錯"],["键","鍵"],
+  ["长","長"],["词","詞"],["试","試"],["诗","詩"],["话","話"],["语","語"],
+  ["说","說"],["读","讀"],["请","請"],["诸","諸"],["诺","諾"],["课","課"],
+  ["谁","誰"],["调","調"],["谈","談"],["谢","謝"],["证","證"],["识","識"],
+  ["译","譯"],["议","議"],["让","讓"],["贝","貝"],["负","負"],["财","財"],
+  ["责","責"],["贤","賢"],["败","敗"],["账","帳"],["货","貨"],["质","質"],
+  ["费","費"],["贴","貼"],["贵","貴"],["贸","貿"],["贺","賀"],["资","資"],
+  ["赏","賞"],["赞","讚"],["赶","趕"],["趋","趨"],["跃","躍"],["践","踐"]
+];
+const fallbackToTraditional = new Map(fallbackPairs);
+const fallbackToSimplified = new Map(fallbackPairs.map(([simple, traditional]) => [traditional, simple]));
 
-    function updateZoomText() {
-      zoomText.textContent = Math.round(zoom * 100) + "%";
+function getConverter(targetLang) {
+  if (targetLang === "original") return null;
+  if (!window.OpenCC) return null;
+  if (!converters[targetLang]) {
+    converters[targetLang] = targetLang === "zh-cn"
+      ? OpenCC.Converter({ from: "tw", to: "cn" })
+      : OpenCC.Converter({ from: "cn", to: "tw" });
+  }
+  return converters[targetLang];
+}
+
+function translateText(text, targetLang) {
+  const converter = getConverter(targetLang);
+  if (converter) return converter(text);
+  if (targetLang === "original") return text;
+
+  const table = targetLang === "zh-cn" ? fallbackToSimplified : fallbackToTraditional;
+  return Array.from(text, char => table.get(char) || char).join("");
+}
+
+function shouldInsertSpace(previousText, nextText) {
+  if (!previousText || !nextText) return false;
+  const prev = previousText.trimEnd().slice(-1);
+  const next = nextText.trimStart().charAt(0);
+  return /[A-Za-z0-9]/.test(prev) && /[A-Za-z0-9]/.test(next);
+}
+
+function updateZoomLabel() {
+  zoomLabel.textContent = Math.round(zoom * 100) + "%";
+}
+
+function setTheme(theme) {
+  viewerEl.classList.remove("normal", "dark", "warm");
+  viewerEl.classList.add(theme);
+  [normalBtn, darkBtn, warmBtn].forEach(btn => btn.classList.remove("active"));
+  if (theme === "normal") normalBtn.classList.add("active");
+  if (theme === "dark") darkBtn.classList.add("active");
+  if (theme === "warm") warmBtn.classList.add("active");
+}
+
+function buildPlainText(textContent) {
+  let text = "";
+  let lastY = null;
+
+  textContent.items.forEach(item => {
+    const value = item.str || "";
+    if (!value.trim() && !item.hasEOL) return;
+
+    const y = Math.round(item.transform[5]);
+    if (lastY !== null && Math.abs(y - lastY) > 5 && text && !text.endsWith("\n")) {
+      text += "\n";
+    } else if (text && !text.endsWith("\n") && shouldInsertSpace(text, value)) {
+      text += " ";
     }
 
-    function setMode(mode) {
-      currentMode = mode;
+    text += value;
+    if (item.hasEOL && !text.endsWith("\n")) text += "\n";
+    lastY = y;
+  });
 
-      pdfPages.classList.remove("mode-normal", "mode-dark", "mode-warm");
-      pdfPages.classList.add("mode-" + mode);
+  return text.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+}
 
-      modeNormalBtn.classList.remove("active");
-      modeDarkBtn.classList.remove("active");
-      modeWarmBtn.classList.remove("active");
+async function extractAllText() {
+  extractedTextPages = [];
+  for (let i = 1; i <= pdfDoc.numPages; i++) {
+    const page = await pdfDoc.getPage(i);
+    const textContent = await page.getTextContent();
+    extractedTextPages.push({
+      pageNum: i,
+      text: buildPlainText(textContent)
+    });
+  }
+  renderTextView();
+}
 
-      if (mode === "normal") {
-        modeNormalBtn.classList.add("active");
-        viewerWrap.style.background = "#e5e7eb";
-      } else if (mode === "dark") {
-        modeDarkBtn.classList.add("active");
-        viewerWrap.style.background = "#111827";
-      } else if (mode === "warm") {
-        modeWarmBtn.classList.add("active");
-        viewerWrap.style.background = "#d6c8aa";
+function renderTextView() {
+  if (!pdfDoc) {
+    textViewEl.innerHTML = "";
+    return;
+  }
+
+  textViewEl.innerHTML = "";
+  extractedTextPages.forEach(({ pageNum, text }) => {
+    const pageEl = document.createElement("section");
+    pageEl.className = "text-page";
+    pageEl.id = "text-page-" + pageNum;
+
+    const header = document.createElement("div");
+    header.className = "text-page-header";
+    header.textContent = "第 " + pageNum + " 頁";
+
+    const pre = document.createElement("pre");
+    pre.textContent = text || "（此頁沒有可抽取文字）";
+
+    pageEl.appendChild(header);
+    pageEl.appendChild(pre);
+    textViewEl.appendChild(pageEl);
+  });
+}
+
+function setTextMode(enabled) {
+  isTextMode = enabled;
+  viewerEl.classList.toggle("text-mode", isTextMode);
+  sidebarEl.style.display = isTextMode ? "none" : "";
+  selectModeBtn.textContent = isTextMode ? "TXT 模式: 開" : "TXT 模式: 關";
+  selectModeBtn.classList.toggle("active", isTextMode);
+  window.getSelection()?.removeAllRanges();
+  clearHighlights();
+  if (searchInput.value.trim()) performSearch(false);
+}
+
+async function renderPage(pageNum, token) {
+  const page = await pdfDoc.getPage(pageNum);
+  if (token !== renderToken) return;
+
+  const viewport = page.getViewport({ scale: zoom });
+  const outputScale = window.devicePixelRatio || 1;
+
+  const pageDiv = document.createElement("div");
+  pageDiv.className = "page";
+  pageDiv.id = "page-" + pageNum;
+  pageDiv.dataset.pageNumber = String(pageNum);
+
+  const wrap = document.createElement("div");
+  wrap.className = "canvas-wrap";
+
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = Math.floor(viewport.width * outputScale);
+  canvas.height = Math.floor(viewport.height * outputScale);
+  canvas.style.width = viewport.width + "px";
+  canvas.style.height = viewport.height + "px";
+
+  wrap.appendChild(canvas);
+
+  const pageNumber = document.createElement("div");
+  pageNumber.className = "page-number";
+  pageNumber.textContent = pageNum + " / " + pdfDoc.numPages;
+
+  pageDiv.appendChild(wrap);
+  pageDiv.appendChild(pageNumber);
+  pagesEl.appendChild(pageDiv);
+
+  const transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null;
+  await page.render({ canvasContext: ctx, transform, viewport }).promise;
+  if (token !== renderToken) return;
+
+  renderedPages.push({ pageNum, div: pageDiv });
+  createThumbnail(page, pageNum, token);
+}
+
+async function createThumbnail(page, pageNum, token) {
+  const thumbViewport = page.getViewport({ scale: 0.22 });
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = thumbViewport.width;
+  canvas.height = thumbViewport.height;
+  await page.render({ canvasContext: ctx, viewport: thumbViewport }).promise;
+  if (token !== renderToken) return;
+
+  const thumb = document.createElement("div");
+  thumb.className = "thumb";
+  thumb.appendChild(canvas);
+
+  const label = document.createElement("div");
+  label.className = "thumb-label";
+  label.textContent = pageNum;
+  thumb.appendChild(label);
+
+  thumb.onclick = () => {
+    document.getElementById("page-" + pageNum)?.scrollIntoView({ behavior: "smooth" });
+  };
+  sidebarEl.appendChild(thumb);
+}
+
+async function renderAllPages() {
+  if (!pdfDoc) return;
+  const token = ++renderToken;
+  pagesEl.innerHTML = '<div class="loading">PDF 載入中...</div>';
+  sidebarEl.innerHTML = "";
+  renderedPages = [];
+  clearHighlights();
+
+  await new Promise(resolve => setTimeout(resolve, 30));
+  if (token !== renderToken) return;
+  pagesEl.innerHTML = "";
+
+  for (let i = 1; i <= pdfDoc.numPages; i++) {
+    await renderPage(i, token);
+  }
+}
+
+function rerender() {
+  renderAllPages();
+  updateZoomLabel();
+}
+
+function fitWidth() {
+  if (!pdfDoc) return;
+  zoom = Math.max((viewerEl.clientWidth - 80) / 850, 0.4);
+  rerender();
+}
+
+function clearHighlights() {
+  textViewEl.querySelectorAll("pre").forEach((pre, index) => {
+    pre.textContent = extractedTextPages[index]?.text || "（此頁沒有可抽取文字）";
+  });
+  allMatches = [];
+  currentMatchIndex = -1;
+}
+
+function escapeHtml(value) {
+  return value.replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+function performSearch(isNext = false) {
+  const keyword = searchInput.value.trim();
+  if (!keyword || !pdfDoc) {
+    clearHighlights();
+    return;
+  }
+
+  if (!isNext || allMatches.length === 0) {
+    if (!isTextMode) {
+      setTextMode(true);
+      return;
+    }
+
+    clearHighlights();
+    const pattern = new RegExp(escapeRegExp(keyword), "gi");
+
+    extractedTextPages.forEach(({ text }, index) => {
+      const pre = textViewEl.querySelectorAll("pre")[index];
+      if (!pre || !text) return;
+
+      let html = "";
+      let lastIndex = 0;
+      let match;
+      pattern.lastIndex = 0;
+
+      while ((match = pattern.exec(text)) !== null) {
+        html += escapeHtml(text.slice(lastIndex, match.index));
+        html += '<mark class="txt-highlight">' + escapeHtml(match[0]) + '</mark>';
+        lastIndex = match.index + match[0].length;
       }
-    }
 
-    async function pageToSVG(page) {
-      const viewport = page.getViewport({ scale: 1.0 });
-      const opList = await page.getOperatorList();
-
-      const svgGfx = new pdfjsLib.SVGGraphics(page.commonObjs, page.objs);
-      const svg = await svgGfx.getSVG(opList, viewport);
-
-      svg.style.display = "block";
-      svg.setAttribute("width", viewport.width);
-      svg.setAttribute("height", viewport.height);
-
-      return { svg, width: viewport.width, height: viewport.height };
-    }
-
-    function applyZoomToAllPages() {
-      const inners = document.querySelectorAll(".page-inner");
-      inners.forEach(inner => {
-        inner.style.transform = `scale(${zoom})`;
-      });
-
-      const boxes = document.querySelectorAll(".page-box");
-      boxes.forEach(box => {
-        const baseW = parseFloat(box.dataset.baseWidth || "0");
-        const baseH = parseFloat(box.dataset.baseHeight || "0");
-        box.style.width = (baseW * zoom) + "px";
-        box.style.height = (baseH * zoom) + "px";
-      });
-
-      updateZoomText();
-    }
-
-    async function renderAllPages() {
-      if (!pdfDoc || rendering) return;
-      rendering = true;
-
-      pdfPages.innerHTML = `<div class="loading">PDF 載入中，請稍候...</div>`;
-
-      try {
-        const fragment = document.createDocumentFragment();
-
-        for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-          const page = await pdfDoc.getPage(pageNum);
-          const { svg, width, height } = await pageToSVG(page);
-
-          if (pageNum === 1) {
-            basePageWidth = width;
-          }
-
-          const pageBox = document.createElement("div");
-          pageBox.className = "page-box";
-          pageBox.dataset.baseWidth = width;
-          pageBox.dataset.baseHeight = height;
-          pageBox.style.width = (width * zoom) + "px";
-          pageBox.style.height = (height * zoom) + "px";
-
-          const pageInner = document.createElement("div");
-          pageInner.className = "page-inner";
-          pageInner.style.width = width + "px";
-          pageInner.style.height = height + "px";
-          pageInner.style.transform = `scale(${zoom})`;
-
-          const pageLabel = document.createElement("div");
-          pageLabel.className = "page-label";
-          pageLabel.textContent = `${pageNum} / ${pdfDoc.numPages}`;
-
-          pageInner.appendChild(svg);
-          pageBox.appendChild(pageInner);
-          pageBox.appendChild(pageLabel);
-          fragment.appendChild(pageBox);
-        }
-
-        pdfPages.innerHTML = "";
-        pdfPages.appendChild(fragment);
-        setMode(currentMode);
-        updateZoomText();
-      } catch (err) {
-        pdfPages.innerHTML = `<div class="loading">PDF 載入失敗：${err.message}</div>`;
-      } finally {
-        rendering = false;
+      if (lastIndex > 0) {
+        html += escapeHtml(text.slice(lastIndex));
+        pre.innerHTML = html;
+        pre.querySelectorAll(".txt-highlight").forEach(mark => allMatches.push(mark));
       }
+    });
+  }
+
+  if (allMatches.length === 0) return;
+  if (currentMatchIndex >= 0) allMatches[currentMatchIndex]?.classList.remove("current");
+  currentMatchIndex = isNext ? (currentMatchIndex + 1) % allMatches.length : 0;
+  const activeMark = allMatches[currentMatchIndex];
+  activeMark.classList.add("current");
+  activeMark.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function selectionBelongsToViewer(selection) {
+  if (!selection || selection.rangeCount === 0) return false;
+  const range = selection.getRangeAt(0);
+  return viewerEl.contains(range.commonAncestorContainer);
+}
+
+document.addEventListener("copy", e => {
+  const selection = window.getSelection();
+  if (!selectionBelongsToViewer(selection)) return;
+
+  const selectedText = selection.toString();
+  if (!selectedText) return;
+
+  const translated = translateText(selectedText, langTargetSelect.value);
+  e.clipboardData.setData("text/plain", translated);
+  e.preventDefault();
+});
+
+selectModeBtn.onclick = () => {
+  if (!pdfDoc) return;
+  setTextMode(!isTextMode);
+};
+
+fileInput.addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async function() {
+    try {
+      pagesEl.innerHTML = '<div class="loading">正在開啟 PDF...</div>';
+      const typedArray = new Uint8Array(this.result);
+      pdfDoc = await pdfjsLib.getDocument({ data: typedArray }).promise;
+      pageCountEl.textContent = pdfDoc.numPages;
+      setTextMode(false);
+      await extractAllText();
+      await renderAllPages();
+    } catch (err) {
+      pagesEl.innerHTML = '<div class="loading">PDF 開啟失敗<br><br>' + err.message + '</div>';
     }
+  };
+  reader.readAsArrayBuffer(file);
+});
 
-    function fitToWidth() {
-      if (!basePageWidth) return;
-      const availableWidth = Math.max(pdfPages.clientWidth - 20, 300);
-      zoom = availableWidth / basePageWidth;
-      if (zoom < 0.35) zoom = 0.35;
-      applyZoomToAllPages();
-    }
+zoomInBtn.onclick = () => { zoom = Math.min(zoom + 0.15, 4); rerender(); };
+zoomOutBtn.onclick = () => { zoom = Math.max(zoom - 0.15, 0.4); rerender(); };
+fitBtn.onclick = fitWidth;
+normalBtn.onclick = () => setTheme("normal");
+darkBtn.onclick = () => setTheme("dark");
+warmBtn.onclick = () => setTheme("warm");
+searchBtn.onclick = () => performSearch(false);
+nextSearchBtn.onclick = () => performSearch(true);
+searchInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") performSearch(allMatches.length > 0);
+});
 
-    fileInput.addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+viewerEl.addEventListener("dragover", e => e.preventDefault());
+viewerEl.addEventListener("drop", e => {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (file && file.type === "application/pdf") {
+    fileInput.files = e.dataTransfer.files;
+    fileInput.dispatchEvent(new Event("change"));
+  }
+});
 
-      const reader = new FileReader();
-
-      reader.onload = async function() {
-        try {
-          pdfPages.innerHTML = `<div class="loading">正在讀取 PDF...</div>`;
-          const typedArray = new Uint8Array(this.result);
-          pdfDoc = await pdfjsLib.getDocument({ data: typedArray }).promise;
-          pageCountEl.textContent = pdfDoc.numPages;
-          zoom = 1.0;
-          basePageWidth = 0;
-          updateZoomText();
-          await renderAllPages();
-        } catch (err) {
-          pdfPages.innerHTML = `<div class="loading">PDF 開啟失敗：${err.message}</div>`;
-          pageCountEl.textContent = "0";
-        }
-      };
-
-      reader.readAsArrayBuffer(file);
-    });
-
-    zoomInBtn.addEventListener("click", () => {
-      if (!pdfDoc) return;
-      zoom = Math.min(zoom + 0.1, 4);
-      applyZoomToAllPages();
-    });
-
-    zoomOutBtn.addEventListener("click", () => {
-      if (!pdfDoc) return;
-      zoom = Math.max(zoom - 0.1, 0.35);
-      applyZoomToAllPages();
-    });
-
-    fitWidthBtn.addEventListener("click", fitToWidth);
-
-    modeNormalBtn.addEventListener("click", () => setMode("normal"));
-    modeDarkBtn.addEventListener("click", () => setMode("dark"));
-    modeWarmBtn.addEventListener("click", () => setMode("warm"));
-
-    setMode("normal");
-    updateZoomText();
-  </script>
+updateZoomLabel();
+</script>
 </body>
 </html>
