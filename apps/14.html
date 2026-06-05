@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>個人化語音輸入</title>
+    <style>
+        body { 
+            font-family: "Microsoft JhengHei", sans-serif; 
+            padding: 20px; 
+            max-width: 600px; 
+            margin: auto; 
+            background-color: #f9f9f9;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        #result { 
+            width: 100%; 
+            height: 200px; 
+            margin-top: 15px; 
+            padding: 10px; 
+            font-size: 16px; 
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: vertical;
+        }
+        button { 
+            padding: 10px 20px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            background-color: #4CAF50; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            transition: background-color 0.3s;
+        }
+        button:hover { background-color: #45a049; }
+        .recording { 
+            background-color: #f44336; 
+            animation: pulse 1.5s infinite;
+        }
+        .recording:hover { background-color: #da190b; }
+        #status {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>語音輸入面板</h2>
+        <button id="startBtn">開始語音輸入</button>
+        <div id="status">系統狀態：準備就緒</div>
+        <textarea id="result" placeholder="辨識結果會出現在這裡..."></textarea>
+    </div>
+
+    <script>
+        // 檢查瀏覽器是否支援 Web Speech API (Chrome 支援 webkitSpeechRecognition)
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            alert("你的瀏覽器目前不支援語音辨識，請使用 Google Chrome 瀏覽器。");
+        } else {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'zh-TW'; // 設定為台灣繁體中文
+            recognition.continuous = true; // 持續聆聽辨識
+            recognition.interimResults = true; // 允許回傳即時的初步辨識結果
+
+            const startBtn = document.getElementById('startBtn');
+            const resultArea = document.getElementById('result');
+            const statusText = document.getElementById('status');
+
+            let isRecording = false;
+
+            // === 核心：個人化語音校正字典 ===
+            // 這裡可以針對你個人發音常被聽錯的詞彙，或是中英夾雜的特殊情境做設定
+            const personalDictionary = {
+                "材料可以": "材料-KY",
+                "中保科": "中保科 (9917)",
+                "犯州": "rafting",
+                "泰克奧": "takeout",
+                // 只要發現系統常常把 A 聽成 B，就可以在這裡加上 "B": "A" 的對應
+            };
+
+            // 文字校正函式
+            function correctText(text) {
+                let corrected = text;
+                for (const [wrong, right] of Object.entries(personalDictionary)) {
+                    // 使用正規表達式全域替換常被聽錯的字詞
+                    const regex = new RegExp(wrong, 'g');
+                    corrected = corrected.replace(regex, right);
+                }
+                return corrected;
+            }
+
+            recognition.onstart = function() {
+                isRecording = true;
+                startBtn.textContent = '停止語音輸入';
+                startBtn.classList.add('recording');
+                statusText.textContent = '系統狀態：正在聆聽 (可隨時說話)...';
+            };
+
+            recognition.onresult = function(event) {
+                let finalTranscript = '';
+                
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    // 只處理最終確定辨識完成的句子
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    }
+                }
+
+                if (finalTranscript) {
+                    // 套用你的個人化校正字典
+                    finalTranscript = correctText(finalTranscript);
