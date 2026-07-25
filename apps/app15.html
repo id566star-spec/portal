@@ -219,7 +219,7 @@
                 nodeElements[node.id] = { data: node, el: el };
             });
 
-            // 2. 繪製平滑貝茲曲線連接線
+            // 2. 智慧計算邊緣與平滑貝茲曲線
             nodesData.forEach(node => {
                 if (node.parentId !== null && nodeElements[node.parentId]) {
                     const parentEl = nodeElements[node.parentId].el;
@@ -227,16 +227,32 @@
 
                     const pW = parentEl.offsetWidth;
                     const pH = parentEl.offsetHeight;
+                    const cW = childEl.offsetWidth;
                     const cH = childEl.offsetHeight;
 
-                    // 對接起終點
-                    const x1 = nodeElements[node.parentId].data.x + pW;
-                    const y1 = nodeElements[node.parentId].data.y + (pH / 2);
-                    const x2 = node.x;
-                    const y2 = node.y + (cH / 2);
+                    const parentData = nodeElements[node.parentId].data;
 
-                    // 計算 S 型控制點
-                    const dx = Math.abs(x2 - x1) * 0.5;
+                    let x1, y1, x2, y2, dir;
+
+                    // 判斷子節點在父節點的右側還是左側
+                    if (node.x >= parentData.x) {
+                        // 子節點在右側：父右邊框 -> 子左邊框
+                        x1 = parentData.x + pW;
+                        y1 = parentData.y + (pH / 2);
+                        x2 = node.x;
+                        y2 = node.y + (cH / 2);
+                        dir = 1; // 控制點向右
+                    } else {
+                        // 子節點在左側：父左邊框 -> 子右邊框
+                        x1 = parentData.x;
+                        y1 = parentData.y + (pH / 2);
+                        x2 = node.x + cW;
+                        y2 = node.y + (cH / 2);
+                        dir = -1; // 控制點向左
+                    }
+
+                    // 設定合理的曲線拉伸距離，防止爆線與迴圈扭曲
+                    const dx = Math.max(Math.abs(x2 - x1) * 0.5, 30) * dir;
                     const pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
 
                     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
