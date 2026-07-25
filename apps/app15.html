@@ -20,7 +20,6 @@
             background-color: #f8f9fa;
         }
         
-        /* 畫布與容器 */
         #container {
             width: 100%;
             height: 100%;
@@ -48,7 +47,6 @@
             z-index: 1; 
         }
 
-        /* 節點樣式 */
         .node {
             position: absolute;
             padding: 10px 18px;
@@ -64,16 +62,14 @@
             cursor: pointer;
             z-index: 2; 
             transition: border-color 0.1s, box-shadow 0.1s;
-            /* 允許在編輯模式下選取文字 */
             user-select: auto;
             -webkit-user-select: auto;
         }
         
-        /* 編輯模式時的樣式 */
         .node[contenteditable="true"] {
             cursor: text;
             outline: none;
-            border-color: #34a853; /* 變成綠色邊框提示正在編輯 */
+            border-color: #34a853; 
             box-shadow: 0 0 10px rgba(52, 168, 83, 0.4);
             z-index: 10;
         }
@@ -163,7 +159,6 @@
         </div>
     </div>
 
-    <!-- 移除編輯按鈕，只保留新增與刪除 -->
     <div id="toolbar">
         <button class="tool-btn add" onclick="addChildNode()">➕ 子節點</button>
         <button class="tool-btn delete" onclick="deleteNode()">🗑️ 刪除</button>
@@ -218,7 +213,6 @@
                     
                     el.addEventListener('pointerdown', (e) => {
                         e.stopPropagation();
-                        // 如果節點正在編輯狀態，不要觸發拖曳與重新選取
                         if (el.getAttribute('contenteditable') === 'true') return;
                         
                         selectNode(node.id);
@@ -227,7 +221,6 @@
                     layer.appendChild(el);
                 }
 
-                // 只有在非編輯狀態時才強制更新文字（避免打字到一半被覆蓋）
                 if (el.getAttribute('contenteditable') !== 'true') {
                     el.className = `node ${node.parentId === null ? 'root' : ''} ${node.id === selectedNodeId ? 'selected' : ''}`;
                     if (el.innerText !== node.text) el.innerText = node.text;
@@ -282,7 +275,6 @@
         }
 
         function selectNode(id) {
-            // 如果點擊了其他節點，確保所有處於編輯狀態的節點都關閉編輯
             document.querySelectorAll('.node[contenteditable="true"]').forEach(el => el.blur());
             selectedNodeId = id;
             render();
@@ -306,7 +298,6 @@
             selectedNodeId = newNode.id;
             render();
             
-            // 自動進入編輯模式
             setTimeout(() => {
                 const newEl = nodeElements[newNode.id].el;
                 enableEditMode(newEl, newNode);
@@ -332,7 +323,6 @@
             render();
         }
 
-        // 整合拖曳與點擊判斷
         function startDragOrEditNode(e, node, el) {
             let startX = e.clientX;
             let startY = e.clientY;
@@ -341,7 +331,6 @@
             let hasMoved = false;
 
             function onMove(ev) {
-                // 如果移動超過 3px，視為拖曳而不是點擊
                 if (Math.abs(ev.clientX - startX) > 3 || Math.abs(ev.clientY - startY) > 3) {
                     hasMoved = true;
                 }
@@ -362,7 +351,6 @@
                 window.removeEventListener('pointermove', onMove);
                 window.removeEventListener('pointerup', onUp);
 
-                // 如果沒有移動，代表這是一個「點擊（Tap）」，啟動編輯模式
                 if (!hasMoved) {
                     enableEditMode(el, node);
                 }
@@ -372,42 +360,37 @@
             window.addEventListener('pointerup', onUp);
         }
 
-        // 啟動直接編輯模式
         function enableEditMode(el, node) {
             el.setAttribute('contenteditable', 'true');
             el.focus();
             
-            // 全選文字，方便手機端直接覆蓋修改
             const selection = window.getSelection();
             const range = document.createRange();
             range.selectNodeContents(el);
             selection.removeAllRanges();
             selection.addRange(range);
 
-            // 編輯結束（點擊空白處或鍵盤收起）
             function finishEdit() {
                 el.setAttribute('contenteditable', 'false');
                 window.getSelection().removeAllRanges();
                 
                 const newText = el.innerText.trim();
                 if (newText !== "") {
-                    node.text = newText; // 儲存新文字
+                    node.text = newText;
                 } else {
-                    el.innerText = node.text; // 如果清空了，恢復原本文字
+                    el.innerText = node.text; 
                 }
                 
-                // 文字長短改變會影響節點寬度，重畫連線
                 render(); 
                 
                 el.removeEventListener('blur', finishEdit);
                 el.removeEventListener('keydown', handleKey);
             }
 
-            // 監聽 Enter 鍵自動完成編輯
             function handleKey(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    el.blur(); // 觸發 blur 事件以完成編輯
+                    el.blur(); 
                 }
             }
 
@@ -418,7 +401,6 @@
         function setupCanvasDrag() {
             container.addEventListener('pointerdown', (e) => {
                 if (e.target === container || e.target === layer || e.target === svg) {
-                    // 點擊空白處，關閉所有編輯狀態
                     document.querySelectorAll('.node[contenteditable="true"]').forEach(el => el.blur());
                     selectedNodeId = null;
                     render();
@@ -450,12 +432,43 @@
             layer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
         }
 
-        function exportJSON() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(nodesData, null, 2));
-            const dlAnchorElem = document.createElement('a');
-            dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", "mindmap.json");
-            dlAnchorElem.click();
+        // ==========================================
+        // 🚀 全新升級的手機版匯出功能 (Web Share API)
+        // ==========================================
+        async function exportJSON() {
+            // 1. 讓使用者輸入想要的檔名
+            let filename = prompt("請輸入檔案名稱：", "我的思維導圖");
+            if (!filename) return; // 如果使用者按取消，就停止匯出
+            if (!filename.endsWith(".json")) filename += ".json"; // 自動補上副檔名
+
+            // 2. 將資料轉換為檔案物件 (Blob)
+            const jsonStr = JSON.stringify(nodesData, null, 2);
+            const blob = new Blob([jsonStr], { type: "application/json" });
+            const file = new File([blob], filename, { type: "application/json" });
+
+            // 3. 嘗試呼叫手機原生分享/儲存選單
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        title: filename,
+                        files: [file]
+                    });
+                    return; // 分享/儲存成功後結束
+                } catch (err) {
+                    console.log("使用者取消分享或分享失敗:", err);
+                    // 失敗的話繼續執行下方的傳統下載模式當作備案
+                }
+            }
+
+            // 4. 傳統下載模式 (電腦版，或是手機不支援分享功能時的備用方案)
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         function importJSON(event) {
@@ -471,6 +484,8 @@
                 }
             };
             fileReader.readAsText(event.target.files[0]);
+            // 清空 input 的值，這樣重複匯入同一個檔案才會觸發 onchange
+            event.target.value = ''; 
         }
 
         init();
