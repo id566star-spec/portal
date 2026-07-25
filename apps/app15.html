@@ -28,14 +28,7 @@
             touch-action: none;
             overflow: hidden;
         }
-        #svg-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 5000px;
-            height: 5000px;
-            pointer-events: none;
-        }
+        
         #nodes-layer {
             position: absolute;
             top: 0;
@@ -43,6 +36,16 @@
             width: 5000px;
             height: 5000px;
             transform-origin: 0 0;
+        }
+
+        #svg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1; /* 線條在底層 */
         }
 
         /* 節點樣式 */
@@ -59,6 +62,7 @@
             white-space: nowrap;
             touch-action: none;
             cursor: pointer;
+            z-index: 2; /* 節點蓋在線條上方 */
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         .node.root {
@@ -74,10 +78,10 @@
         }
 
         /* 連接線樣式 */
-        line {
-            stroke: #5f6368;
-            stroke-width: 2;
-            stroke-dasharray: 4,4;
+        path {
+            stroke: #8c9bab;
+            stroke-width: 2.5;
+            fill: none;
         }
 
         /* 頂部工具列 */
@@ -115,7 +119,6 @@
             display: flex;
             gap: 12px;
             z-index: 100;
-            transition: all 0.3s ease;
         }
         .tool-btn {
             border: none;
@@ -134,7 +137,6 @@
         .tool-btn.edit { background: #fef7e0; color: #b06000; }
         .tool-btn.delete { background: #fce8e6; color: #c5221f; }
 
-        /* 隱藏原生 input */
         #file-input { display: none; }
     </style>
 </head>
@@ -149,8 +151,9 @@
 
     <!-- 主畫布區域 -->
     <div id="container">
-        <svg id="svg-canvas" width="5000" height="5000"></svg>
-        <div id="nodes-layer"></div>
+        <div id="nodes-layer">
+            <svg id="svg-canvas" width="5000" height="5000"></svg>
+        </div>
     </div>
 
     <!-- 底部手機選單 -->
@@ -165,7 +168,6 @@
         let selectedNodeId = null;
         let idCounter = 1;
 
-        // 視圖縮放與位移變數
         let scale = 1;
         let panX = window.innerWidth / 2 - 100;
         let panY = window.innerHeight / 2 - 25;
@@ -176,14 +178,13 @@
         const layer = document.getElementById('nodes-layer');
         const svg = document.getElementById('svg-canvas');
 
-        // 初始化
         function init() {
             nodesData = [{
                 id: 1,
                 text: "核心主題",
                 parentId: null,
-                x: 0,
-                y: 0
+                x: 200,
+                y: 300
             }];
             selectedNodeId = 1;
             idCounter = 2;
@@ -192,14 +193,15 @@
             setupCanvasDrag();
         }
 
-        // 渲染全部節點與連線
         function render() {
-            layer.innerHTML = '';
+            // 清空舊節點（保留 svg 標籤）
+            const oldNodes = layer.querySelectorAll('.node');
+            oldNodes.forEach(n => n.remove());
             svg.innerHTML = '';
 
             const nodeElements = {};
 
-            // 1. 先繪製節點 DOM 以取得尺寸
+            // 1. 繪製節點 DOM
             nodesData.forEach(node => {
                 const el = document.createElement('div');
                 el.className = `node ${node.parentId === null ? 'root' : ''} ${node.id === selectedNodeId ? 'selected' : ''}`;
@@ -207,7 +209,6 @@
                 el.style.left = `${node.x}px`;
                 el.style.top = `${node.y}px`;
 
-                // 綁定點擊事件
                 el.addEventListener('pointerdown', (e) => {
                     e.stopPropagation();
                     selectNode(node.id);
@@ -218,43 +219,42 @@
                 nodeElements[node.id] = { data: node, el: el };
             });
 
-            // 2. 計算邊緣座標並繪製連接線
+            // 2. 繪製平滑貝茲曲線連接線
             nodesData.forEach(node => {
                 if (node.parentId !== null && nodeElements[node.parentId]) {
                     const parentEl = nodeElements[node.parentId].el;
                     const childEl = nodeElements[node.id].el;
 
-                    const pRect = parentEl.getBoundingClientRect();
-                    const cRect = childEl.getBoundingClientRect();
+                    const pW = parentEl.offsetWidth;
+                    const pH = parentEl.offsetHeight;
+                    const cH = childEl.offsetHeight;
 
-                    // 轉換相對座標 (從 right 到 left)
-                    const x1 = nodeElements[node.parentId].data.x + (pRect.width / scale);
-                    const y1 = nodeElements[node.parentId].data.y + (pRect.height / scale / 2);
+                    // 對接起終點
+                    const x1 = nodeElements[node.parentId].data.x + pW;
+                    const y1 = nodeElements[node.parentId].data.y + (pH / 2);
                     const x2 = node.x;
-                    const y2 = node.y + (cRect.height / scale / 2);
+                    const y2 = node.y + (cH / 2);
 
-                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    line.setAttribute('x1', x1);
-                    line.setAttribute('y1', y1);
-                    line.setAttribute('x2', x2);
-                    line.setAttribute('y2', y2);
-                    svg.appendChild(line);
+                    // 計算 S 型控制點
+                    const dx = Math.abs(x2 - x1) * 0.5;
+                    const pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', pathData);
+                    svg.appendChild(path);
                 }
             });
         }
 
-        // 選取節點
         function selectNode(id) {
             selectedNodeId = id;
             render();
         }
 
-        // 點按：新增子節點
         function addChildNode() {
             if (!selectedNodeId) return alert('請先點選一個節點');
             const parentNode = nodesData.find(n => n.id === selectedNodeId);
             
-            // 計算子節點數量，自動向下位移
             const children = nodesData.filter(n => n.parentId === parentNode.id);
             const offsetY = children.length * 60 - 20;
 
@@ -271,7 +271,6 @@
             render();
         }
 
-        // 點按：編輯文字
         function editNodeText() {
             if (!selectedNodeId) return;
             const node = nodesData.find(n => n.id === selectedNodeId);
@@ -282,7 +281,6 @@
             }
         }
 
-        // 點按：刪除節點
         function deleteNode() {
             if (!selectedNodeId) return;
             const node = nodesData.find(n => n.id === selectedNodeId);
@@ -290,7 +288,6 @@
                 return alert("核心主題不能刪除！");
             }
 
-            // 遞迴刪除自身與所有子孫節點
             const idsToDelete = new Set();
             function collectIds(id) {
                 idsToDelete.add(id);
@@ -303,7 +300,6 @@
             render();
         }
 
-        // 拖曳節點邏輯
         function startDragNode(e, node) {
             let startX = e.clientX;
             let startY = e.clientY;
@@ -327,10 +323,9 @@
             window.addEventListener('pointerup', onUp);
         }
 
-        // 畫布拖曳與縮放
         function setupCanvasDrag() {
             container.addEventListener('pointerdown', (e) => {
-                if (e.target === container || e.target === svg) {
+                if (e.target === container || e.target === layer) {
                     selectedNodeId = null;
                     render();
                     isPanning = true;
@@ -349,7 +344,6 @@
 
             window.addEventListener('pointerup', () => { isPanning = false; });
 
-            // 雙指滾輪/手勢縮放
             container.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
@@ -360,11 +354,8 @@
 
         function updateTransform() {
             layer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-            svg.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-            svg.style.transformOrigin = '0 0';
         }
 
-        // JSON 匯出與匯入
         function exportJSON() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(nodesData, null, 2));
             const dlAnchorElem = document.createElement('a');
@@ -388,7 +379,6 @@
             fileReader.readAsText(event.target.files[0]);
         }
 
-        // 啟動
         init();
     </script>
 </body>
