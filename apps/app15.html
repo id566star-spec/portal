@@ -63,7 +63,7 @@
             touch-action: none;
             cursor: pointer;
             z-index: 2; /* 節點蓋在線條上方 */
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: border-color 0.1s, box-shadow 0.1s;
         }
         .node.root {
             background-color: #4285f4;
@@ -142,21 +142,18 @@
 </head>
 <body>
 
-    <!-- 頂部功能按鈕 -->
     <div class="top-bar">
         <button class="btn-action" onclick="exportJSON()">📥 匯出 JSON</button>
         <button class="btn-action" onclick="document.getElementById('file-input').click()">📤 匯入 JSON</button>
         <input type="file" id="file-input" accept=".json" onchange="importJSON(event)">
     </div>
 
-    <!-- 主畫布區域 -->
     <div id="container">
         <div id="nodes-layer">
             <svg id="svg-canvas" width="5000" height="5000"></svg>
         </div>
     </div>
 
-    <!-- 底部手機選單 -->
     <div id="toolbar">
         <button class="tool-btn add" onclick="addChildNode()">➕ 子節點</button>
         <button class="tool-btn edit" onclick="editNodeText()">✏️ 編輯</button>
@@ -165,6 +162,7 @@
 
     <script>
         let nodesData = [];
+        let nodeElements = {}; // 儲存節點的 DOM 參考
         let selectedNodeId = null;
         let idCounter = 1;
 
@@ -193,65 +191,75 @@
             setupCanvasDrag();
         }
 
+        // 高效能更新模式：不刪除 DOM，只更新狀態
         function render() {
-            // 清空舊節點（保留 svg 標籤）
-            const oldNodes = layer.querySelectorAll('.node');
-            oldNodes.forEach(n => n.remove());
-            svg.innerHTML = '';
+            const currentIds = new Set(nodesData.map(n => n.id));
+            
+            // 1. 移除已經刪除的節點
+            document.querySelectorAll('.node').forEach(el => {
+                const id = parseInt(el.getAttribute('data-id'));
+                if (!currentIds.has(id)) {
+                    el.remove();
+                    delete nodeElements[id];
+                }
+            });
 
-            const nodeElements = {};
-
-            // 1. 繪製節點 DOM
+            // 2. 新增或更新現有節點
             nodesData.forEach(node => {
-                const el = document.createElement('div');
+                let el = document.querySelector(`.node[data-id="${node.id}"]`);
+                if (!el) {
+                    el = document.createElement('div');
+                    el.setAttribute('data-id', node.id);
+                    el.addEventListener('pointerdown', (e) => {
+                        e.stopPropagation();
+                        selectNode(node.id);
+                        startDragNode(e, node);
+                    });
+                    layer.appendChild(el);
+                }
+
                 el.className = `node ${node.parentId === null ? 'root' : ''} ${node.id === selectedNodeId ? 'selected' : ''}`;
-                el.innerText = node.text;
+                if (el.innerText !== node.text) el.innerText = node.text;
                 el.style.left = `${node.x}px`;
                 el.style.top = `${node.y}px`;
 
-                el.addEventListener('pointerdown', (e) => {
-                    e.stopPropagation();
-                    selectNode(node.id);
-                    startDragNode(e, node);
-                });
-
-                layer.appendChild(el);
                 nodeElements[node.id] = { data: node, el: el };
             });
 
-            // 2. 智慧計算邊緣與平滑貝茲曲線
+            drawLines();
+        }
+
+        // 獨立出畫線功能，供拖曳時即時調用
+        function drawLines() {
+            svg.innerHTML = ''; // 清空舊連線
             nodesData.forEach(node => {
                 if (node.parentId !== null && nodeElements[node.parentId]) {
                     const parentEl = nodeElements[node.parentId].el;
                     const childEl = nodeElements[node.id].el;
 
-                    const pW = parentEl.offsetWidth;
-                    const pH = parentEl.offsetHeight;
-                    const cW = childEl.offsetWidth;
-                    const cH = childEl.offsetHeight;
+                    // 確保寬高正常獲取，給予預設值防呆
+                    const pW = parentEl.offsetWidth || 80;
+                    const pH = parentEl.offsetHeight || 40;
+                    const cW = childEl.offsetWidth || 80;
+                    const cH = childEl.offsetHeight || 40;
 
                     const parentData = nodeElements[node.parentId].data;
-
                     let x1, y1, x2, y2, dir;
 
-                    // 判斷子節點在父節點的右側還是左側
                     if (node.x >= parentData.x) {
-                        // 子節點在右側：父右邊框 -> 子左邊框
                         x1 = parentData.x + pW;
                         y1 = parentData.y + (pH / 2);
                         x2 = node.x;
                         y2 = node.y + (cH / 2);
-                        dir = 1; // 控制點向右
+                        dir = 1;
                     } else {
-                        // 子節點在左側：父左邊框 -> 子右邊框
                         x1 = parentData.x;
                         y1 = parentData.y + (pH / 2);
                         x2 = node.x + cW;
                         y2 = node.y + (cH / 2);
-                        dir = -1; // 控制點向左
+                        dir = -1;
                     }
 
-                    // 設定合理的曲線拉伸距離，防止爆線與迴圈扭曲
                     const dx = Math.max(Math.abs(x2 - x1) * 0.5, 30) * dir;
                     const pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
 
@@ -270,7 +278,6 @@
         function addChildNode() {
             if (!selectedNodeId) return alert('請先點選一個節點');
             const parentNode = nodesData.find(n => n.id === selectedNodeId);
-            
             const children = nodesData.filter(n => n.parentId === parentNode.id);
             const offsetY = children.length * 60 - 20;
 
@@ -327,7 +334,12 @@
                 const dy = (ev.clientY - startY) / scale;
                 node.x = initialX + dx;
                 node.y = initialY + dy;
-                render();
+                
+                // 拖曳時「只更新位置與連線」，確保效能與寬高準確計算
+                const el = nodeElements[node.id].el;
+                el.style.left = `${node.x}px`;
+                el.style.top = `${node.y}px`;
+                drawLines();
             }
 
             function onUp() {
