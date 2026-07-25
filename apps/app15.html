@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>手機版思維導圖</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        /* 畫布與容器 */
+        #container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            touch-action: none;
+            overflow: hidden;
+        }
+        #svg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5000px;
+            height: 5000px;
+            pointer-events: none;
+        }
+        #nodes-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5000px;
+            height: 5000px;
+            transform-origin: 0 0;
+        }
+
+        /* 節點樣式 */
+        .node {
+            position: absolute;
+            padding: 10px 18px;
+            border-radius: 8px;
+            background-color: #ffffff;
+            border: 2px solid #1a73e8;
+            color: #202124;
+            font-size: 15px;
+            font-weight: 500;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            white-space: nowrap;
+            touch-action: none;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .node.root {
+            background-color: #4285f4;
+            color: #ffffff;
+            font-size: 17px;
+            font-weight: bold;
+            border-color: #1a73e8;
+        }
+        .node.selected {
+            border: 2px solid #ea4335;
+            box-shadow: 0 0 10px rgba(234, 67, 53, 0.4);
+        }
+
+        /* 連接線樣式 */
+        line {
+            stroke: #5f6368;
+            stroke-width: 2;
+            stroke-dasharray: 4,4;
+        }
+
+        /* 頂部工具列 */
+        .top-bar {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 100;
+        }
+        .btn-action {
+            background: #ffffff;
+            border: 1px solid #dadce0;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #3c4043;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+
+        /* 底部手機操作選單 */
+        #toolbar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffffff;
+            padding: 8px 16px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        .tool-btn {
+            border: none;
+            background: #f1f3f4;
+            color: #1f1f1f;
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+        .tool-btn.add { background: #e8f0fe; color: #1a73e8; }
+        .tool-btn.edit { background: #fef7e0; color: #b06000; }
+        .tool-btn.delete { background: #fce8e6; color: #c5221f; }
+
+        /* 隱藏原生 input */
+        #file-input { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- 頂部功能按鈕 -->
+    <div class="top-bar">
+        <button class="btn-action" onclick="exportJSON()">📥 匯出 JSON</button>
+        <button class="btn-action" onclick="document.getElementById('file-input').click()">📤 匯入 JSON</button>
+        <input type="file" id="file-input" accept=".json" onchange="importJSON(event)">
+    </div>
+
+    <!-- 主畫布區域 -->
+    <div id="container">
+        <svg id="svg-canvas" width="5000" height="5000"></svg>
+        <div id="nodes-layer"></div>
+    </div>
+
+    <!-- 底部手機選單 -->
+    <div id="toolbar">
+        <button class="tool-btn add" onclick="addChildNode()">➕ 子節點</button>
+        <button class="tool-btn edit" onclick="editNodeText()">✏️ 編輯</button>
+        <button class="tool-btn delete" onclick="deleteNode()">🗑️ 刪除</button>
+    </div>
+
+    <script>
+        let nodesData = [];
+        let selectedNodeId = null;
+        let idCounter = 1;
+
+        // 視圖縮放與位移變數
+        let scale = 1;
+        let panX = window.innerWidth / 2 - 100;
+        let panY = window.innerHeight / 2 - 25;
+        let isPanning = false;
+        let startX, startY;
+
+        const container = document.getElementById('container');
+        const layer = document.getElementById('nodes-layer');
+        const svg = document.getElementById('svg-canvas');
+
+        // 初始化
+        function init() {
+            nodesData = [{
+                id: 1,
+                text: "核心主題",
+                parentId: null,
+                x: 0,
+                y: 0
+            }];
+            selectedNodeId = 1;
+            idCounter = 2;
+            updateTransform();
+            render();
+            setupCanvasDrag();
+        }
+
+        // 渲染全部節點與連線
+        function render() {
+            layer.innerHTML = '';
+            svg.innerHTML = '';
+
+            const nodeElements = {};
+
+            // 1. 先繪製節點 DOM 以取得尺寸
+            nodesData.forEach(node => {
+                const el = document.createElement('div');
+                el.className = `node ${node.parentId === null ? 'root' : ''} ${node.id === selectedNodeId ? 'selected' : ''}`;
+                el.innerText = node.text;
+                el.style.left = `${node.x}px`;
+                el.style.top = `${node.y}px`;
+
+                // 綁定點擊事件
+                el.addEventListener('pointerdown', (e) => {
+                    e.stopPropagation();
+                    selectNode(node.id);
+                    startDragNode(e, node);
+                });
+
+                layer.appendChild(el);
+                nodeElements[node.id] = { data: node, el: el };
+            });
+
+            // 2. 計算邊緣座標並繪製連接線
+            nodesData.forEach(node => {
+                if (node.parentId !== null && nodeElements[node.parentId]) {
+                    const parentEl = nodeElements[node.parentId].el;
+                    const childEl = nodeElements[node.id].el;
+
+                    const pRect = parentEl.getBoundingClientRect();
+                    const cRect = childEl.getBoundingClientRect();
+
+                    // 轉換相對座標 (從 right 到 left)
+                    const x1 = nodeElements[node.parentId].data.x + (pRect.width / scale);
+                    const y1 = nodeElements[node.parentId].data.y + (pRect.height / scale / 2);
+                    const x2 = node.x;
+                    const y2 = node.y + (cRect.height / scale / 2);
+
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', x1);
+                    line.setAttribute('y1', y1);
+                    line.setAttribute('x2', x2);
+                    line.setAttribute('y2', y2);
+                    svg.appendChild(line);
+                }
+            });
+        }
+
+        // 選取節點
+        function selectNode(id) {
+            selectedNodeId = id;
+            render();
+        }
+
+        // 點按：新增子節點
+        function addChildNode() {
+            if (!selectedNodeId) return alert('請先點選一個節點');
+            const parentNode = nodesData.find(n => n.id === selectedNodeId);
+            
+            // 計算子節點數量，自動向下位移
+            const children = nodesData.filter(n => n.parentId === parentNode.id);
+            const offsetY = children.length * 60 - 20;
+
+            const newNode = {
+                id: idCounter++,
+                text: "子節點",
+                parentId: parentNode.id,
+                x: parentNode.x + 180,
+                y: parentNode.y + offsetY
+            };
+
+            nodesData.push(newNode);
+            selectedNodeId = newNode.id;
+            render();
+        }
+
+        // 點按：編輯文字
+        function editNodeText() {
+            if (!selectedNodeId) return;
+            const node = nodesData.find(n => n.id === selectedNodeId);
+            const newText = prompt("請輸入新文字：", node.text);
+            if (newText && newText.trim() !== "") {
+                node.text = newText.trim();
+                render();
+            }
+        }
+
+        // 點按：刪除節點
+        function deleteNode() {
+            if (!selectedNodeId) return;
+            const node = nodesData.find(n => n.id === selectedNodeId);
+            if (node.parentId === null) {
+                return alert("核心主題不能刪除！");
+            }
+
+            // 遞迴刪除自身與所有子孫節點
+            const idsToDelete = new Set();
+            function collectIds(id) {
+                idsToDelete.add(id);
+                nodesData.filter(n => n.parentId === id).forEach(n => collectIds(n.id));
+            }
+            collectIds(selectedNodeId);
+
+            nodesData = nodesData.filter(n => !idsToDelete.has(n.id));
+            selectedNodeId = node.parentId;
+            render();
+        }
+
+        // 拖曳節點邏輯
+        function startDragNode(e, node) {
+            let startX = e.clientX;
+            let startY = e.clientY;
+            let initialX = node.x;
+            let initialY = node.y;
+
+            function onMove(ev) {
+                const dx = (ev.clientX - startX) / scale;
+                const dy = (ev.clientY - startY) / scale;
+                node.x = initialX + dx;
+                node.y = initialY + dy;
+                render();
+            }
+
+            function onUp() {
+                window.removeEventListener('pointermove', onMove);
+                window.removeEventListener('pointerup', onUp);
+            }
+
+            window.addEventListener('pointermove', onMove);
+            window.addEventListener('pointerup', onUp);
+        }
+
+        // 畫布拖曳與縮放
+        function setupCanvasDrag() {
+            container.addEventListener('pointerdown', (e) => {
+                if (e.target === container || e.target === svg) {
+                    selectedNodeId = null;
+                    render();
+                    isPanning = true;
+                    startX = e.clientX - panX;
+                    startY = e.clientY - panY;
+                }
+            });
+
+            window.addEventListener('pointermove', (e) => {
+                if (isPanning) {
+                    panX = e.clientX - startX;
+                    panY = e.clientY - startY;
+                    updateTransform();
+                }
+            });
+
+            window.addEventListener('pointerup', () => { isPanning = false; });
+
+            // 雙指滾輪/手勢縮放
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+                scale = Math.min(Math.max(0.4, scale * zoomFactor), 2.5);
+                updateTransform();
+            }, { passive: false });
+        }
+
+        function updateTransform() {
+            layer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+            svg.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+            svg.style.transformOrigin = '0 0';
+        }
+
+        // JSON 匯出與匯入
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(nodesData, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "mindmap.json");
+            dlAnchorElem.click();
+        }
+
+        function importJSON(event) {
+            const fileReader = new FileReader();
+            fileReader.onload = function(e) {
+                try {
+                    nodesData = JSON.parse(e.target.result);
+                    selectedNodeId = nodesData[0]?.id || null;
+                    idCounter = Math.max(...nodesData.map(n => n.id), 0) + 1;
+                    render();
+                } catch (err) {
+                    alert("檔案格式不正確！");
+                }
+            };
+            fileReader.readAsText(event.target.files[0]);
+        }
+
+        // 啟動
+        init();
+    </script>
+</body>
+</html>
