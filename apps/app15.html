@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>手機版思維導圖</title>
     <style>
         * {
@@ -45,7 +45,7 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 1; /* 線條在底層 */
+            z-index: 1; 
         }
 
         /* 節點樣式 */
@@ -62,9 +62,22 @@
             white-space: nowrap;
             touch-action: none;
             cursor: pointer;
-            z-index: 2; /* 節點蓋在線條上方 */
+            z-index: 2; 
             transition: border-color 0.1s, box-shadow 0.1s;
+            /* 允許在編輯模式下選取文字 */
+            user-select: auto;
+            -webkit-user-select: auto;
         }
+        
+        /* 編輯模式時的樣式 */
+        .node[contenteditable="true"] {
+            cursor: text;
+            outline: none;
+            border-color: #34a853; /* 變成綠色邊框提示正在編輯 */
+            box-shadow: 0 0 10px rgba(52, 168, 83, 0.4);
+            z-index: 10;
+        }
+
         .node.root {
             background-color: #4285f4;
             color: #ffffff;
@@ -72,19 +85,17 @@
             font-weight: bold;
             border-color: #1a73e8;
         }
-        .node.selected {
+        .node.selected:not([contenteditable="true"]) {
             border: 2px solid #ea4335;
             box-shadow: 0 0 10px rgba(234, 67, 53, 0.4);
         }
 
-        /* 連接線樣式 */
         path {
             stroke: #8c9bab;
             stroke-width: 2.5;
             fill: none;
         }
 
-        /* 頂部工具列 */
         .top-bar {
             position: fixed;
             top: 10px;
@@ -106,7 +117,6 @@
             cursor: pointer;
         }
 
-        /* 底部手機操作選單 */
         #toolbar {
             position: fixed;
             bottom: 20px;
@@ -134,7 +144,6 @@
             cursor: pointer;
         }
         .tool-btn.add { background: #e8f0fe; color: #1a73e8; }
-        .tool-btn.edit { background: #fef7e0; color: #b06000; }
         .tool-btn.delete { background: #fce8e6; color: #c5221f; }
 
         #file-input { display: none; }
@@ -154,15 +163,15 @@
         </div>
     </div>
 
+    <!-- 移除編輯按鈕，只保留新增與刪除 -->
     <div id="toolbar">
         <button class="tool-btn add" onclick="addChildNode()">➕ 子節點</button>
-        <button class="tool-btn edit" onclick="editNodeText()">✏️ 編輯</button>
         <button class="tool-btn delete" onclick="deleteNode()">🗑️ 刪除</button>
     </div>
 
     <script>
         let nodesData = [];
-        let nodeElements = {}; // 儲存節點的 DOM 參考
+        let nodeElements = {}; 
         let selectedNodeId = null;
         let idCounter = 1;
 
@@ -170,7 +179,6 @@
         let panX = window.innerWidth / 2 - 100;
         let panY = window.innerHeight / 2 - 25;
         let isPanning = false;
-        let startX, startY;
 
         const container = document.getElementById('container');
         const layer = document.getElementById('nodes-layer');
@@ -191,11 +199,9 @@
             setupCanvasDrag();
         }
 
-        // 高效能更新模式：不刪除 DOM，只更新狀態
         function render() {
             const currentIds = new Set(nodesData.map(n => n.id));
             
-            // 1. 移除已經刪除的節點
             document.querySelectorAll('.node').forEach(el => {
                 const id = parseInt(el.getAttribute('data-id'));
                 if (!currentIds.has(id)) {
@@ -204,22 +210,29 @@
                 }
             });
 
-            // 2. 新增或更新現有節點
             nodesData.forEach(node => {
                 let el = document.querySelector(`.node[data-id="${node.id}"]`);
                 if (!el) {
                     el = document.createElement('div');
                     el.setAttribute('data-id', node.id);
+                    
                     el.addEventListener('pointerdown', (e) => {
                         e.stopPropagation();
+                        // 如果節點正在編輯狀態，不要觸發拖曳與重新選取
+                        if (el.getAttribute('contenteditable') === 'true') return;
+                        
                         selectNode(node.id);
-                        startDragNode(e, node);
+                        startDragOrEditNode(e, node, el);
                     });
                     layer.appendChild(el);
                 }
 
-                el.className = `node ${node.parentId === null ? 'root' : ''} ${node.id === selectedNodeId ? 'selected' : ''}`;
-                if (el.innerText !== node.text) el.innerText = node.text;
+                // 只有在非編輯狀態時才強制更新文字（避免打字到一半被覆蓋）
+                if (el.getAttribute('contenteditable') !== 'true') {
+                    el.className = `node ${node.parentId === null ? 'root' : ''} ${node.id === selectedNodeId ? 'selected' : ''}`;
+                    if (el.innerText !== node.text) el.innerText = node.text;
+                }
+                
                 el.style.left = `${node.x}px`;
                 el.style.top = `${node.y}px`;
 
@@ -229,15 +242,13 @@
             drawLines();
         }
 
-        // 獨立出畫線功能，供拖曳時即時調用
         function drawLines() {
-            svg.innerHTML = ''; // 清空舊連線
+            svg.innerHTML = ''; 
             nodesData.forEach(node => {
                 if (node.parentId !== null && nodeElements[node.parentId]) {
                     const parentEl = nodeElements[node.parentId].el;
                     const childEl = nodeElements[node.id].el;
 
-                    // 確保寬高正常獲取，給予預設值防呆
                     const pW = parentEl.offsetWidth || 80;
                     const pH = parentEl.offsetHeight || 40;
                     const cW = childEl.offsetWidth || 80;
@@ -271,6 +282,8 @@
         }
 
         function selectNode(id) {
+            // 如果點擊了其他節點，確保所有處於編輯狀態的節點都關閉編輯
+            document.querySelectorAll('.node[contenteditable="true"]').forEach(el => el.blur());
             selectedNodeId = id;
             render();
         }
@@ -292,16 +305,12 @@
             nodesData.push(newNode);
             selectedNodeId = newNode.id;
             render();
-        }
-
-        function editNodeText() {
-            if (!selectedNodeId) return;
-            const node = nodesData.find(n => n.id === selectedNodeId);
-            const newText = prompt("請輸入新文字：", node.text);
-            if (newText && newText.trim() !== "") {
-                node.text = newText.trim();
-                render();
-            }
+            
+            // 自動進入編輯模式
+            setTimeout(() => {
+                const newEl = nodeElements[newNode.id].el;
+                enableEditMode(newEl, newNode);
+            }, 50);
         }
 
         function deleteNode() {
@@ -323,37 +332,94 @@
             render();
         }
 
-        function startDragNode(e, node) {
+        // 整合拖曳與點擊判斷
+        function startDragOrEditNode(e, node, el) {
             let startX = e.clientX;
             let startY = e.clientY;
             let initialX = node.x;
             let initialY = node.y;
+            let hasMoved = false;
 
             function onMove(ev) {
-                const dx = (ev.clientX - startX) / scale;
-                const dy = (ev.clientY - startY) / scale;
-                node.x = initialX + dx;
-                node.y = initialY + dy;
-                
-                // 拖曳時「只更新位置與連線」，確保效能與寬高準確計算
-                const el = nodeElements[node.id].el;
-                el.style.left = `${node.x}px`;
-                el.style.top = `${node.y}px`;
-                drawLines();
+                // 如果移動超過 3px，視為拖曳而不是點擊
+                if (Math.abs(ev.clientX - startX) > 3 || Math.abs(ev.clientY - startY) > 3) {
+                    hasMoved = true;
+                }
+
+                if (hasMoved) {
+                    const dx = (ev.clientX - startX) / scale;
+                    const dy = (ev.clientY - startY) / scale;
+                    node.x = initialX + dx;
+                    node.y = initialY + dy;
+                    
+                    el.style.left = `${node.x}px`;
+                    el.style.top = `${node.y}px`;
+                    drawLines();
+                }
             }
 
             function onUp() {
                 window.removeEventListener('pointermove', onMove);
                 window.removeEventListener('pointerup', onUp);
+
+                // 如果沒有移動，代表這是一個「點擊（Tap）」，啟動編輯模式
+                if (!hasMoved) {
+                    enableEditMode(el, node);
+                }
             }
 
             window.addEventListener('pointermove', onMove);
             window.addEventListener('pointerup', onUp);
         }
 
+        // 啟動直接編輯模式
+        function enableEditMode(el, node) {
+            el.setAttribute('contenteditable', 'true');
+            el.focus();
+            
+            // 全選文字，方便手機端直接覆蓋修改
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            // 編輯結束（點擊空白處或鍵盤收起）
+            function finishEdit() {
+                el.setAttribute('contenteditable', 'false');
+                window.getSelection().removeAllRanges();
+                
+                const newText = el.innerText.trim();
+                if (newText !== "") {
+                    node.text = newText; // 儲存新文字
+                } else {
+                    el.innerText = node.text; // 如果清空了，恢復原本文字
+                }
+                
+                // 文字長短改變會影響節點寬度，重畫連線
+                render(); 
+                
+                el.removeEventListener('blur', finishEdit);
+                el.removeEventListener('keydown', handleKey);
+            }
+
+            // 監聽 Enter 鍵自動完成編輯
+            function handleKey(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    el.blur(); // 觸發 blur 事件以完成編輯
+                }
+            }
+
+            el.addEventListener('blur', finishEdit);
+            el.addEventListener('keydown', handleKey);
+        }
+
         function setupCanvasDrag() {
             container.addEventListener('pointerdown', (e) => {
-                if (e.target === container || e.target === layer) {
+                if (e.target === container || e.target === layer || e.target === svg) {
+                    // 點擊空白處，關閉所有編輯狀態
+                    document.querySelectorAll('.node[contenteditable="true"]').forEach(el => el.blur());
                     selectedNodeId = null;
                     render();
                     isPanning = true;
